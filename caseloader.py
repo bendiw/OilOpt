@@ -7,7 +7,7 @@ def load(path, well=None):
         df = df.loc[df['well'] == well]
     return df
 
-def gen_targets(df, well, intervals=None, allow_nan=False):
+def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False):
     df = df.loc[df['well']==well]
     if(not allow_nan):
         df = df[pd.notnull(df['gaslift_rate'])]
@@ -38,7 +38,18 @@ def gen_targets(df, well, intervals=None, allow_nan=False):
         y = df['oil']
 ##    print(X)
 ##    print(y)
+    if(normalize):
+        X, y = normalize_data(X, y)
     return np.array(X),np.array(y)
+
+def normalize_data(X, y):
+    X_mean = np.mean(X)
+    y_mean = np.mean(y)
+    X_std = np.std(X)
+    y_std = np.std(y)
+    X = [(x-X_mean)/X_std for x in X]
+    y = [(y-y_mean)/y_std for y in y]
+    return X, y
 
 def conv_to_batch(data):
     batch= []

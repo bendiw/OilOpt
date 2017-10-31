@@ -4,10 +4,11 @@ import random as r
 from maxout import max_out
 from matplotlib import pyplot
 import caseloader as cl
+import tools
 
 def add_layer(inputs, input_size, output_size, activation_function = None):
-    W = tf.Variable(np.random.uniform(-0.1, 0.1, size = (input_size, output_size)), trainable = True)
-    b = tf.Variable(np.random.uniform(-50, 50, size =output_size), trainable = True)
+    W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
+    b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True)
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
@@ -31,16 +32,16 @@ def total_batch(data):
 
 def plot_pred(x, pred, y):
     pyplot.figure()
-    pyplot.plot(x,pred,'r.')
+    pyplot.plot(x,pred,'r')
     pyplot.plot(x,y,'b.')
     pyplot.show()
 
 df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
-data = [cl.gen_targets(df, "A6",100)]
-#print(data[0][1])
+data = [cl.gen_targets(df, "A5", normalize=True, intervals=20)] #,intervals=100
 data = cl.conv_to_batch(data)
+data.sort()
 ##print(len(data))
-#print((data))
+print((data))
 
 ##X, Y = [], []
 ##data = []
@@ -64,17 +65,20 @@ out = max_out(L1, 1)
 
 error = tf.reduce_mean(tf.reduce_sum(tf.square(y_ - out)))
 ##error = tf.losses.sigmoid_cross_entropy()
-train_step = tf.train.AdamOptimizer(0.00001).minimize(error)
+train_step = tf.train.AdamOptimizer(0.0001).minimize(error)
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
-for i in range(20000 + 1):
+for i in range(25000 + 1):
     batch_xs, batch_ys = next_batch(data, len(data)-1)
 ##    print (batch_xs, batch_ys)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
     if (i % 200 == 0):
         total_x, total_y = next_batch(data, len(data)-1)
-        print ("Step %04d" %i, " error = %g" %sess.run(error, feed_dict={x: total_x, y_: total_y}))
+        res = sess.run(error, feed_dict={x: total_x, y_: total_y})
+        print ("Step %04d" %i, " error = %g" %res)
+        if(res<0.0):
+            break
 
 total_x, total_y = total_batch(data)
 pred = sess.run(out, feed_dict={x: total_x, y_: total_y})
