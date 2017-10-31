@@ -7,7 +7,7 @@ import caseloader as cl
 
 def add_layer(inputs, input_size, output_size, activation_function = None):
     W = tf.Variable(np.random.uniform(-0.1, 0.1, size = (input_size, output_size)), trainable = True)
-    b = tf.Variable(np.random.uniform(-1000, 1000, size =output_size), trainable = True)
+    b = tf.Variable(np.random.uniform(-50, 50, size =output_size), trainable = True)
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
@@ -36,7 +36,7 @@ def plot_pred(x, pred, y):
     pyplot.show()
 
 df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
-data = [cl.gen_targets(df, "C2", 100)]
+data = [cl.gen_targets(df, "A6",100)]
 #print(data[0][1])
 data = cl.conv_to_batch(data)
 ##print(len(data))
@@ -57,13 +57,14 @@ data = cl.conv_to_batch(data)
 x = tf.placeholder(tf.float64, [None,1])
 y_ = tf.placeholder(tf.float64, [None,1])
 
-n_hidden = 10
+n_hidden = 6
 
 L1, W, b = add_layer(x, 1, n_hidden, activation_function = None)
 out = max_out(L1, 1)
 
-error = tf.reduce_mean((tf.square(y_ - out)))
-train_step = tf.train.AdamOptimizer(0.001).minimize(error)
+error = tf.reduce_mean(tf.reduce_sum(tf.square(y_ - out)))
+##error = tf.losses.sigmoid_cross_entropy()
+train_step = tf.train.AdamOptimizer(0.00001).minimize(error)
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 

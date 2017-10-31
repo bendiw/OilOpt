@@ -21,18 +21,23 @@ def gen_targets(df, well, intervals=None, allow_nan=False):
         step = g_diff/intervals
         vals = np.arange(min_g, max_g, step)
         for i in vals:
-            val = df.loc[df['gaslift_rate']>=i-step]
+            val = df.loc[df['gaslift_rate']>=i]
             val = val.loc[val['gaslift_rate']<=i+step]
-            if(val.shape[0] >= 1):
+            if(val.shape[0] > 1):
+##                print(val)
                 glift, oil = val.ix[val['time_ms_begin'].idxmax()][['gaslift_rate', 'oil']]
-            elif(not val.empty):
-                glift, oil = val[['gaslift_rate','oil']]
+
+            elif(val.shape[0]==1):
+                glift = val['gaslift_rate'].values[0]
+                oil = val['oil'].values[0]
             if(not val.empty):
                 X.append(glift)
                 y.append(oil)
     else:
         X = df['gaslift_rate']
         y = df['oil']
+##    print(X)
+##    print(y)
     return np.array(X),np.array(y)
 
 def conv_to_batch(data):
