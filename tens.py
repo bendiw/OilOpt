@@ -37,28 +37,14 @@ def plot_pred(x, pred, y):
     pyplot.show()
 
 ##df = cl.load("C:\\Users\\agmal_000\\Skole\\Optimering fordypning\\OilOpt\\OilOpt\\welltests.csv")
-df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
-data = [cl.gen_targets(df, "A5", normalize=True, intervals=20)] #,intervals=100
+##df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
+data = [cl.gen_targets(df, "A5", normalize=True)] #,intervals=100
 data = cl.conv_to_batch(data)
 data.sort()
 ##print(len(data))
 ##print((data))
 
-##X, Y = [], []
-##data = []
-##cases = 30
-##for i in range(cases):
-##    x = r.uniform(-10,10)
-##    X.append(x)
-##X.sort()
-##for x in X[:cases-5]:
-##    y = x**2 + r.uniform(-abs(x),abs(x))
-##    Y.append(y)
-##    data.append([[x],[y]])
-##for x in X[cases-5:]:
-##    y=x/2
-##    Y.append(y)
-##    data.append([[x],[y]])
+
 
 x = tf.placeholder(tf.float64, [None,1])
 y_ = tf.placeholder(tf.float64, [None,1])
@@ -87,7 +73,7 @@ for i in range(25000 + 1):
         total_x, total_y = next_batch(data, len(data))
         res = sess.run(error, feed_dict={x: total_x, y_: total_y})
         print ("Step %04d" %i, " error = %g" %res)
-        if(res<0.0):
+        if(res<0.001):
             break
 
 total_x, total_y = total_batch(data)
