@@ -36,45 +36,55 @@ def plot_pred(x, pred, y):
     pyplot.plot(x,y,'b.')
     pyplot.show()
 
+##df = cl.load("C:\\Users\\agmal_000\\Skole\\Optimering fordypning\\OilOpt\\OilOpt\\welltests.csv")
 df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
 data = [cl.gen_targets(df, "A5", normalize=True, intervals=20)] #,intervals=100
 data = cl.conv_to_batch(data)
 data.sort()
 ##print(len(data))
-print((data))
+##print((data))
 
 ##X, Y = [], []
 ##data = []
-##cases = 20
+##cases = 30
 ##for i in range(cases):
 ##    x = r.uniform(-10,10)
 ##    X.append(x)
 ##X.sort()
-##for x in X:
+##for x in X[:cases-5]:
 ##    y = x**2 + r.uniform(-abs(x),abs(x))
+##    Y.append(y)
+##    data.append([[x],[y]])
+##for x in X[cases-5:]:
+##    y=x/2
 ##    Y.append(y)
 ##    data.append([[x],[y]])
 
 x = tf.placeholder(tf.float64, [None,1])
 y_ = tf.placeholder(tf.float64, [None,1])
 
-n_hidden = 6
+n_hidden = 5
 
-L1, W, b = add_layer(x, 1, n_hidden, activation_function = None)
-out = max_out(L1, 1)
+L1, W1, b1 = add_layer(x, 1, n_hidden, activation_function = None)
+L2, W2, b2 = add_layer(x, 1, n_hidden, activation_function = None)
 
-error = tf.reduce_mean(tf.reduce_sum(tf.square(y_ - out)))
+out1 = max_out(L1, 1)
+out2 = max_out(L2, 1)
+out = tf.subtract(out1,out2)
+
+error = tf.reduce_sum((tf.square(y_ - out)))
 ##error = tf.losses.sigmoid_cross_entropy()
+
 train_step = tf.train.AdamOptimizer(0.0001).minimize(error)
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
 for i in range(25000 + 1):
-    batch_xs, batch_ys = next_batch(data, len(data)-1)
+    batch_xs, batch_ys = next_batch(data, len(data))
 ##    print (batch_xs, batch_ys)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
     if (i % 200 == 0):
-        total_x, total_y = next_batch(data, len(data)-1)
+        total_x, total_y = next_batch(data, len(data))
         res = sess.run(error, feed_dict={x: total_x, y_: total_y})
         print ("Step %04d" %i, " error = %g" %res)
         if(res<0.0):
