@@ -7,6 +7,23 @@ def load(path, well=None):
         df = df.loc[df['well'] == well]
     return df
 
+def gen_test_case(cases=30):
+    X, Y = [], []
+    data = []
+    for i in range(cases):
+        x = r.uniform(-10,10)
+        X.append(x)
+    X.sort()
+    for x in X[:cases-5]:
+        y = x**2 + r.uniform(-abs(x),abs(x))
+        Y.append(y)
+        data.append([[x],[y]])
+    for x in X[cases-5:]:
+        y=x/2
+        Y.append(y)
+        data.append([[x],[y]])
+    return data
+
 def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False):
     df = df.loc[df['well']==well]
     if(not allow_nan):
