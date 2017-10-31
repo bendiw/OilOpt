@@ -19,8 +19,11 @@ well='A3'
 model = Earth(allow_missing = True, enable_pruning=False)
 
 for well in df.well.unique():
-    X = df.loc[df['well'] == well, 'gaslift_rate']
-    y = df.loc[df['well'] == well, 'oil']
+    df_w = df.loc[df['well'] == well]
+    X = df_w['gaslift_rate']
+    y = df_w['oil']
+    min_s = df_w['time_ms_begin'].min()
+    max_s = df_w['time_ms_begin'].max()
     ####X = X.dropna()
     ####y = y.dropna()
     print(X, y)
@@ -28,6 +31,7 @@ for well in df.well.unique():
 
 ##    print(model.trace())
     print(model.summary())
+    print((max_s-min_s)/(60*60*24*365*1000))
 
     y_hat = model.predict(X)
     pyplot.figure()
