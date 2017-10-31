@@ -36,7 +36,7 @@ def plot_pred(x, pred, y):
     pyplot.plot(x,y,'b.')
     pyplot.show()
 
-##df = cl.load("C:\\Users\\agmal_000\\Skole\\Optimering fordypning\\OilOpt\\OilOpt\\welltests.csv")
+df = cl.load("welltests.csv")
 ##df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
 data = [cl.gen_targets(df, "A5", normalize=True)] #,intervals=100
 data = cl.conv_to_batch(data)
