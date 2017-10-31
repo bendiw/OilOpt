@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import MaxoutDense, Activation
+from keras.layers import Dense, MaxoutDense, Activation, maximum
 import numpy as np
 # fix random seed for reproducibility
 seed = 7
@@ -11,19 +11,22 @@ X, Y = [], []
 for i in range(len(dataset)):
     X.append(dataset[i][0])
     Y.append(dataset[i][1])
-n = 3
+n = 4
 print (X)
 print (Y)
 w = np.random.uniform(-0.1,0.1, size = (1,n))
 b = np.random.uniform(-0.1,0.1, size = (n,))
-print (w)
-print (b)
-print ([w,b])
+##print (w)
+##print (b)
+print ([w.shape, b.shape])
 ## create model
 ##keras.layers.core.MaxoutDense(output_dim, nb_feature=1, init='glorot_uniform', weights=[w,b] , W_regularizer=None, b_regularizer=None,
 ##                              activity_regularizer=None, W_constraint=None, b_constraint=None, bias=True, input_dim=1)
 model = Sequential()
-model.add(MaxoutDense(n, nb_feature=1, input_dim=1, init='uniform', weights =[w,b]))
+model.add(Dense(4, input_shape=(4,)))
+max_out = maximum([Dense(4, input_shape=(1,))(model.get_layer(index=0).get_ouput_at(0)) for _ in range(n)])
+model.add(max_out)
+#model.add(MaxoutDense(n, nb_feature=1, input_dim=1, init='uniform')) #, weights =[w,b])
 # Compile model
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 # Fit the model
