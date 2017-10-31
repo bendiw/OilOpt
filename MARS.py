@@ -14,20 +14,19 @@ df = df[pd.notnull(df['gaslift_rate'])]
 df = df[pd.notnull(df['oil'])]
 
 well='A5'
-model = Earth(allow_missing = True, enable_pruning=False, max_terms=10, penalty=0,
+model = Earth(allow_missing = True, enable_pruning=False, max_terms=6, penalty=0.1,
               minspan=3)
 wells = df.well.unique()
-for well in ['A5']:
+for well in wells:
     df_w = df.loc[df['well'] == well]
     df = cl.load(base_dir+data_file)
-    X,y = cl.gen_targets(df, well, normalize=True, intervals=20)
+    X,y = cl.gen_targets(df, well, normalize=True, intervals=100)
     X = np.array(X)
     y = np.array(y)
-    print("\nwell: ", well)
     model.fit(X, y)
 
 ##    print(model.trace())
-##    print(model.summary())
+    print(model.summary())
 
     y_hat = model.predict(X)
     pyplot.figure()
