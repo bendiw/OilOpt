@@ -1,4 +1,5 @@
 import numpy as np
+import pyearth
 from pyearth import Earth
 import pandas as pd
 from matplotlib import pyplot
@@ -40,11 +41,24 @@ class Mars:
         self.model.fit(X, y)
     ##    print(model.trace())
         print(self.model.summary())
+        print("R2 score: ", self.model.score(X, y), "\n")
+##        print(dir(self.model.basis_[2]))
+##        print((self.model.basis_[0].get_knot()))
         y_hat = self.model.predict(X)
-        print(y_hat)
+        #print(y_hat)
         X = [x[0] for x in X]
-        print("\n", X, "\n\n")
+        #print("\n", X, "\n\n")
+##        print(self.model.predict([98988,]))
         self.plot_fig(X, y, y_hat, well)
+        print(self.get_breakpoints())
+
+    def get_breakpoints(self):
+        brk = []
+        for bf in self.model.basis_:
+##            print(type(bf))
+            if type(bf) is pyearth._basis.HingeBasisFunction:
+                brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
+        return brk
 
 
 def run_all():
