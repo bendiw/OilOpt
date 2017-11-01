@@ -11,3 +11,12 @@ def normalize(data):
     X = [(x-X_mean)/X_std for x in X]
     y = [(y-y_mean)/y_std for y in y]
     return X,y
+
+def get_stats(data):
+
+    return mean, stdev
+
+def denormalize(data, mean, stdev):    
+    X = [(x*X_std[0]+mean[0]) for x in X]
+    y = [(y*y_std[1]+mean[1]) for y in y]
+    return X, y
