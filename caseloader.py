@@ -24,7 +24,14 @@ def gen_test_case(cases=30):
         data.append([[x],[y]])
     return data
 
-def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False):
+
+##############
+##              Generates targets from a dataframe                      ##
+## If intervals input is given, the dataset will be processed to reduce ##
+## amount of data points in close proximity to each other. The way this ##
+## is done is specified by the mode parameter.                          ##
+##############
+def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, mode="new"):
     df = df.loc[df['well']==well]
     if(not allow_nan):
         df = df[pd.notnull(df['gaslift_rate'])]
@@ -42,7 +49,14 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False):
             val = val.loc[val['gaslift_rate']<=i+step]
             if(val.shape[0] > 1):
 ##                print(val)
-                glift, oil = val.ix[val['time_ms_begin'].idxmax()][['gaslift_rate', 'oil']]
+                if(mode=="avg"):
+                    print(val[['gaslift_rate', 'oil']])
+                    df_m = val[['gaslift_rate', 'oil']].mean(axis=0)
+                    print(df_m)
+                    glift = df_m['gaslift_rate']
+                    oil = df_m['oil']
+                else:
+                    glift, oil = val.ix[val['time_ms_begin'].idxmax()][['gaslift_rate', 'oil']]
 
             elif(val.shape[0]==1):
                 glift = val['gaslift_rate'].values[0]

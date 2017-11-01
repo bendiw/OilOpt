@@ -30,11 +30,9 @@ class Mars:
         pyplot.show()
 
     def run_well(self, well):
-##        self.model = Earth(allow_missing=True, enable_pruning=False, max_terms=6, penalty=0.1,
-##                  minspan=6)
         df_w = self.df.loc[self.df['well'] == well]
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        data = cl.conv_to_batch([cl.gen_targets(self.df, well, normalize=False, intervals=100)])
+        data = cl.conv_to_batch([cl.gen_targets(self.df, well, normalize=False, intervals=100, mode="avg")])
         data.sort()
 ####        data_sorted = cl.conv_to_batch([X,y]).sort()
         X = [d[0] for d in data]

@@ -38,7 +38,12 @@ def plot_pred(x, pred, y):
 
 df = cl.load("welltests.csv")
 <<<<<<< HEAD
+<<<<<<< HEAD
 data = [cl.gen_targets(df, "C3", normalize=True, intervals = 100)] #,intervals=100
+=======
+##df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
+data = [cl.gen_targets(df, "B2", normalize=True)] #,intervals=100
+>>>>>>> refs/remotes/origin/master
 data = cl.conv_to_batch(data)
 data.sort()
 ##print(len(data))
@@ -49,7 +54,11 @@ data.sort()
 x = tf.placeholder(tf.float64, [None,1])
 y_ = tf.placeholder(tf.float64, [None,1])
 
+<<<<<<< HEAD
 n_hidden = 100
+=======
+n_hidden = 3
+>>>>>>> refs/remotes/origin/master
 
 L1, W1, b1 = add_layer(x, 1, n_hidden, activation_function = None)
 L2, W2, b2 = add_layer(x, 1, n_hidden, activation_function = None)
@@ -65,7 +74,11 @@ train_step = tf.train.AdamOptimizer(0.01).minimize(error)
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
+<<<<<<< HEAD
 for i in range(5000 + 1):
+=======
+for i in range(12000 + 1):
+>>>>>>> refs/remotes/origin/master
     batch_xs, batch_ys = next_batch(data, len(data))
 ##    print (batch_xs, batch_ys)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
