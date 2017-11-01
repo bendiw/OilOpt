@@ -39,10 +39,6 @@ def plot_pred(x, pred, y):
 df = cl.load("welltests.csv")
 <<<<<<< HEAD
 data = [cl.gen_targets(df, "C3", normalize=True, intervals = 100)] #,intervals=100
-=======
-##df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
-data = [cl.gen_targets(df, "A5", normalize=True)] #,intervals=100
->>>>>>> refs/remotes/origin/master
 data = cl.conv_to_batch(data)
 data.sort()
 ##print(len(data))
