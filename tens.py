@@ -38,7 +38,7 @@ def plot_pred(x, pred, y):
 
 df = cl.load("welltests.csv")
 ##df = cl.load("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests.csv")
-data = [cl.gen_targets(df, "A5", normalize=True)] #,intervals=100
+data = [cl.gen_targets(df, "B2", normalize=True)] #,intervals=100
 data = cl.conv_to_batch(data)
 data.sort()
 ##print(len(data))
@@ -49,7 +49,7 @@ data.sort()
 x = tf.placeholder(tf.float64, [None,1])
 y_ = tf.placeholder(tf.float64, [None,1])
 
-n_hidden = 5
+n_hidden = 3
 
 L1, W1, b1 = add_layer(x, 1, n_hidden, activation_function = None)
 L2, W2, b2 = add_layer(x, 1, n_hidden, activation_function = None)
@@ -61,11 +61,11 @@ out = tf.subtract(out1,out2)
 error = tf.reduce_sum((tf.square(y_ - out)))
 ##error = tf.losses.sigmoid_cross_entropy()
 
-train_step = tf.train.AdamOptimizer(0.0001).minimize(error)
+train_step = tf.train.AdamOptimizer(0.01).minimize(error)
 sess = tf.InteractiveSession()
 tf.global_variables_initializer().run()
 
-for i in range(25000 + 1):
+for i in range(12000 + 1):
     batch_xs, batch_ys = next_batch(data, len(data))
 ##    print (batch_xs, batch_ys)
     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
