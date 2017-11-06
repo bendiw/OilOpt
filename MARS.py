@@ -36,7 +36,7 @@ class Mars:
     def run_well(self, well):
         df_w = self.df.loc[self.df['well'] == well]
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        data = cl.conv_to_batch([cl.gen_targets(self.df, well, normalize=True, intervals=100, mode="avg")])
+        data = cl.conv_to_batch([cl.gen_targets(self.df, well, normalize=True, intervals=100, factor=0)])
         data.sort()
 ####        data_sorted = cl.conv_to_batch([X,y]).sort()
         X = [d[0] for d in data]

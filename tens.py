@@ -53,7 +53,7 @@ def generate_sets(data, train_frac, val_frac):
 
 
 df = cl.load("welltests.csv")
-data = [cl.gen_targets(df, "C3", normalize=True, intervals = 100, mode = 'new')] #,intervals=100
+data = [cl.gen_targets(df, "C3", normalize=True, intervals = 100, factor=0)] #,intervals=100
 epochs = 5000
 beta = 0.01
 train_frac = 0.7
