@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 
 def load(path, well=None):
     df = pd.read_csv(path, sep=",")
@@ -31,7 +32,7 @@ def gen_test_case(cases=30):
 ## amount of data points in close proximity to each other. The way this ##
 ## is done is specified by the mode parameter.                          ##
 ##############
-def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, mode="new"):
+def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, factor=0):
     df = df.loc[df['well']==well]
     if(not allow_nan):
         df = df[pd.notnull(df['gaslift_rate'])]
@@ -47,17 +48,13 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, mo
         for i in vals:
             val = df.loc[df['gaslift_rate']>=i]
             val = val.loc[val['gaslift_rate']<=i+step]
+            maxtime = val['time_ms_begin'].max()
+            mintime = val['time_ms_begin'].min()
+            div = maxtime-mintime
             if(val.shape[0] > 1):
-##                print(val)
-                if(mode=="avg"):
-                    print(val[['gaslift_rate', 'oil']])
-                    df_m = val[['gaslift_rate', 'oil']].mean(axis=0)
-                    print(df_m)
-                    glift = df_m['gaslift_rate']
-                    oil = df_m['oil']
-                else:
-                    glift, oil = val.ix[val['time_ms_begin'].idxmax()][['gaslift_rate', 'oil']]
-
+                factors = val['time_ms_begin'].apply(lambda x: math.exp(-factor*((maxtime-x)/div)))
+                oil = val['oil'].multiply(factors).sum() / factors.sum()
+                glift = val['gaslift_rate'].multiply(factors).sum() / factors.sum()
             elif(val.shape[0]==1):
                 glift = val['gaslift_rate'].values[0]
                 oil = val['oil'].values[0]
