@@ -10,6 +10,9 @@ import plotter
 def add_layer(inputs, input_size, output_size, activation_function = None):
     W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
     b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True)
+    print("inputs",inputs.shape)
+    print("W",W.shape)
+    print("b",b.shape)
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
@@ -83,40 +86,32 @@ def convert_from_dict_to_tflists(dict_data):
         i += 1
     return data
 
-def get_x_vals(total_x):
-    x1_min = np.inf
-    x1_max = 0
-    x2_min = np.inf
-    x2_max = 0
-    for inputs in total_x:
-        if (inputs[0][0] < x1_min):
-            x1_min = inputs[0][0]
-        elif (inputs[0][0] > x1_max):
-            x1_maks = inputs[0][0]
-        if (inputs[0][1] < x2_min):
-            x1_min = inputs[0][0]
-        elif (inputs[0][1] > x2_max):
-            x1_maks = inputs[0][0]
+def get_x_vals(dict_data):
+    x1_min = np.nanmin(dict_data["gaslift"])
+    x1_max = np.nanmax(dict_data["gaslift"])
+    x2_min = np.nanmin(dict_data["choke"])
+    x2_max = np.nanmax(dict_data["choke"])
+    x1 = np.arange(x1_min, x1_max, (x1_max-x1_min)/15)
+    x2 = np.arange(x2_min, x2_max, (x2_max-x2_min)/15)
     x_vals = []
-    for i in range(10000):
-        x1 = r.random()*(x1_max-x1_min) + x1_min
-        x2 = r.random()*(x2_max-x2_min) + x2_min
-        x_vals.append([x1,x2])
+    for i in range(len(x1)):
+        for j in range(len(x2)):
+            x_vals.append([x1[i],x2[j]])
     return x_vals
     
     
                 
     
-def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100, mode = 'new'):
+def run(datafile, plot_3d = False, factor = 1.5, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100):
     df = cl.load("welltests.csv")
-    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals = 100) #,intervals=100
+    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals=intervals, factor = factor, nan_ratio = 100.0) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)
     all_data_points = data.copy()
 
-    x = tf.placeholder(tf.float64, [None,1])
+    num_inputs = len(data[0][0])
+    x = tf.placeholder(tf.float64, [None,num_inputs])
     y_ = tf.placeholder(tf.float64, [None,1])
     keep_prob = tf.placeholder(tf.float64)
-    num_inputs = len(data[0][0])
     L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
     L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None)        
 
@@ -135,7 +130,6 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
     train_step = tf.train.AdamOptimizer(0.01).minimize(loss)
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
-
     if (cross_validation == None):
         train_set, validation_set, test_set = generate_sets(data, train_frac, val_frac)
         for i in range(epochs + 1):
@@ -149,7 +143,7 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
         test_error = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
         print ("Test set error: ", test_error)
     else:
-        print ("Using",cross_validation+"-fold cross validation")
+        print ("Using ",cross_validation,"-fold cross validation")
         total_error = 0
         sets = generate_cross_sets(data, cross_validation)
         for i in range(cross_validation):
@@ -174,11 +168,15 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
         
     total_x, total_y = total_batch(all_data_points)
     if (plot_3d):
-        x_vals = get_x_vals(total_x)
-        pred = sess.run(out, feed_dict={x: x_vals})
+        x_vals = get_x_vals(dict_data)
+        y_vals = [[0] for i in range(len(x_vals))]
+        pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
         x1 = [x[0] for x in x_vals]
         x2 = [x[1] for x in x_vals]
-        plotter.plot3d(x1, x2, pred)
+        z = []
+        for prediction in pred:
+            z.append(prediction[0])
+        return plotter.plot3d(x1, x2, z)
         
     else:
         pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
