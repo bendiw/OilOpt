@@ -45,6 +45,8 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, fa
     if(not allow_nan):
         df = df[pd.notnull(df['gaslift_rate'])]
         df = df[pd.notnull(df['oil'])]
+        if(add_Z):
+            df = df[pd.notnull(df['choke'])]
     if(intervals):
         X = []
         y = []
