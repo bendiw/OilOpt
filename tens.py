@@ -105,10 +105,7 @@ def get_x_vals(dict_data):
 def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100, mode = 'new'):
     df = cl.load("welltests.csv")
     dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals = 100, nan_ratio = 100.0) #,intervals=100
-    for key in dict_data.keys():
-        print (key)
     data = convert_from_dict_to_tflists(dict_data)
-    print(data)
     all_data_points = data.copy()
 
     num_inputs = len(data[0][0])
@@ -146,7 +143,7 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
         test_error = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
         print ("Test set error: ", test_error)
     else:
-        print ("Using",cross_validation+"-fold cross validation")
+        print ("Using ",cross_validation,"-fold cross validation")
         total_error = 0
         sets = generate_cross_sets(data, cross_validation)
         for i in range(cross_validation):
@@ -172,10 +169,6 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
     total_x, total_y = total_batch(all_data_points)
     if (plot_3d):
         x_vals = get_x_vals(dict_data)
-        print ("Total X:",total_x[:15])
-        print ("x_vals:")
-        for i in range(15):
-            print (x_vals[i])
         y_vals = [[0] for i in range(len(x_vals))]
         pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
         x1 = [x[0] for x in x_vals]
@@ -183,10 +176,7 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
         z = []
         for prediction in pred:
             z.append(prediction[0])
-        print ("X",x1[:15])
-        print ("Y",x2[:15])
-        print ("Z",pred[:15])
-        plotter.plot3d(x1, x2, z)
+        return plotter.plot3d(x1, x2, z)
         
     else:
         pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
