@@ -37,7 +37,7 @@ class Mars:
     def run_well(self, well):
         df_w = self.df.loc[self.df['well'] == well]
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        d_dict = cl.gen_targets(self.df, well, normalize=False, allow_nan = False, nan_ratio=0.01, intervals=100, factor=0)
+        d_dict = cl.gen_targets(self.df, well, normalize=True, allow_nan = False, nan_ratio=0.9, intervals=100, factor=0)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
@@ -46,14 +46,16 @@ class Mars:
 ####        data_sorted = cl.conv_to_batch([X,y]).sort()
         X = [d[0] for d in data]
         y = [d[1] for d in data]
+        print(X[0])
         self.model.fit(X, y)
         print(self.model.summary())
         print("R2 score: ", self.model.score(X, y), "\n")
         y_hat = self.model.predict(X)
         X = [x[0] for x in X]
         if('choke' in d_dict.keys()):
-            self.test3d(d_dict, 35)
-            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
+            #self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
+            self.test3d(d_dict, 15)
+
         else:
             self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints())
 
@@ -72,13 +74,14 @@ class Mars:
 ##            print(type(bf))
             if type(bf) is pyearth._basis.HingeBasisFunction:
                 if(not bf.is_pruned()):
-                    brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
+                    print(bf.get_knot())
+                    #brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
         return brk
 
     def test3d(self, d_dict, inters):
+        t_z = []
         t_x = []
         t_y = []
-        t_z = []
         x, y, z = d_dict['gaslift'], d_dict['choke'], d_dict['output']
         x_v = np.arange(np.nanmin(x), np.nanmax(x), (np.nanmax(x)-np.nanmin(x))/inters)
         y_v = np.arange(np.nanmin(y), np.nanmax(y), (np.nanmax(y)-np.nanmin(y))/inters)
@@ -87,7 +90,8 @@ class Mars:
                 t_x.append(i)
                 t_y.append(j)
                 t_z.append(self.model.predict([[i, j]]))
-        plotter.plot3d(t_x, t_y, t_z)
+        #t_z = np.append([],t_z)
+        plotter.plot3d(t_x, t_y, [m[0] for m in t_z])
 
 
 def run_all():
