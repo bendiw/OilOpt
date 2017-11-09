@@ -91,11 +91,12 @@ def get_x_vals(dict_data):
     x1_max = np.nanmax(dict_data["gaslift"])
     x2_min = np.nanmin(dict_data["choke"])
     x2_max = np.nanmax(dict_data["choke"])
-    x1 = np.arange(x1_min, x1_max, (x1_max-x1_min)/5000)
-    x2 = np.arange(x2_min, x2_max, (x2_max-x2_min)/5000)
+    x1 = np.arange(x1_min, x1_max, (x1_max-x1_min)/15)
+    x2 = np.arange(x2_min, x2_max, (x2_max-x2_min)/15)
     x_vals = []
     for i in range(len(x1)):
-        x_vals.append([x1[i],x2[i]])
+        for j in range(len(x2)):
+            x_vals.append([x1[i],x2[j]])
     return x_vals
     
     
@@ -179,10 +180,13 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
         pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
         x1 = [x[0] for x in x_vals]
         x2 = [x[1] for x in x_vals]
+        z = []
+        for prediction in pred:
+            z.append(prediction[0])
         print ("X",x1[:15])
         print ("Y",x2[:15])
         print ("Z",pred[:15])
-        plotter.plot3d(x1, x2, pred)
+        plotter.plot3d(x1, x2, z)
         
     else:
         pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
