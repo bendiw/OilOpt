@@ -5,6 +5,7 @@ from maxout import max_out
 from matplotlib import pyplot
 import caseloader as cl
 import tools
+import plotter
 
 def add_layer(inputs, input_size, output_size, activation_function = None):
     W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
@@ -66,19 +67,59 @@ def generate_cross_sets(data, cross_validation):
             new_set.append(data.pop(r.randint(0,len(data)-1)))
         sets.append(new_set)
     return sets
+
+def convert_from_dict_to_tflists(dict_data):
+    data = []
+    for value in dict_data["gaslift"]:
+        data.append([[value]])
+    if ("choke" in dict_data.keys()):
+        i = 0
+        for value in dict_data["choke"]:
+            data[i][0].append(value)
+            i += 1
+    i = 0
+    for value in dict_data["output"]:
+        data[i].append([value])
+        i += 1
+    return data
+
+def get_x_vals(total_x):
+    x1_min = np.inf
+    x1_max = 0
+    x2_min = np.inf
+    x2_max = 0
+    for inputs in total_x:
+        if (inputs[0][0] < x1_min):
+            x1_min = inputs[0][0]
+        elif (inputs[0][0] > x1_max):
+            x1_maks = inputs[0][0]
+        if (inputs[0][1] < x2_min):
+            x1_min = inputs[0][0]
+        elif (inputs[0][1] > x2_max):
+            x1_maks = inputs[0][0]
+    x_vals = []
+    for i in range(10000):
+        x1 = r.random()*(x1_max-x1_min) + x1_min
+        x2 = r.random()*(x2_max-x2_min) + x2_min
+        x_vals.append([x1,x2])
+    return x_vals
     
-def run(datafile, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100, mode = 'new'):
+    
+                
+    
+def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100, mode = 'new'):
     df = cl.load("welltests.csv")
-    data = [cl.gen_targets(df, datafile+"", normalize=True, intervals = 100)] #,intervals=100
-    data = cl.conv_to_batch(data)
+    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals = 100) #,intervals=100
+    data = convert_from_dict_to_tflists(dict_data)
     all_data_points = data.copy()
 
     x = tf.placeholder(tf.float64, [None,1])
     y_ = tf.placeholder(tf.float64, [None,1])
     keep_prob = tf.placeholder(tf.float64)
+    num_inputs = len(data[0][0])
+    L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
+    L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None)        
 
-    L1, W1, b1 = add_layer(x, 1, n_hidden, activation_function = None)
-    L2, W2, b2 = add_layer(x, 1, n_hidden, activation_function = None)
     regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
 
     dropout1 = tf.nn.dropout(L1, keep_prob)
@@ -132,31 +173,33 @@ def run(datafile, cross_validation = None, epochs = 5000, beta = 0.01, train_fra
         print ("Average loss: ", float(total_error)/float(cross_validation))
         
     total_x, total_y = total_batch(all_data_points)
-    pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
-    bp = plot_pred(total_x, pred, total_y)
+    if (plot_3d):
+        x_vals = get_x_vals(total_x)
+        pred = sess.run(out, feed_dict={x: x_vals})
+        x1 = [x[0] for x in x_vals]
+        x2 = [x[1] for x in x_vals]
+        plotter.plot3d(x1, x2, pred)
+        
+    else:
+        pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
+        bp = plot_pred(total_x, pred, total_y)
+        xvalues = bp[0].get_xdata()
+        yvalues = bp[0].get_ydata()
+        breakpoints_y = []
+        breakpoints_x = []
+        old_w = (yvalues[1]-yvalues[0])/(xvalues[1]-xvalues[0])
+        for i in range(2,len(yvalues)):
+            w = (yvalues[i]-yvalues[i-1])/(xvalues[i]-xvalues[i-1])
+            if (abs(w-old_w)>0.00001):
+                breakpoints_y.append(yvalues[i-1])
+                breakpoints_x.append(xvalues[i-1])
+            old_w = w
 
-    xvalues = bp[0].get_xdata()
-    yvalues = bp[0].get_ydata()
-    ##breakpoints_y = [yvalues[0]]
-    ##breakpoints_x = [xvalues[0]]
-    breakpoints_y = []
-    breakpoints_x = []
-    old_w = (yvalues[1]-yvalues[0])/(xvalues[1]-xvalues[0])
-    for i in range(2,len(yvalues)):
-        w = (yvalues[i]-yvalues[i-1])/(xvalues[i]-xvalues[i-1])
-        if (abs(w-old_w)>0.00001):
-            breakpoints_y.append(yvalues[i-1])
-            breakpoints_x.append(xvalues[i-1])
-        old_w = w
-    ##breakpoints_y.append(yvalues[-1])
-    ##breakpoints_x.append(xvalues[-1])
+        pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
+        sess.close()
+        pyplot.show()
+        ##weights, biases = sess.run(W), sess.run(b)
 
-    pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
-    sess.close()
-    pyplot.show()
-    ##weights, biases = sess.run(W), sess.run(b)
-    ##print (weights)
-    ##print (biases)
             
 
 
