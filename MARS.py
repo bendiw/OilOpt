@@ -5,6 +5,7 @@ import pandas as pd
 from matplotlib import pyplot
 import math
 import caseloader as cl
+import plotter
 import random as r
 
 data_file = "welltests.csv"
@@ -36,7 +37,12 @@ class Mars:
     def run_well(self, well):
         df_w = self.df.loc[self.df['well'] == well]
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        data = cl.conv_to_batch([cl.gen_targets(self.df, well, normalize=True, intervals=100, factor=0)])
+        d_dict = cl.gen_targets(self.df, well, normalize=True, intervals=100, factor=0)
+        if('choke' in d_dict.keys()):
+            data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
+            plotter.plot3d(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
+        else:
+            data = cl.conv_to_batch([d_dict['gaslift'], d_dict['output']])
         data.sort()
 ####        data_sorted = cl.conv_to_batch([X,y]).sort()
         X = [d[0] for d in data]
@@ -52,7 +58,10 @@ class Mars:
         X = [x[0] for x in X]
         #print("\n", X, "\n\n")
 ##        print(self.model.predict([98988,]))
-        self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints())
+        if('choke' in d_dict.keys()):
+            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
+        else:
+            self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints())
 
     def get_breakpoints(self):
         brk = []
@@ -60,6 +69,16 @@ class Mars:
 ##            print(type(bf))
             if type(bf) is pyearth._basis.HingeBasisFunction:
                 if(not bf.is_pruned()):                    
+                    brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
+        return brk
+
+    def get_multi_breakpoints(self):
+        brk = []
+        for bf in self.model.basis_:
+##            print(type(bf))
+            if type(bf) is pyearth._basis.HingeBasisFunction:
+                if(not bf.is_pruned()):
+                    print(bf.get_knot())
                     brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
         return brk
 
