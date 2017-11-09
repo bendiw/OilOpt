@@ -12,7 +12,7 @@ data_file = "welltests.csv"
 
 class Mars:
 
-    def __init__(self, miss = True, prune=False, max_terms=10, penalty=0.1, minspan=3):
+    def __init__(self, miss = True, prune=False, max_terms=10, penalty=0.1, minspan=1):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
@@ -37,7 +37,7 @@ class Mars:
     def run_well(self, well):
         df_w = self.df.loc[self.df['well'] == well]
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        d_dict = cl.gen_targets(self.df, well, normalize=True, intervals=100, factor=0)
+        d_dict = cl.gen_targets(self.df, well, normalize=False, allow_nan = False, nan_ratio=0.01, intervals=100, factor=0)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
@@ -47,37 +47,12 @@ class Mars:
         X = [d[0] for d in data]
         y = [d[1] for d in data]
         self.model.fit(X, y)
-    ##    print(model.trace())
         print(self.model.summary())
         print("R2 score: ", self.model.score(X, y), "\n")
-##        print(dir(self.model.basis_[2]))
-##        print((self.model.basis_[0].get_knot()))
         y_hat = self.model.predict(X)
-        #print(y_hat)
         X = [x[0] for x in X]
-        #print("\n", X, "\n\n")
-##        print(self.model.predict([98988,]))
-
-        #####TEST#####
-        t_x = []
-        t_y = []
-        t_z = []
-        x, y, z = d_dict['gaslift'], d_dict['choke'], d_dict['output']
-##        print(x, y, z)
-        x_v = np.arange(np.nanmin(x), np.nanmax(x), (np.nanmax(x)-np.nanmin(x))/20)
-        y_v = np.arange(np.nanmin(y), np.nanmax(y), (np.nanmax(y)-np.nanmin(y))/20)
-        print(np.nanmax(y))
-        for i in x_v:
-            for j in y_v:
-                t_x.append(i)
-                t_y.append(j)
-####                print("mmmmm",i, j)
-                t_z.append(self.model.predict([[i, j]]))
-        plotter.plot3d(t_x, t_y, t_z)
-            
-
-        #############
         if('choke' in d_dict.keys()):
+            self.test3d(d_dict, 35)
             self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
         else:
             self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints())
@@ -99,6 +74,20 @@ class Mars:
                 if(not bf.is_pruned()):
                     brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
         return brk
+
+    def test3d(self, d_dict, inters):
+        t_x = []
+        t_y = []
+        t_z = []
+        x, y, z = d_dict['gaslift'], d_dict['choke'], d_dict['output']
+        x_v = np.arange(np.nanmin(x), np.nanmax(x), (np.nanmax(x)-np.nanmin(x))/inters)
+        y_v = np.arange(np.nanmin(y), np.nanmax(y), (np.nanmax(y)-np.nanmin(y))/inters)
+        for i in x_v:
+            for j in y_v:
+                t_x.append(i)
+                t_y.append(j)
+                t_z.append(self.model.predict([[i, j]]))
+        plotter.plot3d(t_x, t_y, t_z)
 
 
 def run_all():
