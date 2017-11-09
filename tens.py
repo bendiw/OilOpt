@@ -10,6 +10,9 @@ import plotter
 def add_layer(inputs, input_size, output_size, activation_function = None):
     W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
     b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True)
+    print("inputs",inputs.shape)
+    print("W",W.shape)
+    print("b",b.shape)
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
@@ -88,15 +91,16 @@ def get_x_vals(total_x):
     x1_max = 0
     x2_min = np.inf
     x2_max = 0
+    print (total_x)
     for inputs in total_x:
-        if (inputs[0][0] < x1_min):
-            x1_min = inputs[0][0]
-        elif (inputs[0][0] > x1_max):
-            x1_maks = inputs[0][0]
-        if (inputs[0][1] < x2_min):
-            x1_min = inputs[0][0]
-        elif (inputs[0][1] > x2_max):
-            x1_maks = inputs[0][0]
+        if (inputs[0] < x1_min):
+            x1_min = inputs[0]
+        elif (inputs[0] > x1_max):
+            x1_maks = inputs[0]
+        if (inputs[1] < x2_min):
+            x1_min = inputs[1]
+        elif (inputs[1] > x2_max):
+            x1_maks = inputs[1]
     x_vals = []
     for i in range(10000):
         x1 = r.random()*(x1_max-x1_min) + x1_min
@@ -109,14 +113,17 @@ def get_x_vals(total_x):
     
 def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100, mode = 'new'):
     df = cl.load("welltests.csv")
-    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals = 100) #,intervals=100
+    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals = 100, nan_ratio = 100.0) #,intervals=100
+    for key in dict_data.keys():
+        print (key)
     data = convert_from_dict_to_tflists(dict_data)
+    print(data)
     all_data_points = data.copy()
 
-    x = tf.placeholder(tf.float64, [None,1])
+    num_inputs = len(data[0][0])
+    x = tf.placeholder(tf.float64, [None,num_inputs])
     y_ = tf.placeholder(tf.float64, [None,1])
     keep_prob = tf.placeholder(tf.float64)
-    num_inputs = len(data[0][0])
     L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
     L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None)        
 
@@ -135,7 +142,7 @@ def run(datafile, plot_3d = False, cross_validation = None, epochs = 5000, beta 
     train_step = tf.train.AdamOptimizer(0.01).minimize(loss)
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
-
+    print("HERE")
     if (cross_validation == None):
         train_set, validation_set, test_set = generate_sets(data, train_frac, val_frac)
         for i in range(epochs + 1):
