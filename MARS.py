@@ -91,11 +91,8 @@ class Mars:
                 t_x.append(i)
                 t_y.append(j)
                 t_z.append(self.model.predict([[i, j]]))
-        #t_z = np.append([],t_z)
-##        plotter.delaunay(x,y,z)
-
         plotter.plot3d(t_x, t_y, [m[0] for m in t_z])
-##        plotter.mesh(t_x, t_y, [m[0] for m in t_z])
+
 
 
 def run_all():
