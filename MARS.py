@@ -54,7 +54,8 @@ class Mars:
         X = [x[0] for x in X]
         if('choke' in d_dict.keys()):
             #self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
-            self.test3d(d_dict, 15)
+            self.test3d(d_dict, 50)
+##            plotter.mesh(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
 
         else:
             self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints())
@@ -90,8 +91,8 @@ class Mars:
                 t_x.append(i)
                 t_y.append(j)
                 t_z.append(self.model.predict([[i, j]]))
-        #t_z = np.append([],t_z)
         plotter.plot3d(t_x, t_y, [m[0] for m in t_z])
+
 
 
 def run_all():
