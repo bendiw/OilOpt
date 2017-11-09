@@ -40,7 +40,6 @@ class Mars:
         d_dict = cl.gen_targets(self.df, well, normalize=True, intervals=100, factor=0)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
-            plotter.plot3d(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
             data = cl.conv_to_batch([d_dict['gaslift'], d_dict['output']])
         data.sort()
@@ -58,6 +57,26 @@ class Mars:
         X = [x[0] for x in X]
         #print("\n", X, "\n\n")
 ##        print(self.model.predict([98988,]))
+
+        #####TEST#####
+        t_x = []
+        t_y = []
+        t_z = []
+        x, y, z = d_dict['gaslift'], d_dict['choke'], d_dict['output']
+##        print(x, y, z)
+        x_v = np.arange(np.nanmin(x), np.nanmax(x), (np.nanmax(x)-np.nanmin(x))/20)
+        y_v = np.arange(np.nanmin(y), np.nanmax(y), (np.nanmax(y)-np.nanmin(y))/20)
+        print(np.nanmax(y))
+        for i in x_v:
+            for j in y_v:
+                t_x.append(i)
+                t_y.append(j)
+####                print("mmmmm",i, j)
+                t_z.append(self.model.predict([[i, j]]))
+        plotter.plot3d(t_x, t_y, t_z)
+            
+
+        #############
         if('choke' in d_dict.keys()):
             self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
         else:
@@ -78,7 +97,6 @@ class Mars:
 ##            print(type(bf))
             if type(bf) is pyearth._basis.HingeBasisFunction:
                 if(not bf.is_pruned()):
-                    print(bf.get_knot())
                     brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
         return brk
 
