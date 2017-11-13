@@ -54,7 +54,7 @@ class Mars:
         X = [x[0] for x in X]
         if('choke' in d_dict.keys()):
             #self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
-            self.test3d(d_dict, 50)
+            self.test3d(d_dict, 15)
 ##            plotter.mesh(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
 
         else:
