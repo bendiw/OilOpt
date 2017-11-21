@@ -20,7 +20,9 @@ def plot3d(x, y, z):
     ax.set_ylabel('choke')
     ax.set_zlabel('output')
     triang = mtri.Triangulation(x, y)
-    print(data[triang.triangles])
+##    print(data[triang.triangles])
+    #ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True)
+
 
     ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True, cmap=plt.cm.CMRmap)
     plt.show()
