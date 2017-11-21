@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.tri as mtri
 
 def normalize(data):
     X = np.array([d for d in data[0][0]])
@@ -20,3 +21,15 @@ def denormalize(data, mean, stdev):
     X = [(x*X_std[0]+mean[0]) for x in X]
     y = [(y*y_std[1]+mean[1]) for y in y]
     return X, y
+
+def delaunay(x, y, z):
+    
+    data = []
+    for i in range(len(x)):
+        data.append([x[i], y[i], z[i]])
+    data = np.array(data)
+    triang = mtri.Triangulation(x, y)
+#    print(triang.triangles)
+#    tri = Delaunay(data)
+#    return(data[tri.simplices])
+    return data[triang.triangles]
