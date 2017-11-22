@@ -93,22 +93,27 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 ##    print(X)
 ##    print(y)
     if(normalize):
-        X = normalize_data(X)
-        y = normalize_data(y)
-
+        X, X_mean, X_std = normalize_data(X)
+        y, y_mean, y_std = normalize_data(y)
+        means = [X_mean]
+        stds = [X_std]
         if add_Z:
-            Z = normalize_data(Z)
+            Z, Z_mean, Z_std = normalize_data(Z)
+            means.append(Z_mean)
+            stds.append(Z_std)
+        means.append(y_mean)
+        stds.append(y_std)
     ret['gaslift'] = np.array(X)
     ret['output'] = np.array(y)
     if(add_Z):
         ret['choke'] = np.array(Z)
-    return ret
+    return ret, means, stds
 
 def normalize_data(data):
     X_mean = np.mean(data)
     X_std = np.std(data)
     X = [(x-X_mean)/X_std for x in data]
-    return X
+    return X, X_mean, X_std
 
 def conv_to_batch_multi(X, Y, Z):
     batch = []
