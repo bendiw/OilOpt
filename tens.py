@@ -130,13 +130,27 @@ def res_ss(ys, pred):
     for i in range(len(ys)):
         ss_res += (ys[i][0]-pred[i][0])**2
     return ss_res
-                
-    
+
+def denormalize(x, y, pred, means, stds):
+    y_ = tools.simple_denorm([a[0] for a in y], means[-1], stds[-1])
+    pred_ = tools.simple_denorm([a[0] for a in pred], means[-1], stds[-1])
+    new_y = [[a] for a in y_]
+    new_pred = [[a] for a in pred_]
+    x1 = tools.simple_denorm([a[0] for a in x], means[0], stds[0])
+    if (len(x[0])>1):
+        x2 = tools.simple_denorm([a[1] for a in x], means[1], stds[1])
+        new_x = []
+        for i in range(len(x)):
+            new_x.append([x1[i],x2[i]])
+    else:
+        new_x = [[x] for x in x1]
+    return new_x, new_y, new_pred
+
 def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
         epochs = 1000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 5,
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3):
     df = cl.load("welltests.csv")
-    dict_data = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
+    dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)
     is_3d = False
@@ -219,6 +233,13 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
         x_vals = get_x_vals(dict_data, grid_size)
         y_vals = [[0] for i in range(len(x_vals))]
         pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
+        print (x_vals)
+        print(y_vals)
+        print(pred)
+        x_vals, y_vals, pred = denormalize(x_vals, y_vals, pred, means, stds)
+        print (x_vals)
+        print(y_vals)
+        print(pred)
         x1 = [x[0] for x in x_vals]
         x2 = [x[1] for x in x_vals]
         z = []
@@ -229,6 +250,7 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
         breakpoints = tools.delaunay(x1,x2,z)        
         
     else:
+        total_x, total_y, pred = denormalize(total_x, total_y, pred, means, stds)
         xvalues, yvalues = [], []
         for i in range(len(total_x)):
             xvalues.append(total_x[i][0])
