@@ -16,7 +16,7 @@ reload(tools)
 
 class Mars:
 
-    def __init__(self, miss = False, prune=True, max_terms=10, penalty=0.7, minspan=1):
+    def __init__(self, miss = True, prune=True, max_terms=10, penalty=0.0005, minspan=1):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
@@ -52,9 +52,9 @@ class Mars:
         X = [d[0] for d in data]
         y = [d[1] for d in data]
         self.model.fit(X, y)
-#        print(self.model.summary())
+        print(self.model.summary())
         print("R2 score: ", self.model.score(X, y), "\n")
-#        print("X:", X)
+        print("X:", X)
         y_hat = self.model.predict(X)
         X = [x[0] for x in X]
         
@@ -65,7 +65,7 @@ class Mars:
             if(plot):
                 self.test3d(d_dict, inters, well)
                 
-            inters = 5
+            inters = 3
             t_z = []
             t_x = []
             t_y = []
