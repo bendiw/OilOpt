@@ -251,6 +251,7 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
             plot_pred(total_x, pred, total_y)
             pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
             pyplot.show()
+
         ##weights, biases = sess.run(W), sess.run(b)
         
     sess.close()
