@@ -109,7 +109,6 @@ def get_x_vals(dict_data, grid_size):
 def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
         epochs = 1000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 5,
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3):
-
     df = cl.load("welltests.csv")
     dict_data = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio) #,intervals=100
