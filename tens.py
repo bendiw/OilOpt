@@ -103,7 +103,33 @@ def get_x_vals(dict_data, grid_size):
             x_vals.append([x1[i],x2[j]])
     return x_vals
     
-    
+def r2(ydata, pred):
+    tot = 0
+    for i in range(len(ydata)):
+        tot += ydata[i][0]
+    mean = tot/len(ydata)
+    r2 = 1 - res_ss(ydata,pred) / tot_ss(ydata,mean)
+    return r2
+        
+def tot_ss(ys, mean):
+    ss_tot = 0
+    for i in range(len(ys)):
+        ss_tot += (ys[i][0]-mean)**2
+    return ss_tot
+
+# =============================================================================
+# def reg_ss(pred, mean):
+#     ss_reg = 0
+#     for i in range(len(pred)):
+#         ss_reg += (pred[i][0]-mean)**2
+#     return ss_reg
+# =============================================================================
+
+def res_ss(ys, pred):
+    ss_res = 0
+    for i in range(len(ys)):
+        ss_res += (ys[i][0]-pred[i][0])**2
+    return ss_res
                 
     
 def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
@@ -116,9 +142,9 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
     is_3d = False
     if (len(data[0][0]) >= 2):
         is_3d = True
-        print("Well",datafile, "- Choke and gaslift")
+        print("Well",datafile, goal, "- Choke and gaslift")
     else:
-        print("Well",datafile, "- Gaslift only")
+        print("Well",datafile, goal, "- Gaslift only")
     all_data_points = data.copy()
 
     num_inputs = len(data[0][0])
@@ -186,6 +212,9 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
 # =============================================================================
         
     total_x, total_y = total_batch(all_data_points)
+    pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
+    print("R2 =",r2(total_y,pred))
+    breakpoints = 0
     if (is_3d):
         x_vals = get_x_vals(dict_data, grid_size)
         y_vals = [[0] for i in range(len(x_vals))]
@@ -197,10 +226,9 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
             z.append(prediction[0])
         if (plot):
             plotter.plot3d(x1, x2, z, datafile)
-        return tools.delaunay(x1,x2,z)        
+        breakpoints = tools.delaunay(x1,x2,z)        
         
     else:
-        pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
         xvalues, yvalues = [], []
         for i in range(len(total_x)):
             xvalues.append(total_x[i][0])
@@ -223,11 +251,10 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
             plot_pred(total_x, pred, total_y)
             pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
             pyplot.show()
-        return breakpoints
-
         ##weights, biases = sess.run(W), sess.run(b)
-
+        
     sess.close()
+    return is_3d, breakpoints
     
     
 
