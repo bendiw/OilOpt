@@ -28,7 +28,9 @@ p_sep_route = {"A":[1], "B":[0,1], "C":[0]}
 sep_p_route = [["B"], ["A", "B"]]
 
 sep_cap = [1, math.inf]
-tot_exp_cap = 10
+tot_exp_cap = 7
+glift_groups = [["A", "B"]]
+glift_caps = [2]
 
 
 oil_polytopes = {}
@@ -188,27 +190,27 @@ for sep in range(len(sep_cap)):
     else:
         m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][1]]) <= sep_cap[sep], "sep_"+str(sep)+"_gas_constr")
 
-        for pform in sep_p_route[sep]:
-            for well in p_dict[pform]:
-                pass
+#gaslift constraints
+for i in range(len(glift_groups)):
+    m.addConstr((quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["A"]])
+    + quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["B"]]))<= glift_caps[i], "glift_a_b")
+     
+    
+#total gas export constraint
+#flow from separators minus gas lift employed in fields A + B
+m.addConstr((quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + 
+            routerate_C +
+            quicksum([quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][j]]) for j in range(len(sep_p_route[sep]))])
+            - quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict[pform]]) for pform in glift_groups[i]]))
+            <= tot_exp_cap, "total_gas_export")
+
+
 #change tracking variables
 
 
-#CONSTRAINT CREATION
-
-#routing constraints
-
 #maximum changes constraint
 
-#separator constraints
 
-#gaslift constraints
-
-
-#EXAMPLE
-#x = m.addVar(vtype= GRB.CONTINUOUS)
-#y = m.addVar(vtype= GRB.CONTINUOUS)
-#z = m.addVar(vtype= GRB.CONTINUOUS)
 
 m.setObjective(quicksum([w_PWL[0][well] for well in wellnames]), GRB.MAXIMIZE)
 # Add constraint: x + 2 y + 3 z <= 4
@@ -226,3 +228,10 @@ for v in m.getVars():
 for c in m.getConstrs():    
     print("constr", c.ConstrName, "slack ", c.slack)
 print('Obj:', m.objVal)
+for p in platforms:
+    print(p,"gaslift", sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict[p]]))
+    
+    for well in p_dict[p]:
+        print(well, "gas",sum([a.x*b[2] for a,b in w_breakpoints[GAS][well].items()]) if multidims[GAS][well] else sum([a.x*b[1] for a,b in w_breakpoints[GAS][well].items()]))
+    print("\n")
+print("gaslift A+B:", (sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["A"]]), sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["B"]])))

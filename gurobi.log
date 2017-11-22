@@ -1842,3 +1842,937 @@ Solution count 1: 6.43216
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.00s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.00s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.00s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.00s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 203 rows, 402 columns and 1951 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+00]
+Presolve removed 179 rows and 363 columns
+Presolve time: 0.01s
+Presolved: 24 rows, 39 columns, 93 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 34 continuous, 5 integer (5 binary)
+
+Root relaxation: objective 6.432158e+00, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (11 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.09 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.00s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.00s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1965 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.00s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.00s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.04 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Optimize a model with 204 rows, 402 columns and 1989 nonzeros
+Model has 26 SOS constraints
+Variable types: 318 continuous, 84 integer (84 binary)
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 7e+00]
+Presolve removed 176 rows and 358 columns
+Presolve time: 0.01s
+Presolved: 28 rows, 44 columns, 106 nonzeros
+Presolved model has 5 SOS constraint(s)
+Variable types: 38 continuous, 6 integer (6 binary)
+
+Root relaxation: objective 6.432158e+00, 6 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     0    6.43216    0    1          -    6.43216      -     -    0s
+     0     2    6.43216    0    1          -    6.43216      -     -    0s
+*    2     2               1       6.4321580    6.43216  0.00%   1.0    0s
+
+Explored 3 nodes (9 simplex iterations) in 0.05 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 1: 6.43216 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.432158000702e+00, best bound 6.432158000702e+00, gap 0.0000%
