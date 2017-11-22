@@ -10,9 +10,11 @@ import plotter
 def add_layer(inputs, input_size, output_size, activation_function = None):
     W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
     b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True)
-    print("inputs",inputs.shape)
-    print("W",W.shape)
-    print("b",b.shape)
+# =============================================================================
+#     print("inputs",inputs.shape)
+#     print("W",W.shape)
+#     print("b",b.shape)
+# =============================================================================
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
@@ -37,7 +39,7 @@ def total_batch(data):
 def plot_pred(x, pred, y):
     pyplot.figure()
     bp = pyplot.plot(x,pred,'r')
-    pyplot.plot(x,y,'b.')
+    a = pyplot.plot(x,y,'b.')
     return bp
 
 def generate_sets(data, train_frac, val_frac):
@@ -45,7 +47,6 @@ def generate_sets(data, train_frac, val_frac):
     train_set, val_set = [], []
     train_size = int(np.round(train_frac * len(data)))
     val_size = int(np.round(val_frac * len(data)))
-    test_size = len(data) - train_size - val_size
     while (len(train_set) < train_size):
         train_set.append(data.pop(r.randint(0, len(data)-1)))
     while (len(val_set) < val_size):
@@ -53,6 +54,9 @@ def generate_sets(data, train_frac, val_frac):
 ##    print("Train: ", len(train_set))
 ##    print("Val: ", len(val_set))
 ##    print("Test: ", len(data))
+    train_set.sort()
+    val_set.sort()
+    data.sort()
     return train_set, val_set, data
 
 def generate_cross_sets(data, cross_validation):
@@ -86,13 +90,13 @@ def convert_from_dict_to_tflists(dict_data):
         i += 1
     return data
 
-def get_x_vals(dict_data):
+def get_x_vals(dict_data, grid_size):
     x1_min = np.nanmin(dict_data["gaslift"])
     x1_max = np.nanmax(dict_data["gaslift"])
     x2_min = np.nanmin(dict_data["choke"])
     x2_max = np.nanmax(dict_data["choke"])
-    x1 = np.arange(x1_min, x1_max, (x1_max-x1_min)/15)
-    x2 = np.arange(x2_min, x2_max, (x2_max-x2_min)/15)
+    x1 = np.arange(x1_min, x1_max, (x1_max-x1_min)/grid_size)
+    x2 = np.arange(x2_min, x2_max, (x2_max-x2_min)/grid_size)
     x_vals = []
     for i in range(len(x1)):
         for j in range(len(x2)):
@@ -102,11 +106,20 @@ def get_x_vals(dict_data):
     
                 
     
-def run(datafile, goal='oil', plot_3d = False, factor = 1.5, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100):
+def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
+        epochs = 1000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 5,
+        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3):
 
     df = cl.load("welltests.csv")
-    dict_data = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals, factor = factor, nan_ratio = 0.3) #,intervals=100
+    dict_data = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
+                               factor = factor, nan_ratio = nan_ratio) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)
+    is_3d = False
+    if (len(data[0][0]) >= 2):
+        is_3d = True
+        print("Well",datafile, "- Choke and gaslift")
+    else:
+        print("Well",datafile, "- Gaslift only")
     all_data_points = data.copy()
 
     num_inputs = len(data[0][0])
@@ -127,8 +140,10 @@ def run(datafile, goal='oil', plot_3d = False, factor = 1.5, cross_validation = 
     loss = tf.reduce_mean(tf.square(y_ - out))
     loss = tf.reduce_mean(loss + beta * regularizers)
     ##error = tf.losses.sigmoid_cross_entropy()
-
-    train_step = tf.train.AdamOptimizer(0.01).minimize(loss)
+# =============================================================================
+#     print("Start training")
+# =============================================================================
+    train_step = tf.train.AdamOptimizer(0.03).minimize(loss)
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     if (cross_validation == None):
@@ -136,40 +151,44 @@ def run(datafile, goal='oil', plot_3d = False, factor = 1.5, cross_validation = 
         for i in range(epochs + 1):
             batch_xs, batch_ys = next_batch(train_set, len(train_set))
             sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: k_prob})
-            if (i % 200 == 0):
-                total_x, total_y = next_batch(validation_set, len(validation_set))
-                res = sess.run(loss, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
-                print ("Step %04d" %i, " validation loss = %g" %res)
-        test_x, test_y = total_batch(test_set)
-        test_error = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
-        print ("Test set error: ", test_error)
-    else:
-        print ("Using ",cross_validation,"-fold cross validation")
-        total_error = 0
-        sets = generate_cross_sets(data, cross_validation)
-        for i in range(cross_validation):
-            test_set = sets[i]
-            train_set = []
-            for j in range(i):
-                for case in sets[j]:
-                    train_set.append(case)
-            if (i+1 < cross_validation):
-                for j in range(i+1, cross_validation):
-                    for case in sets[j]:
-                        train_set.append(case)
-            for j in range(epochs + 1):
-                batch_xs, batch_ys = next_batch(train_set, len(train_set))
-                sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: k_prob})
-                if (j == epochs):
-                    test_x, test_y = next_batch(test_set, len(test_set))
-                    res = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
-                    print ("Cross set run %03d" %i, "test loss = %g" %res)
-                    total_error += res
-        print ("Average loss: ", float(total_error)/float(cross_validation))
+# =============================================================================
+#             if (i % 200 == 0):
+#                 total_x, total_y = next_batch(validation_set, len(validation_set))
+#                 res = sess.run(loss, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
+#                 print ("Step %04d" %i, " validation loss = %g" %res)
+#         test_x, test_y = total_batch(test_set)
+#         test_error = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
+#         print ("Test set error: ", test_error)
+# =============================================================================
+# =============================================================================
+#     else:
+#         print ("Using ",cross_validation,"-fold cross validation")
+#         total_error = 0
+#         sets = generate_cross_sets(data, cross_validation)
+#         for i in range(cross_validation):
+#             test_set = sets[i]
+#             train_set = []
+#             for j in range(i):
+#                 for case in sets[j]:
+#                     train_set.append(case)
+#             if (i+1 < cross_validation):
+#                 for j in range(i+1, cross_validation):
+#                     for case in sets[j]:
+#                         train_set.append(case)
+#             for j in range(epochs + 1):
+#                 batch_xs, batch_ys = next_batch(train_set, len(train_set))
+#                 sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: k_prob})
+#                 if (j == epochs):
+#                     test_x, test_y = next_batch(test_set, len(test_set))
+#                     res = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})
+#                     print ("Cross set run %03d" %i, "test loss = %g" %res)
+#                     total_error += res
+#         print ("Average loss: ", float(total_error)/float(cross_validation))
+# =============================================================================
         
     total_x, total_y = total_batch(all_data_points)
-    if (plot_3d):
-        x_vals = get_x_vals(dict_data)
+    if (is_3d):
+        x_vals = get_x_vals(dict_data, grid_size)
         y_vals = [[0] for i in range(len(x_vals))]
         pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
         x1 = [x[0] for x in x_vals]
@@ -177,29 +196,42 @@ def run(datafile, goal='oil', plot_3d = False, factor = 1.5, cross_validation = 
         z = []
         for prediction in pred:
             z.append(prediction[0])
-        return plotter.plot3d(x1, x2, z)
+        if (plot):
+            plotter.plot3d(x1, x2, z, datafile)
+        return tools.delaunay(x1,x2,z)        
         
     else:
         pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
-        bp = plot_pred(total_x, pred, total_y)
-        xvalues = bp[0].get_xdata()
-        yvalues = bp[0].get_ydata()
-        breakpoints_y = []
-        breakpoints_x = []
+        xvalues, yvalues = [], []
+        for i in range(len(total_x)):
+            xvalues.append(total_x[i][0])
+            yvalues.append(pred[i][0])
+        breakpoints = [[xvalues[0],yvalues[0]]]
+        breakpoints_y = [yvalues[0]]
+        breakpoints_x = [xvalues[0]]
         old_w = (yvalues[1]-yvalues[0])/(xvalues[1]-xvalues[0])
         for i in range(2,len(yvalues)):
             w = (yvalues[i]-yvalues[i-1])/(xvalues[i]-xvalues[i-1])
             if (abs(w-old_w)>0.00001):
+                breakpoints.append([xvalues[i-1],yvalues[i-1]])
                 breakpoints_y.append(yvalues[i-1])
                 breakpoints_x.append(xvalues[i-1])
             old_w = w
+        breakpoints.append([xvalues[-1],yvalues[-1]])
+        breakpoints_y.append(yvalues[-1])
+        breakpoints_x.append(xvalues[-1])
+        if (plot):
+            plot_pred(total_x, pred, total_y)
+            pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
+            pyplot.show()
+        return breakpoints
 
-        pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
-        sess.close()
-        pyplot.show()
         ##weights, biases = sess.run(W), sess.run(b)
 
-            
+    sess.close()
+    
+    
+
 
 
 
