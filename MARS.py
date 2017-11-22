@@ -52,9 +52,8 @@ class Mars:
         X = [d[0] for d in data]
         y = [d[1] for d in data]
         self.model.fit(X, y)
-        print(self.model.summary())
-        print("R2 score: ", self.model.score(X, y), "\n")
-        print("X:", X)
+#        print(self.model.summary())
+#        print("R2 score: ", self.model.score(X, y), "\n")
         y_hat = self.model.predict(X)
         X = [x[0] for x in X]
         
