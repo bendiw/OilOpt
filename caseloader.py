@@ -32,7 +32,7 @@ def gen_test_case(cases=30):
 ## amount of data points in close proximity to each other. The way this ##
 ## is done is specified by the mode parameter.                          ##
 ##############
-def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5):
+def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5):
     df = df.loc[df['well']==well]
     ret = {}
     add_Z = False
@@ -44,7 +44,7 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, fa
         Z = None
     if(not allow_nan):
         df = df[pd.notnull(df['gaslift_rate'])]
-        df = df[pd.notnull(df['oil'])]
+        df = df[pd.notnull(df[goal])]
         if(add_Z):
             df = df[pd.notnull(df['choke'])]
     if(intervals):
@@ -70,13 +70,13 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, fa
             div = maxtime-mintime
             if(val.shape[0] > 1):
                 factors = val['time_ms_begin'].apply(lambda x: math.exp(-factor*((maxtime-x)/div)))
-                oil = val['oil'].multiply(factors).sum() / factors.sum()
+                oil = val[goal].multiply(factors).sum() / factors.sum()
                 glift = val['gaslift_rate'].multiply(factors).sum() / factors.sum()
 ####                if(add_Z):
 ##                    choke = val['choke'].multiply(factors).sum() / factors.sum()
             elif(val.shape[0]==1):
                 glift = val['gaslift_rate'].values[0]
-                oil = val['oil'].values[0]
+                oil = val[goal].values[0]
 ##                if(add_Z):
 ##                    choke = val['choke'].values[0]
             if(not val.empty):
@@ -88,7 +88,7 @@ def gen_targets(df, well, intervals=None, allow_nan=False, normalize = False, fa
         if add_Z:
             Z = df['choke']
         X = df['gaslift_rate']
-        y = df['oil']
+        y = df[goal]
         
 ##    print(X)
 ##    print(y)
