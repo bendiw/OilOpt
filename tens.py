@@ -102,9 +102,9 @@ def get_x_vals(dict_data):
     
                 
     
-def run(datafile, plot_3d = False, factor = 1.5, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100):
+def run(datafile, goal='oil', plot_3d = False, factor = 1.5, cross_validation = None, epochs = 5000, beta = 0.01, train_frac = 0.8, val_frac = 0.1, n_hidden = 3, k_prob = 1.0, normalize = True, intervals = 100):
     df = cl.load("welltests.csv")
-    dict_data = cl.gen_targets(df, datafile+"", normalize=True, intervals=intervals, factor = factor, nan_ratio = 100.0) #,intervals=100
+    dict_data = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals, factor = factor, nan_ratio = 0.0) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)
     all_data_points = data.copy()
 

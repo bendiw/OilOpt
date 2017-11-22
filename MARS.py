@@ -24,25 +24,25 @@ class Mars:
         dframe = dframe[pd.notnull(dframe['oil'])]
         self.df = dframe
         
-    def plot_fig(self, X, y, y_hat, title="Model fit", brk=None):
+    def plot_fig(self, X, y, y_hat, title="Model fit", brk=None, goal='oil'):
         pyplot.figure()
 ##        X = [d[0] for d in data]
 ####        y = [d[1] for d in data]
         pyplot.plot(X,y,'b.')
         pyplot.plot(X,y_hat,'r')
         pyplot.xlabel('gaslift')
-        pyplot.ylabel('oil')
+        pyplot.ylabel(goal)
         pyplot.title(title)
         if(brk):
             for pair in brk:
                 pyplot.plot(pair[0], pair[1], 'k*')
         pyplot.show()
 
-    def run_well(self, well):
+    def run_well(self, well, goal):
         df_w = self.df.loc[self.df['well'] == well]
 #        print(df_w.shape)
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        d_dict = cl.gen_targets(self.df, well, normalize=True, allow_nan = False, nan_ratio=0.3, intervals=100, factor=0)
+        d_dict = cl.gen_targets(self.df, well,goal=goal, normalize=True, allow_nan = False, nan_ratio=0.3, intervals=100, factor=0)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
@@ -61,8 +61,7 @@ class Mars:
 ##            plotter.mesh(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
 
-#        else:
-#        self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints(X, y_hat))
+#        self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints(X, y_hat), goal=goal)
         if('choke' in d_dict.keys()):
             inters = 10
 #            self.test3d(d_dict, inters)
@@ -130,9 +129,9 @@ def run_all():
     for well in wells:
         m.run_well(well)
 
-def run(well):
+def run(well, goal='oil'):
     m = Mars()
-    return m.run_well(well)
+    return m.run_well(well, goal)
     #        if('choke' in d_dict.keys()):
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
 #            self.test3d(d_dict, 15)

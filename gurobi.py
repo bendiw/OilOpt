@@ -21,12 +21,17 @@ wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2",
 
 oil_polytopes = {}
 gas_polytopes = {}
-well_multidim = {}
+well_oil_multidim = {}
+well_gas_multidim = {}
+
+multidims = [well_oil_multidim, well_gas_multidim]
+polytopes = [oil_polytopes, gas_polytopes]
 for well in wellnames:
     print(well)
-    is_multi, polys = MARS.run(well)
-    oil_polytopes[well] = polys
-    well_multidim[well] = is_multi
+    for i in range(len(phasenames)):
+        is_multi, polys = MARS.run(well, phasenames[i])
+        polytopes[i][well] = polys
+        multidims[i][well] = is_multi
 
 #nn = tens()
 
@@ -38,7 +43,7 @@ phases = 1
 platforms = []
 separators = []
 constrPlatforms = [[]] #set of sets
-polytopes = [oil_polytopes]
+
 
 
 #dictionaries to keep track of polytope variables
@@ -57,7 +62,7 @@ w_breakpoints = [w_oil_breakpoint_vars, w_gas_breakpoint_vars]
 #WEIGHTING VARIABLES
 for well in wellnames:
     
-    for phase in range(phases):
+    for phase in range(len(phasenames)):
         
         #add list of polytope indicator variables for the well
         w_polytopes[phase][well] = []
@@ -65,7 +70,7 @@ for well in wellnames:
         #get corresponding polytope dict
         ptopes = polytopes[phase]
 
-        if(well_multidim[well]):
+        if(multidims[phase][well]):
             #multidimensional case
             for p in range(len(ptopes[well])): #each polytope
                 
@@ -99,12 +104,8 @@ for well in wellnames:
 m.update() #test
 for c in m.getConstrs():    
     print("constr", c.ConstrName)
-#for well in wellnames:
-#    print(well, well_multidim[well])
-#    print(w_breakpoints[0][well])
-#aggregated variables for oil, gas production per well
-#m.addConstr(quicksum(<variables>)==<aggr var>, "<name>")
 
+#PWL approximation variables
 
 #routing variables
 
@@ -112,7 +113,6 @@ for c in m.getConstrs():
 
 
 #CONSTRAINT CREATION
-#SOS2 constraints, convexity
 
 #routing constraints
 
@@ -134,7 +134,6 @@ m.addConstr(b == quicksum([a*b for a,b in zip(var, gas)]))
 m.addConstr(b <=2.5, "c0")
 for v in var:
     m.addConstr(v<=1)
-m.addConstr(quicksum(var)==1, "convexity")
 
 # Add constraint: x + y >= 1
 m.optimize()
