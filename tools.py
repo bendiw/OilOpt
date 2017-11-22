@@ -22,6 +22,10 @@ def denormalize(data, mean, stdev):
     y = [(y*y_std[1]+mean[1]) for y in y]
     return X, y
 
+def simple_denorm(data, mean, stdev):
+    denorm = [x*stdev+mean for x in data]
+    return denorm
+
 def delaunay(x, y, z):
     
     data = []
