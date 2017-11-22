@@ -197,7 +197,7 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
             z.append(prediction[0])
         if (plot):
             plotter.plot3d(x1, x2, z, datafile)
-        return tools.delaunay(x1,x2,z)        
+        return True, tools.delaunay(x1,x2,z)        
         
     else:
         pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
@@ -223,7 +223,7 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
             plot_pred(total_x, pred, total_y)
             pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
             pyplot.show()
-        return breakpoints
+        return False, breakpoints
 
         ##weights, biases = sess.run(W), sess.run(b)
 

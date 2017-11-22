@@ -8,6 +8,7 @@ Created on Sun Nov 19 22:49:52 2017
 from gurobipy import *
 import MARS
 import numpy as np
+import tens
 
 #TODO: convert normalized values from MARS/NN to real oil/gas/gaslift/choke
 
@@ -26,7 +27,7 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
 p_sep_route = {"A":[1], "B":[0,1], "C":[0]}
 sep_p_route = [["B"], ["A", "B"]]
 
-sep_cap = [5, math.inf]
+sep_cap = [1, math.inf]
 tot_exp_cap = 10
 
 
@@ -41,18 +42,15 @@ for well in wellnames:
     print(well)
     for i in range(len(phasenames)):
         is_multi, polys = MARS.run(well, phasenames[i], plot=False)
+#        is_multi, polys = tens.run(well, goal=phasenames[i])
         polytopes[i][well] = polys
         multidims[i][well] = is_multi
 
-#nn = tens()
 
 
 
 
-wells = []
 #phases = 1
-platforms = []
-separators = []
 constrPlatforms = [[]] #set of sets
 
 
@@ -163,8 +161,8 @@ w_route_flow_vars = {}
 #routing variables
 for pform in platforms:
     if(pform=="C"): #local separator
-        routerate_C = m.addVar(vtype = GRB.CONTINUOUS, name=well+"_"+"flow_local_sep")
-        m.addConstr(routerate + quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items()]) - w_PWL[1][well] == 0, well+"_local_gasflow_tracking")
+        routerate_C = m.addVar(vtype = GRB.CONTINUOUS, name="C_"+"flow_local_sep")
+        m.addConstr(routerate_C + quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items()]) - w_PWL[1][well] == 0, well+"_local_gasflow_tracking")
     else:
         for well in p_dict[pform]:
             well_sep_rate = {}
@@ -183,17 +181,16 @@ for pform in platforms:
             m.addConstr(quicksum(rates)-w_PWL[1][well] == 0, well+"_gasflow_tracking")
             w_route_flow_vars[well] = well_sep_rate
 
-print(p_dict[sep_p_route[0][0]])
 #separator constraints
 for sep in range(len(sep_cap)):
     if(sep==0):
-        m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + routerate_C <= sep_cap[sep])
-        
+        m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + routerate_C <= sep_cap[sep], "sep_"+str(sep)+"_gas_constr")
+    else:
+        m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][1]]) <= sep_cap[sep], "sep_"+str(sep)+"_gas_constr")
 
-    
-    for pform in sep_p_route[sep]:
-        for well in p_dict[pform]:
-            pass
+        for pform in sep_p_route[sep]:
+            for well in p_dict[pform]:
+                pass
 #change tracking variables
 
 
