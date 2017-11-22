@@ -29,7 +29,7 @@ def delaunay(x, y, z):
         data.append([x[i], y[i], z[i]])
     data = np.array(data)
     triang = mtri.Triangulation(x, y)
-#    print(triang.triangles)
+#    print(data[triang.triangles])
 #    tri = Delaunay(data)
 #    return(data[tri.simplices])
     return data[triang.triangles]

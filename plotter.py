@@ -8,7 +8,7 @@ import matplotlib.tri as mtri
 
 
 
-def plot3d(x, y, z):
+def plot3d(x, y, z, well):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x = np.array(x)
@@ -18,6 +18,7 @@ def plot3d(x, y, z):
     for i in range(len(x)):
         data.append([x[i], y[i], z[i]])
     data = np.array(data)
+    plt.title(well)
     ax.set_xlabel('gas lift')
     ax.set_ylabel('choke')
     ax.set_zlabel('output')
