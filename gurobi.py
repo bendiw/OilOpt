@@ -9,7 +9,7 @@ from gurobipy import *
 import MARS
 import numpy as np
 import tens
-
+import math
 #TODO: convert normalized values from MARS/NN to real oil/gas/gaslift/choke
 
 
@@ -17,6 +17,7 @@ import tens
 m = Model("Ekofisk")
 
 phasenames = ["oil", "gas"]
+sepnames = ["LP", "HP"]
 OIL = 0
 GAS = 1
 wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", 
@@ -27,10 +28,10 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
 p_sep_route = {"A":[1], "B":[0,1], "C":[0]}
 sep_p_route = [["B"], ["A", "B"]]
 
-sep_cap = [1, math.inf]
-tot_exp_cap = 7
+sep_cap = [100000, math.inf]
+tot_exp_cap = 510000
 glift_groups = [["A", "B"]]
-glift_caps = [2]
+glift_caps = [500000]
 
 
 oil_polytopes = {}
@@ -43,7 +44,7 @@ polytopes = [oil_polytopes, gas_polytopes]
 for well in wellnames:
     print(well)
     for i in range(len(phasenames)):
-        is_multi, polys = MARS.run(well, phasenames[i], plot=False)
+        is_multi, polys = MARS.run(well, phasenames[i], normalize=False, plot=False)
 #        is_multi, polys = tens.run(well, goal=phasenames[i])
         polytopes[i][well] = polys
         multidims[i][well] = is_multi
@@ -68,7 +69,7 @@ w_gas_breakpoint_vars = {well : {} for well in wellnames}
 w_polytopes = [w_oil_polytope_vars, w_gas_polytope_vars]
 w_breakpoints = [w_oil_breakpoint_vars, w_gas_breakpoint_vars]
 
-
+#w_prod_var = m.addVars(wellnames, name="w_prod_var", vtype=GRB.BINARY)
 
 #WEIGHTING VARIABLES
 for well in wellnames:
@@ -113,7 +114,6 @@ for well in wellnames:
 #            print("\n\n")
             #SOS2 constraint on breakpoints
             m.addSOS(2, list(brkpoints.keys()))
-            m.addConstr(quicksum(list(brkpoints.keys()))==1, well+"_"+phasenames[phase]+"_sos2_convex")
             w_breakpoints[phase][well] = brkpoints
             
 
@@ -133,11 +133,7 @@ for well in wellnames:
 
 
         
-#single polytope selection constraints
-for well in wellnames:
-    for phase in range((len(phasenames))):
-        if(multidims[phase][well]):
-            m.addConstr(quicksum(w_polytopes[phase][well])<=1)
+
             
 #constraint to force PWL models to agree per well
 for well in wellnames:
@@ -158,50 +154,69 @@ for pform in platforms:
             m_dict[sep] = min((well_gas_max[well]), sep_cap[sep])
         big_M[well] = m_dict
 
-w_route_flow_vars = {}
 
+
+w_route_flow_vars = {}
+w_route_bin_vars = {}
 #routing variables
 for pform in platforms:
     if(pform=="C"): #local separator
+        for well in p_dict[pform]:
+            routevar = m.addVar(vtype = GRB.BINARY, name=well+"_"+"produce_bin")
+            w_route_bin_vars[well] = [routevar]
+
         routerate_C = m.addVar(vtype = GRB.CONTINUOUS, name="C_"+"flow_local_sep")
-        m.addConstr(routerate_C + quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items()]) - w_PWL[1][well] == 0, well+"_local_gasflow_tracking")
+        m.addConstr(routerate_C + quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict[pform]]) - quicksum(w_PWL[1][n] for n in p_dict[pform]) == 0, pform+"_local_gasflow_tracking")
     else:
         for well in p_dict[pform]:
             well_sep_rate = {}
+            well_sep_bin = []
             routes = []
             rates = []
             for sep in p_sep_route[pform]:
-                routevar = m.addVar(vtype = GRB.BINARY, name=well+"_"+"bin_route_sep_"+str(sep))
-                routerate = m.addVar(vtype = GRB.CONTINUOUS, name=well+"_"+"flow_sep_"+str(sep))
+                routevar = m.addVar(vtype = GRB.BINARY, name=well+"_bin_route_"+sepnames[sep]+"_sep")
+                routerate = m.addVar(vtype = GRB.CONTINUOUS, name=well+"_"+"flow_"+sepnames[sep]+"_sep")
                 well_sep_rate[sep] = routerate
+                well_sep_bin.append(routevar)
                 #big-M constraint on flow
-                m.addConstr(routerate - routevar*big_M[well][sep]<=0, well+"_"+"routing_decision")
+                m.addConstr(routerate - routevar*big_M[well][sep]<=0, well+"_"+"routing_bigM")
 
                 routes.append(routevar)
                 rates.append(routerate)
             m.addConstr(quicksum(routes)<=1, well+"_"+"routing_decision")
             m.addConstr(quicksum(rates)-w_PWL[1][well] == 0, well+"_gasflow_tracking")
             w_route_flow_vars[well] = well_sep_rate
+            w_route_bin_vars[well] = well_sep_bin
+            
+#single polytope selection constraints
+for pform in platforms:
+    for well in p_dict[pform]:
+        for phase in range((len(phasenames))):
+            if(multidims[phase][well]):
+                m.addConstr(quicksum(w_polytopes[phase][well])==quicksum(w_route_bin_vars[well]))
+            else:
+                m.addConstr(quicksum(list(w_breakpoints[phase][well].keys()))==quicksum(w_route_bin_vars[well]), well+"_"+phasenames[phase]+"_sos2_convex")
+
 
 #separator constraints
 for sep in range(len(sep_cap)):
     if(sep==0):
-        m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + routerate_C <= sep_cap[sep], "sep_"+str(sep)+"_gas_constr")
+        m.addConstr(quicksum(w_route_flow_vars[n][sep] for n in p_dict[sep_p_route[sep][0]]) + routerate_C <= sep_cap[sep], "LP_sep_gas_constr")
     else:
-        m.addConstr(quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][1]]) <= sep_cap[sep], "sep_"+str(sep)+"_gas_constr")
+        m.addConstr(quicksum(w_route_flow_vars[n][sep] for n in p_dict[sep_p_route[sep][0]]) + quicksum(w_route_flow_vars[n][sep] for n in p_dict[sep_p_route[sep][1]]) <= sep_cap[sep], "HP_sep_gas_constr")
 
 #gaslift constraints
 for i in range(len(glift_groups)):
-    m.addConstr((quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["A"]])
-    + quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["B"]]))<= glift_caps[i], "glift_a_b")
+    m.addConstr(quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict["A"]])
+    + quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][m].items()]) for m in p_dict["B"]])<= glift_caps[i], "glift_a_b")
      
     
 #total gas export constraint
 #flow from separators minus gas lift employed in fields A + B
-m.addConstr((quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][0]]) + 
+m.addConstr(quicksum(w_route_flow_vars[n][0] for n in p_dict[sep_p_route[0][0]]) + 
             routerate_C +
-            quicksum([quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_route[sep][j]]) for j in range(len(sep_p_route[sep]))])
-            - quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict[pform]]) for pform in glift_groups[i]]))
+            quicksum([quicksum(w_route_flow_vars[n][1] for n in p_dict[sep_p_route[1][j]]) for j in range(len(sep_p_route[1]))])
+            - quicksum([quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict[pformz]]) for pformz in glift_groups[0]])
             <= tot_exp_cap, "total_gas_export")
 
 
@@ -212,26 +227,34 @@ m.addConstr((quicksum(w_route_flow_vars[well][sep] for well in p_dict[sep_p_rout
 
 
 
-m.setObjective(quicksum([w_PWL[0][well] for well in wellnames]), GRB.MAXIMIZE)
+m.setObjective(quicksum([w_PWL[0][n] for n in wellnames]), GRB.MAXIMIZE)
 # Add constraint: x + 2 y + 3 z <= 4
 #m.addConstr(b == quicksum([a*b for a,b in zip(var, gas)]))
 #m.addConstr(b <=2.5, "c0")
 #for v in var:
 #    m.addConstr(v<=1)
-
+m.update()
 # Add constraint: x + y >= 1
 m.optimize()
-for v in m.getVars():
-    print(v.varName, v.x)
+#for v in m.getVars():
+#    print(v.varName, v.x)
 
 
-for c in m.getConstrs():    
-    print("constr", c.ConstrName, "slack ", c.slack)
-print('Obj:', m.objVal)
+#for c in m.getConstrs():    
+#    print("constr", c.ConstrName, "slack ", c.slack)
+print('\nObj value:', m.objVal, "\n")
 for p in platforms:
-    print(p,"gaslift", sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict[p]]))
-    
+    print(p,"gas lift", sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][q].items()]) for q in p_dict[p]]))
     for well in p_dict[p]:
-        print(well, "gas",sum([a.x*b[2] for a,b in w_breakpoints[GAS][well].items()]) if multidims[GAS][well] else sum([a.x*b[1] for a,b in w_breakpoints[GAS][well].items()]))
+        print(well,"\tHP_prod?\t {0:2.1f} \tgas\t {1:8.2f} \toil:\t {2:8.2f} \tlift:\t {3:8.2f}".format(m.getVarByName(well+"_"+"bin_route_HP_sep").x if p!="C" else m.getVarByName(well+"_"+"produce_bin").x, 
+     sum([a.x*b[2] for a,b in w_breakpoints[GAS][well].items()]) if multidims[GAS][well] else sum([a.x*b[1] for a,b in w_breakpoints[GAS][well].items()]),
+     sum([a.x*b[2] for a,b in w_breakpoints[OIL][well].items()]) if multidims[OIL][well] else sum([a.x*b[1] for a,b in w_breakpoints[OIL][well].items()]),
+     sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items()])) )
     print("\n")
-print("gaslift A+B:", (sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["A"]]), sum([a.x*b[0] for a,b in w_breakpoints[OIL][well].items() for well in p_dict["B"]])))
+    
+    
+
+print("slack LP separator:", m.getConstrByName("LP_sep_gas_constr").slack)
+print("slack HP separator:", m.getConstrByName("HP_sep_gas_constr").slack)
+print("slack tot gas exp:", m.getConstrByName("total_gas_export").slack)
+print("gaslift A+B:", sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict["A"]])+ sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict["B"]]))
