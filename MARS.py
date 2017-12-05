@@ -16,7 +16,7 @@ reload(tools)
 
 class Mars:
 
-    def __init__(self, miss = True, prune=True, max_terms=10, penalty=0.05, minspan=2):
+    def __init__(self, miss = True, prune=True, max_terms=10, penalty=0.005, minspan=2):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
