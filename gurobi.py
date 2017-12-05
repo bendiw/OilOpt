@@ -28,10 +28,13 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
 p_sep_route = {"A":[1], "B":[0,1], "C":[0]}
 sep_p_route = [["B"], ["A", "B"]]
 
+
+#Case relevant numerics
 sep_cap = [100000, math.inf]
 tot_exp_cap = 510000
 glift_groups = [["A", "B"]]
 glift_caps = [500000]
+max_changes = 100
 
 
 oil_polytopes = {}
@@ -45,10 +48,9 @@ for well in wellnames:
     print(well)
     for i in range(len(phasenames)):
         is_multi, polys = MARS.run(well, phasenames[i], normalize=False, plot=False)
-#        is_multi, polys = tens.run(well, goal=phasenames[i])
+       # is_multi, polys = tens.run(well, goal=phasenames[i])
         polytopes[i][well] = polys
         multidims[i][well] = is_multi
-
 
 
 
@@ -64,6 +66,21 @@ w_oil_polytope_vars = {}
 w_oil_breakpoint_vars = {well : {} for well in wellnames}
 w_gas_breakpoint_vars = {well : {} for well in wellnames}
 
+#dicts to hold change tracking variables:
+w_change_vars = {well:[] for well in wellnames}
+
+#dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
+w_initial_vars = {well : [0,0] for well in wellnames}
+
+#dict with binary var describing whether or not wells are producing in initial setting
+w_initial_prod = {well : 0 for well in wellnames}
+
+#dict with maximum gaslift in each well
+w_max_glift = {"A2":124200.2899, "A3":99956.56739, "A5":125615.4024, "A6":150090.517, "A7":95499.28792, "A8":94387.68607, "B1":118244.94, "B2":112660.5625, "B3":138606.6016,
+               "B4":197509.0709, "B5":210086.0959, "B6":117491.1591, "B7":125035.4286, "C1":106860.5264, "C2":132718.54, "C3" : 98934.12, "C4":124718.303}
+
+#dict with allowed relative change, {well: [glift_delta, choke_delta]}
+w_relative_change = {well : [1.0, 1.0] for well in wellnames}
 
 #keep dicts in a list
 w_polytopes = [w_oil_polytope_vars, w_gas_polytope_vars]
@@ -221,27 +238,27 @@ m.addConstr(quicksum(w_route_flow_vars[n][0] for n in p_dict[sep_p_route[0][0]])
 
 
 #change tracking variables
-
-
+for well in wellnames:
+    changevar = m.addVar(vtype = GRB.BINARY, name=well+"_glift_change_binary")
+    w_change_vars[well].append(changevar)
+    m.addConstr(w_initial_vars[well][0] - quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items()]) <=  changevar*w_initial_vars[well][0]*w_relative_change[well][0])
+    m.addConstr(quicksum([a*b[0] for a,b in w_breakpoints[OIL][well].items()]) - w_initial_vars[well][0] <=  changevar*w_initial_vars[well][0]*w_relative_change[well][0]+(1-w_initial_prod[well])*w_max_glift[well]*changevar)
+    
+    if(multidims[OIL][well]):
+        changevar = m.addVar(vtype = GRB.BINARY, name=well+"_choke_change_binary")
+        w_change_vars[well].append(changevar)
+        m.addConstr(w_initial_vars[well][1] - quicksum([a*b[1] for a,b in w_breakpoints[OIL][well].items()]) <=  changevar*w_initial_vars[well][1]*w_relative_change[well][1])
+        m.addConstr(quicksum([a*b[1] for a,b in w_breakpoints[OIL][well].items()]) - w_initial_vars[well][1] <=  changevar*w_initial_vars[well][1]*w_relative_change[well][1]+ (1-w_initial_prod[well])*changevar)
+    
 #maximum changes constraint
+m.addConstr(quicksum([quicksum(b) for a,b in w_change_vars.items()]) <= max_changes)
 
-
-
+#objective vaue
 m.setObjective(quicksum([w_PWL[0][n] for n in wellnames]), GRB.MAXIMIZE)
-# Add constraint: x + 2 y + 3 z <= 4
-#m.addConstr(b == quicksum([a*b for a,b in zip(var, gas)]))
-#m.addConstr(b <=2.5, "c0")
-#for v in var:
-#    m.addConstr(v<=1)
 m.update()
-# Add constraint: x + y >= 1
 m.optimize()
-#for v in m.getVars():
-#    print(v.varName, v.x)
 
 
-#for c in m.getConstrs():    
-#    print("constr", c.ConstrName, "slack ", c.slack)
 print('\nObj value:', m.objVal, "\n")
 for p in platforms:
     print(p,"gas lift", sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][q].items()]) for q in p_dict[p]]))

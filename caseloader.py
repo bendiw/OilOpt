@@ -34,10 +34,19 @@ def gen_test_case(cases=30):
 ##############
 def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5, hp=True):
     df = df.loc[df['well']==well]
-    if(hp):
+    if(hp==0):
+        if(df['prs_dns'].isnull().sum()/df.shape[0] <= 0.5):
+            df1 = df.loc[df['prs_dns']>=18.5]
+            df2 = df.loc[df['prs_dns']<18.5 ]
+            if(df1.shape[0] >= df2.shape[0]):
+                df = df1
+            else:
+                df = df2
+    elif(hp==1):
         df = df.loc[df['prs_dns']>=18.5]
     else:
         df = df.loc[df['prs_dns']<18.5 ]
+
     print(df.shape)
     ret = {}
     add_Z = False
