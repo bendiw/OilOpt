@@ -233,13 +233,7 @@ def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_
         x_vals = get_x_vals(dict_data, grid_size)
         y_vals = [[0] for i in range(len(x_vals))]
         pred = sess.run(out, feed_dict={x: x_vals, y_: y_vals, keep_prob: 1.0})
-        print (x_vals)
-        print(y_vals)
-        print(pred)
         x_vals, y_vals, pred = denormalize(x_vals, y_vals, pred, means, stds)
-        print (x_vals)
-        print(y_vals)
-        print(pred)
         x1 = [x[0] for x in x_vals]
         x2 = [x[1] for x in x_vals]
         z = []
