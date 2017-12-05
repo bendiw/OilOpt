@@ -16,7 +16,7 @@ reload(tools)
 
 class Mars:
 
-    def __init__(self, miss = True, prune=True, max_terms=10, penalty=0.0005, minspan=1):
+    def __init__(self, miss = True, prune=True, max_terms=10, penalty=0.05, minspan=2):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
@@ -38,22 +38,22 @@ class Mars:
                 pyplot.plot(pair[0], pair[1], 'k*')
         pyplot.show()
 
-    def run_well(self, well, goal, plot=True):
+    def run_well(self, well, goal, normalize, hp, plot=True):
         df_w = self.df.loc[self.df['well'] == well]
 #        print(df_w.shape)
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        d_dict = cl.gen_targets(self.df, well,goal=goal, normalize=True, allow_nan = False, nan_ratio=0.3, intervals=100, factor=0)
+        d_dict, means, std = cl.gen_targets(self.df, well,goal=goal, normalize=normalize, allow_nan = False, nan_ratio=0.01, intervals=100, factor=0, hp=hp)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
             data = cl.conv_to_batch([d_dict['gaslift'], d_dict['output']])
         data.sort()
-####        data_sorted = cl.conv_to_batch([X,y]).sort()
+####        data_sorted = cl.conv_to_batch([X,y]).sort()s
         X = [d[0] for d in data]
         y = [d[1] for d in data]
         self.model.fit(X, y)
 #        print(self.model.summary())
-#        print("R2 score: ", self.model.score(X, y), "\n")
+        print("R2 score: ", self.model.score(X, y), "\n")
         y_hat = self.model.predict(X)
         X = [x[0] for x in X]
         
@@ -61,10 +61,10 @@ class Mars:
 ##            plotter.mesh(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
         if('choke' in d_dict.keys()):
+                
+            inters = 10
             if(plot):
                 self.test3d(d_dict, inters, well)
-                
-            inters = 3
             t_z = []
             t_x = []
             t_y = []
@@ -131,9 +131,9 @@ def run_all():
     for well in wells:
         m.run_well(well)
 
-def run(well, goal='oil', plot=True):
+def run(well, goal='oil', plot=True, normalize=True, hp=True):
     m = Mars()
-    return m.run_well(well, goal, plot)
+    return m.run_well(well, goal, normalize, hp, plot)
     #        if('choke' in d_dict.keys()):
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
 #            self.test3d(d_dict, 15)
