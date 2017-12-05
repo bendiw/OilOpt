@@ -30,10 +30,15 @@ def gen_test_case(cases=30):
 ##              Generates targets from a dataframe                      ##
 ## If intervals input is given, the dataset will be processed to reduce ##
 ## amount of data points in close proximity to each other. The way this ##
-## is done is specified by the mode parameter.                          ##
+## is done is specified by the 'mode' parameter.                        ##
 ##############
-def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5):
+def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5, hp=True):
     df = df.loc[df['well']==well]
+    if(hp):
+        df = df.loc[df['prs_dns']>=18.5]
+    else:
+        df = df.loc[df['prs_dns']<18.5 ]
+    print(df.shape)
     ret = {}
     add_Z = False
     if not (df['choke'].isnull().sum()/df.shape[0] > nan_ratio):
@@ -60,7 +65,7 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 ##            c_vals = np.arange(min_c, max_c, c_step)
         g_diff = max_g-min_g
         step = g_diff/intervals
-        print(step)
+#        print(step)
         vals = np.arange(min_g, max_g, step)
         for i in range(len(vals)):
             val = df.loc[df['gaslift_rate']>=vals[i]]
@@ -103,6 +108,9 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
             stds.append(Z_std)
         means.append(y_mean)
         stds.append(y_std)
+    else:
+        means=None
+        stds = None
     ret['gaslift'] = np.array(X)
     ret['output'] = np.array(y)
     if(add_Z):

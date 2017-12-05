@@ -148,10 +148,10 @@ def denormalize(x, y, pred, means, stds):
 
 def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
         epochs = 1000, beta = 0.01, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
-        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3):
+        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=True):
     df = cl.load("welltests.csv")
     dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
-                               factor = factor, nan_ratio = nan_ratio) #,intervals=100
+                               factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)
     is_3d = False
     if (len(data[0][0]) >= 2):
