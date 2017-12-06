@@ -42,7 +42,7 @@ class Mars:
         df_w = self.df.loc[self.df['well'] == well]
 #        print(df_w.shape)
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        d_dict, means, std = cl.gen_targets(self.df, well,goal=goal, normalize=normalize, allow_nan = False, nan_ratio=0.01, intervals=100, factor=0, hp=hp)
+        d_dict, means, std = cl.gen_targets(self.df, well,goal=goal, normalize=normalize, allow_nan = False, nan_ratio=0.3, intervals=100, factor=0, hp=hp)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
@@ -62,7 +62,7 @@ class Mars:
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
         if('choke' in d_dict.keys()):
                 
-            inters = 10
+            inters = 30
             if(plot):
                 self.test3d(d_dict, inters, well)
             t_z = []
@@ -131,7 +131,7 @@ def run_all():
     for well in wells:
         m.run_well(well)
 
-def run(well, goal='oil', plot=True, normalize=True, hp=True):
+def run(well, goal='oil', plot=True, normalize=True, hp=0):
     m = Mars()
     return m.run_well(well, goal, normalize, hp, plot)
     #        if('choke' in d_dict.keys()):
