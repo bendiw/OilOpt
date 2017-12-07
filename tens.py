@@ -31,6 +31,7 @@ def next_batch(data, size):
 
 def total_batch(data):
     batch_x, batch_y = [], []
+    data.sort()
     for i in range(len(data)):
         batch_x.append(data[i][0])
         batch_y.append(data[i][1])
@@ -38,8 +39,9 @@ def total_batch(data):
 
 def plot_pred(x, pred, y):
     pyplot.figure()
-    bp = pyplot.plot(x,pred,'r')
-    a = pyplot.plot(x,y,'b.')
+    bp = pyplot.plot(x,pred,'#141494')
+    orange = '#009292'
+    a = pyplot.plot(x,y,color=orange,linestyle='None', marker = '.',markersize=8)
     return bp
 
 def generate_sets(data, train_frac, val_frac):
@@ -145,6 +147,22 @@ def denormalize(x, y, pred, means, stds):
     else:
         new_x = [[x] for x in x1]
     return new_x, new_y, new_pred
+
+def run2(datafile):
+    is_3d, breakpoints, total_x, pred, total_y = run(datafile, beta = 0)
+    plot_pred(total_x, pred, total_y)
+    pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
+    pyplot.ylabel('oil')
+    pyplot.xlabel('gaslift')
+    pyplot.title(datafile)
+    colors = ['b', 'g', 'c', 'm', 'y', 'k', 'w']
+    c = 0
+    for i in range(2,10,2):
+        _, breakpoints, _, pred, _ = run(datafile, beta = float(i)/100.0)
+        bp = pyplot.plot(total_x, pred, colors[c])
+        pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
+        c+=1
+    pyplot.show()
 
 def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
         epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
@@ -265,13 +283,16 @@ def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_v
         breakpoints_x.append(xvalues[-1])
         if (plot):
             plot_pred(total_x, pred, total_y)
+            pyplot.ylabel(goal)
+            pyplot.xlabel('gas lift')
+            pyplot.title(datafile)
             pyplot.plot(breakpoints_x, breakpoints_y, 'k*')
             pyplot.show()
 
         ##weights, biases = sess.run(W), sess.run(b)
         
     sess.close()
-    return is_3d, breakpoints
+    return is_3d, breakpoints#, total_x, pred, total_y
     
     
 
