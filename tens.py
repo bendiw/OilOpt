@@ -147,7 +147,7 @@ def denormalize(x, y, pred, means, stds):
     return new_x, new_y, new_pred
 
 def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
-        epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
+        epochs = 100, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=0):
     df = cl.load("welltests_new.csv")
     dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,

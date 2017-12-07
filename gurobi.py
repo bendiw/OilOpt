@@ -38,11 +38,11 @@ sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
 
 
 #Case relevant numerics
-sep_cap = {"LP": 600000, "HP":math.inf}
-tot_exp_cap = 900000
+sep_cap = {"LP": 5600000, "HP":math.inf}
+tot_exp_cap = 5900000
 glift_groups = [["A", "B"]]
-glift_caps = [1000000]
-max_changes = 20
+glift_caps = [2000000]
+max_changes = 21
 
 
 oil_polytopes = {}
@@ -61,8 +61,8 @@ for platform in platforms:
             B_multis = {}
             for separator in p_sep_names[platform]:
 #                    print(separator_dict[separator])
-#                is_multi, polys = MARS.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
-                is_multi, polys = tens.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
+                is_multi, polys = MARS.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
+#                is_multi, polys = tens.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
 
                 B_polys[separator] = polys
                 B_multis[separator] = is_multi
