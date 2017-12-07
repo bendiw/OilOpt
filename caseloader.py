@@ -80,7 +80,6 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 ##            c_vals = np.arange(min_c, max_c, c_step)
         g_diff = max_g-min_g
         step = g_diff/intervals
-#        print(step)
         vals = np.arange(min_g, max_g, step)
         for i in range(len(vals)):
             val = df.loc[df['gaslift_rate']>=vals[i]]
