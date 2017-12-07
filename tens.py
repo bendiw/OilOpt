@@ -163,8 +163,50 @@ def run2(datafile):
         pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
         c+=1
     pyplot.show()
+    
+def hey(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+        epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
+        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=1, prev = None):
+    if (prev == None):
+        prev = [0]*2
+        x = tf.placeholder(tf.float64, [None,1])
+        y_ = tf.placeholder(tf.float64, [None,1])
+        keep_prob = tf.placeholder(tf.float64)
+        L1, W1, b1 = add_layer(x, 1, 5, activation_function = None)
+        L2, W2, b2 = add_layer(x, 1, 5, activation_function = None) 
+        regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
+        dropout1 = tf.nn.dropout(L1, keep_prob)
+        dropout2 = tf.nn.dropout(L2, keep_prob)
+        out1 = max_out(dropout1, 1)
+        out2 = max_out(dropout2, 1)
+        out = tf.subtract(out1,out2)
+        loss = tf.reduce_mean(tf.square(y_ - out) + beta * regularizers)
+        train_step = tf.train.AdamOptimizer(0.03).minimize(loss)
+        sess = tf.InteractiveSession()
+        prev[0] = [sess, train_step, x, y_, keep_prob, out]
+        print("Initializing Tensorflow modules. This may take a while...")
+        
+        x2 = tf.placeholder(tf.float64, [None,2])
+        y_2 = tf.placeholder(tf.float64, [None,1])
+        keep_prob2 = tf.placeholder(tf.float64)
+        L12, W12, b12 = add_layer(x2, 2, 5, activation_function = None)
+        L22, W22, b22 = add_layer(x2, 2, 5, activation_function = None) 
+        regularizers2 = tf.nn.l2_loss(W12) + tf.nn.l2_loss(W22)
+        dropout12 = tf.nn.dropout(L12, keep_prob2)
+        dropout22 = tf.nn.dropout(L22, keep_prob2)
+        out12 = max_out(dropout12, 1)
+        out22 = max_out(dropout22, 1)
+        out2 = tf.subtract(out12,out22)
+        loss2 = tf.reduce_mean(tf.square(y_2 - out2) + beta * regularizers2)
+        train_step2 = tf.train.AdamOptimizer(0.03).minimize(loss2)
+        prev[1] = [sess, train_step2, x2, y_2, keep_prob2, out2]
+    tf.global_variables_initializer().run()
+    return run(datafile, prev, goal=goal, 
+               hp=hp, grid_size=grid_size, plot=plot, epochs=epochs, beta=beta, train_frac=train_frac,
+               val_frac=val_frac, n_hidden=n_hidden, k_prob=k_prob, normalize=normalize, intervals=intervals,
+               nan_ratio=nan_ratio, factor=factor, cross_validation=cross_validation)
 
-def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+def run(datafile, prev, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
         epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=0):
     df = cl.load("welltests_new.csv")
@@ -174,35 +216,39 @@ def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_v
     is_3d = False
     if (len(data[0][0]) >= 2):
         is_3d = True
+        sess, train_step, x, y_, keep_prob, out = prev[1][0], prev[1][1], prev[1][2], prev[1][3], prev[1][4], prev[1][5]
         print("Well",datafile, goal, "- Choke and gaslift")
     else:
+        sess, train_step, x, y_, keep_prob, out = prev[0][0], prev[0][1], prev[0][2], prev[0][3], prev[0][4], prev[0][5]
         print("Well",datafile, goal, "- Gaslift only")
     all_data_points = data.copy()
-
-    num_inputs = len(data[0][0])
-    x = tf.placeholder(tf.float64, [None,num_inputs])
-    y_ = tf.placeholder(tf.float64, [None,1])
-    keep_prob = tf.placeholder(tf.float64)
-    L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
-    L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None)        
-
-    regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
-
-    dropout1 = tf.nn.dropout(L1, keep_prob)
-    dropout2 = tf.nn.dropout(L2, keep_prob)
-    out1 = max_out(dropout1, 1)
-    out2 = max_out(dropout2, 1)
-    out = tf.subtract(out1,out2)
-
-    loss = tf.reduce_mean(tf.square(y_ - out))
-    loss = tf.reduce_mean(loss + beta * regularizers)
-    ##error = tf.losses.sigmoid_cross_entropy()
+   
 # =============================================================================
-#     print("Start training")
+#     num_inputs = len(data[0][0])
+#     x = tf.placeholder(tf.float64, [None,num_inputs])
+#     y_ = tf.placeholder(tf.float64, [None,1])
+#     keep_prob = tf.placeholder(tf.float64)
+#     L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
+#     L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None) 
+# 
+#     regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
+# 
+#     dropout1 = tf.nn.dropout(L1, keep_prob)
+#     dropout2 = tf.nn.dropout(L2, keep_prob)
+#     out1 = max_out(dropout1, 1)
+#     out2 = max_out(dropout2, 1)
+#     out = tf.subtract(out1,out2)
+# 
+#     #loss = tf.reduce_mean(tf.square(y_ - out))
+#     loss = tf.reduce_mean(tf.square(y_ - out) + beta * regularizers)
+#     ##error = tf.losses.sigmoid_cross_entropy()
+# # =============================================================================
+# #     print("Start training")
+# # =============================================================================
+#     train_step = tf.train.AdamOptimizer(0.03).minimize(loss)
+#     sess = tf.InteractiveSession()
+#     tf.global_variables_initializer().run()
 # =============================================================================
-    train_step = tf.train.AdamOptimizer(0.03).minimize(loss)
-    sess = tf.InteractiveSession()
-    tf.global_variables_initializer().run()
     if (cross_validation == None):
         train_set, validation_set, test_set = generate_sets(data, train_frac, val_frac)
         for i in range(epochs + 1):
@@ -290,9 +336,12 @@ def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_v
             pyplot.show()
 
         ##weights, biases = sess.run(W), sess.run(b)
-        
-    sess.close()
-    return is_3d, breakpoints#, total_x, pred, total_y
+    if (is_3d):
+        prev[1] = [sess, train_step, x, y_, keep_prob, out]
+    else:
+        prev[0] = [sess, train_step, x, y_, keep_prob, out]
+
+    return is_3d, breakpoints, prev#, total_x, pred, total_y
     
     
 
