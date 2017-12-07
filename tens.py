@@ -148,6 +148,7 @@ def denormalize(x, y, pred, means, stds):
         new_x = [[x] for x in x1]
     return new_x, new_y, new_pred
 
+<<<<<<< HEAD
 def run2(datafile):
     is_3d, breakpoints, total_x, pred, total_y = run(datafile, beta = 0)
     plot_pred(total_x, pred, total_y)
@@ -166,8 +167,12 @@ def run2(datafile):
 
 def run(datafile, goal='oil', grid_size = 15, plot = False, factor = 1.5, cross_validation = None,
         epochs = 2000, beta = 0.05, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
+=======
+def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+        epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
+>>>>>>> refs/remotes/origin/master
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=0):
-    df = cl.load("welltests.csv")
+    df = cl.load("welltests_new.csv")
     dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
     data = convert_from_dict_to_tflists(dict_data)

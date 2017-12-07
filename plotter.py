@@ -26,7 +26,7 @@ def plot3d(x, y, z, well):
 #    print(data[triang.triangles])
     #ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True)
 #    delaunay(x, y, z)
-    ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True, cmap=plt.cm.CMRmap)
+    ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True, cmap=plt.cm.PuBu)
     plt.show()
 
 #plot3d(0,0,0)
