@@ -52,6 +52,7 @@ well_gas_multidim = {}
 
 multidims = [well_oil_multidim, well_gas_multidim]
 polytopes = [oil_polytopes, gas_polytopes]
+tens_prev = None
 for platform in platforms:
     for well in p_dict[platform]:
 #        if well in ["A8", "C1"]: #TODO: swap these with correct wells
@@ -62,7 +63,7 @@ for platform in platforms:
             for separator in p_sep_names[platform]:
 #                    print(separator_dict[separator])
 #                is_multi, polys = MARS.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
-                is_multi, polys = tens.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
+                is_multi, polys, tens_prev = tens.hey(well, prev=tens_prev, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
 
                 B_polys[separator] = polys
                 B_multis[separator] = is_multi
