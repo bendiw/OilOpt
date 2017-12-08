@@ -50,9 +50,7 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
         df = df.loc[df['prs_dns']>=18.5]
 #        print("zzz")
     else:
-        print("adsads")
         df = df.loc[df['prs_dns']<18.5 ]
-    print(df.shape)
 
     ret = {}
     add_Z = False
@@ -78,15 +76,18 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 ##            c_diff = max_c-min_c
 ##            c_step = c_diff/intervals
 ##            c_vals = np.arange(min_c, max_c, c_step)
+#        print(max_g, min_g)
         g_diff = max_g-min_g
         step = g_diff/intervals
-        vals = np.arange(min_g, max_g, step)
+        vals = np.arange(min_g, max_g+step, step)
+#        print(intervals)
         for i in range(len(vals)):
             val = df.loc[df['gaslift_rate']>=vals[i]]
             val = val.loc[val['gaslift_rate']<=vals[i]+step]
             maxtime = val['time_ms_begin'].max()
             mintime = val['time_ms_begin'].min()
             div = maxtime-mintime
+#            print(val["gaslift_rate"])
             if(val.shape[0] > 1):
                 factors = val['time_ms_begin'].apply(lambda x: math.exp(-factor*((maxtime-x)/div)))
                 oil = val[goal].multiply(factors).sum() / factors.sum()
@@ -96,6 +97,7 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
             elif(val.shape[0]==1):
                 glift = val['gaslift_rate'].values[0]
                 oil = val[goal].values[0]
+#                print("#####glift: ",glift)
 ##                if(add_Z):
 ##                    choke = val['choke'].values[0]
             if(not val.empty):

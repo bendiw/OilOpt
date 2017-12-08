@@ -16,7 +16,7 @@ reload(tools)
 
 class Mars:
 
-    def __init__(self, miss = True, prune=True, max_terms=15, penalty=0.03, minspan=2):
+    def __init__(self, miss = True, prune=True, max_terms=15, penalty=0.0003, minspan=2):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
@@ -46,7 +46,6 @@ class Mars:
 #        df_w = self.df.loc[self.df['well'] == well]
 #        print(df_w.shape)
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        print(hp)
         d_dict, means, std = cl.gen_targets(self.df, well,goal=goal, normalize=normalize, allow_nan = allow_nan, nan_ratio=nan_ratio, intervals=intervals, factor=factor, hp=hp)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])

@@ -148,6 +148,8 @@ def denormalize(x, y, pred, means, stds):
         new_x = [[x] for x in x1]
     return new_x, new_y, new_pred
 
+#def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+#       epochs = 100, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
 def run2(datafile):
     is_3d, breakpoints, total_x, pred, total_y = run(datafile, beta = 0)
     plot_pred(total_x, pred, total_y)
@@ -206,7 +208,7 @@ def hey(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_v
                val_frac=val_frac, n_hidden=n_hidden, k_prob=k_prob, normalize=normalize, intervals=intervals,
                nan_ratio=nan_ratio, factor=factor, cross_validation=cross_validation)
 
-def run(datafile, prev, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+def run(datafile, prev=None, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
         epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
         k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=0):
     df = cl.load("welltests_new.csv")
@@ -230,21 +232,21 @@ def run(datafile, prev, goal='oil', grid_size = 8, plot = False, factor = 1.5, c
 #     keep_prob = tf.placeholder(tf.float64)
 #     L1, W1, b1 = add_layer(x, num_inputs, n_hidden, activation_function = None)
 #     L2, W2, b2 = add_layer(x, num_inputs, n_hidden, activation_function = None) 
-# 
+#     
 #     regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
-# 
+#     
 #     dropout1 = tf.nn.dropout(L1, keep_prob)
 #     dropout2 = tf.nn.dropout(L2, keep_prob)
 #     out1 = max_out(dropout1, 1)
 #     out2 = max_out(dropout2, 1)
 #     out = tf.subtract(out1,out2)
-# 
+#     
 #     #loss = tf.reduce_mean(tf.square(y_ - out))
 #     loss = tf.reduce_mean(tf.square(y_ - out) + beta * regularizers)
 #     ##error = tf.losses.sigmoid_cross_entropy()
-# # =============================================================================
-# #     print("Start training")
-# # =============================================================================
+#     # =============================================================================
+#     #     print("Start training")
+#     # =============================================================================
 #     train_step = tf.train.AdamOptimizer(0.03).minimize(loss)
 #     sess = tf.InteractiveSession()
 #     tf.global_variables_initializer().run()
