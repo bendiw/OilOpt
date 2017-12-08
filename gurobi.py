@@ -38,11 +38,11 @@ sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
 
 
 #Case relevant numerics
-sep_cap = {"LP": 5600000, "HP":math.inf}
-tot_exp_cap = 5900000
+sep_cap = {"LP": 8000000, "HP":math.inf}
+tot_exp_cap = 50000000
 glift_groups = [["A", "B"]]
-glift_caps = [2000000]
-max_changes = 21
+glift_caps = [10000000]
+max_changes = 100
 
 
 oil_polytopes = {}
@@ -62,13 +62,8 @@ for platform in platforms:
             B_multis = {}
             for separator in p_sep_names[platform]:
 #                    print(separator_dict[separator])
-<<<<<<< HEAD
-                is_multi, polys = MARS.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
-#                is_multi, polys = tens.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
-=======
 #                is_multi, polys = MARS.run(well, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
                 is_multi, polys, tens_prev = tens.hey(well, prev=tens_prev, goal=phasenames[i], normalize=False, plot=False, hp=separator_dict[separator])
->>>>>>> master
 
                 B_polys[separator] = polys
                 B_multis[separator] = is_multi
@@ -80,6 +75,9 @@ for platform in platforms:
 #               # is_multi, polys = tens.run(well, goal=phasenames[i])
 #                polytopes[i][well] = polys
 #                multidims[i][well] = is_multi
+tens_prev[0][0].close()
+tens_prev[1][0].close()
+
 
 
 
@@ -100,9 +98,11 @@ w_change_vars = {well:[] for well in wellnames}
 
 #dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
 w_initial_vars = {well : [0,0] for well in wellnames}
+#w_initial_vars["A8"] = [180000, 0]
 
 #dict with binary var describing whether or not wells are producing in initial setting
 w_initial_prod = {well : 0 for well in wellnames}
+#w_initial_prod["A8"] = 1
 
 #dict with maximum gaslift in each well
 w_max_glift = {"A2":124200.2899, "A3":99956.56739, "A5":125615.4024, "A6":150090.517, "A7":95499.28792, "A8":94387.68607, "B1":118244.94, "B2":112660.5625, "B3":138606.6016,
@@ -158,7 +158,7 @@ for platform in platforms:
                 else:
                     #single dimension case
                     brkpoints = {}
-                    for p in range(len(ptopes[well])): #each breakpoint
+                    for p in range(len(ptopes[well][separator])): #each breakpoint
                         w = m.addVar(vtype = GRB.CONTINUOUS, name=well+"_"+phasenames[phase]+"_"+str(p))
                         m.update()
                         brkpoints[w] = ptopes[well][separator][p]
@@ -300,7 +300,7 @@ m.addConstr(quicksum([quicksum(b) for a,b in w_change_vars.items()]) <= max_chan
 m.setObjective(quicksum([quicksum([w_PWL[0][n][separator] for separator in well_to_sep[n]]) for n in wellnames]), GRB.MAXIMIZE)
 m.update()
 #m.setParam(GRB.Param.Heuristics, 0)
-m.setParam(GRB.Param.Presolve, 0)
+#m.setParam(GRB.Param.Presolve, 0)
 m.optimize()
 
 vals = ["oil", "gas", "lift", "choke", "route"]
@@ -364,5 +364,17 @@ print("slack:", m.getConstrByName("total_gas_export").slack, "\n")
 print("Gas lift A & B")
 print("value:", sum(plat_res[p]["lift"] for p in ["A", "B"]))
 print("slack:", m.getConstrByName("glift_a_b").slack)
+
+print("\n OIL")
+print("polys:", polytopes[OIL]["A8"])
+for a,b in w_breakpoints[OIL]["A8"]["HP"].items():
+    print(a.x, b)
+    
+print("\n GAS")
+print("polys:", polytopes[GAS]["A8"])
+for a,b in w_breakpoints[GAS]["A8"]["HP"].items():
+    print(a.x, b)
+    
+
 
 #print("gaslift A+B:", sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict["A"]])+ sum([sum([a.x*b[0] for a,b in w_breakpoints[OIL][n].items()]) for n in p_dict["B"]]))
