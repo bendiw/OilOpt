@@ -38,11 +38,11 @@ sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
 
 
 #Case relevant numerics
-sep_cap = {"LP": 8000000, "HP":math.inf}
-tot_exp_cap = 50000000
+glift_caps = [260000]
+tot_exp_cap = 500000
+sep_cap = {"LP": 200000, "HP":math.inf}
 glift_groups = [["A", "B"]]
-glift_caps = [10000000]
-max_changes = 100
+max_changes = 5
 
 
 oil_polytopes = {}
@@ -167,9 +167,9 @@ for platform in platforms:
                     m.addSOS(2, list(brkpoints.keys()))
                     w_breakpoints[phase][well][separator] = brkpoints
             
-print(w_polytope_vars[OIL]["A2"])
-print(multidims[OIL]["A2"])
-print(multidims[GAS]["A2"])
+#print(w_polytope_vars[OIL]["A2"])
+#print(multidims[OIL]["A2"])
+#print(multidims[GAS]["A2"])
 
 
 #PWL approximation variables/constraints
@@ -299,8 +299,8 @@ m.addConstr(quicksum([quicksum(b) for a,b in w_change_vars.items()]) <= max_chan
 #objective vaue
 m.setObjective(quicksum([quicksum([w_PWL[0][n][separator] for separator in well_to_sep[n]]) for n in wellnames]), GRB.MAXIMIZE)
 m.update()
-#m.setParam(GRB.Param.Heuristics, 0)
-#m.setParam(GRB.Param.Presolve, 0)
+m.setParam(GRB.Param.Heuristics, 0)
+m.setParam(GRB.Param.Presolve, 0)
 m.optimize()
 
 vals = ["oil", "gas", "lift", "choke", "route"]
@@ -313,17 +313,17 @@ for p in platforms:
     for well in p_dict[p]:
         tmp = {v: 0 for v in vals}
         tmp["route"] = "N/A"
+        w_change = m.getVarByName(well+"_glift_change_binary").x + (m.getVarByName(well+"_choke_change_binary").x if any(multidims[OIL][well].values()) else 0)
         for separator in well_to_sep[well]:
     #        print(w_breakpoints[OIL]["A2"])
     #        print(well, separator)
     #        print(w_breakpoints[OIL])
 #            print(well, m.getVarByName(well+"_glift_change_binary").x, (m.getVarByName(well+"_choke_change_binary").x if multidims[OIL][well][separator] else ""))
-            w_change = m.getVarByName(well+"_glift_change_binary").x + (m.getVarByName(well+"_choke_change_binary").x if multidims[OIL][well][separator] else 0)
             tmp["oil"] += sum([a.x*b[2] for a,b in w_breakpoints[OIL][well][separator].items()])  if multidims[OIL][well][separator] else sum([a.x*b[1] for a,b in w_breakpoints[OIL][well][separator].items()])
             tmp["gas"] += sum([a.x*b[2] for a,b in w_breakpoints[GAS][well][separator].items()])  if multidims[GAS][well][separator] else sum([a.x*b[1] for a,b in w_breakpoints[GAS][well][separator].items()])
             tmp["lift"] += sum([a.x*b[0] for a,b in w_breakpoints[OIL][well][separator].items()])
             tmp["choke"] += sum([a.x*b[1] for a,b in w_breakpoints[OIL][well][separator].items()])  if multidims[OIL][well][separator] else 0
-            if(m.getVarByName(well+"_bin_route_"+separator+"_sep").x == 1):
+            if(m.getVarByName(well+"_bin_route_"+separator+"_sep").x > 0.1):
                 tmp[vals[4]] = separator
         results[well] = tmp
         p_tmp["oil"] += tmp["oil"]
@@ -365,15 +365,26 @@ print("Gas lift A & B")
 print("value:", sum(plat_res[p]["lift"] for p in ["A", "B"]))
 print("slack:", m.getConstrByName("glift_a_b").slack)
 
-print("\n OIL")
-print("polys:", polytopes[OIL]["A8"])
-for a,b in w_breakpoints[OIL]["A8"]["HP"].items():
+print("\n B6 OIL")
+#print("polys:", polytopes[OIL]["B6"])
+#for a,b in w_breakpoints[OIL]["B6"]["LP"].items():
+#    print(a.x, b)
+    
+print("\n B6 LP GAS")
+#print("polys:", polytopes[GAS]["B6"])
+for a,b in w_breakpoints[GAS]["B6"]["LP"].items():
+    print(a.x, b)
+#    
+#print("\n B2 OIL")
+#print("polys:", polytopes[OIL]["B3"])
+#for a,b in w_breakpoints[OIL]["B3"]["HP"].items():
+#    print(a.x, b)
+#    
+print("\n B6 HP GAS")
+#print("polys:", polytopes[GAS]["B3"])
+for a,b in w_breakpoints[GAS]["B6"]["HP"].items():
     print(a.x, b)
     
-print("\n GAS")
-print("polys:", polytopes[GAS]["A8"])
-for a,b in w_breakpoints[GAS]["A8"]["HP"].items():
-    print(a.x, b)
     
 
 
