@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 def load(path, well=None):
-    df = pd.read_csv(path, sep=",")
+    df = pd.read_csv(path,sep=',')
     if(well):
         df = df.loc[df['well'] == well]
     return df
@@ -50,9 +50,9 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
         df = df.loc[df['prs_dns']>=18.5]
 #        print("zzz")
     else:
-        print("adsads")
+#        print("adsads")
         df = df.loc[df['prs_dns']<18.5 ]
-    print(df.shape)
+#    print(df.shape)
 
     ret = {}
     add_Z = False
