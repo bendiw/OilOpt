@@ -15,8 +15,8 @@ reload(plotter)
 reload(tools)
 
 class Mars:
-
-    def __init__(self, miss = True, prune=True, max_terms=15, penalty=0.03, minspan=2):
+    
+    def __init__(self, miss = True, prune=False, max_terms=15, penalty=10, minspan=1):
         self.model = Earth(allow_missing=miss, enable_pruning=prune, max_terms=max_terms, penalty=penalty,
                   minspan=minspan)
         dframe = pd.read_csv(data_file, sep=",")
@@ -42,12 +42,12 @@ class Mars:
                 pyplot.plot(pair[0], pair[1], 'k*')
         pyplot.show()
 
-    def run_well(self, well, goal, plot, normalize, hp, allow_nan, nan_ratio, intervals, factor, grid_size):
+    def run_well(self, well, goal, plot, normalize, hp, allow_nan, nan_ratio, intervals, factor, grid_size, verbose):
 #        df_w = self.df.loc[self.df['well'] == well]
 #        print(df_w.shape)
 ##        X,y = cl.gen_targets(self.df, well, normalize=True)
-        print(hp)
         d_dict, means, std = cl.gen_targets(self.df, well,goal=goal, normalize=normalize, allow_nan = allow_nan, nan_ratio=nan_ratio, intervals=intervals, factor=factor, hp=hp)
+#        print(d_dict)
         if('choke' in d_dict.keys()):
             data = cl.conv_to_batch_multi(d_dict['gaslift'], d_dict['choke'], d_dict['output'])
         else:
@@ -58,10 +58,11 @@ class Mars:
         y = [d[1] for d in data]
 #        print(X, y)
         self.model.fit(X, y)
-        print("********* WELL", well, "*********")
-#        print(self.model.summary())
-        print("R2 score: ", self.model.score(X, y))
-        print("******************", "\n\n")
+        if(verbose >2):
+            print("********* WELL", well, "*********")
+    #        print(self.model.summary())
+            print("R2 score: ", self.model.score(X, y))
+            print("******************", "\n\n")
         y_hat = self.model.predict(X)
         X = [x[0] for x in X]
         
@@ -87,7 +88,10 @@ class Mars:
         else:
             if(plot):
                 self.plot_fig(X, y, y_hat, well, brk=self.get_breakpoints(X, y_hat), goal=goal)
-            return False, self.get_breakpoints(X, y_hat) #y_hat
+            b = self.get_breakpoints(X, y_hat)
+#            tst = set(item for item in b)
+#            print(tst)
+            return False,  b#y_hat
 
     
     
@@ -100,10 +104,18 @@ class Mars:
 ##            print(type(bf))
             if type(bf) is pyearth._basis.HingeBasisFunction:
                 
-                if(not bf.is_pruned()):                    
-                    brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
+                if(not bf.is_pruned()):    
+                    to_check = bf.get_knot()
+                    already = False
+#                    print("ho",brk, to_check)
+                    for b in brk:
+                        if to_check in b:
+                            already = True
+                    if not already:
+                        brk.append([bf.get_knot(), self.model.predict([bf.get_knot(),])[0]])
 #                record = not record
         brk.append([X[-1], y_hat[-1]])
+
         return sorted(brk, key=lambda x: x[0])
 
 #    def get_multi_breakpoints(self):
@@ -139,9 +151,9 @@ def run_all():
         for goal in ['oil', 'gas']:
             run(well, normalize=False, goal=goal)
 
-def run(well, goal='oil', plot=True, normalize=False, hp=0, allow_nan = False, nan_ratio=0.3, intervals=100, factor=0, grid_size=10):
+def run(well, goal='oil', plot=True, normalize=False, hp=0, allow_nan = False, nan_ratio=0.3, intervals=100, factor=1.5, grid_size=10, verbose=0):
     m = Mars()
-    return m.run_well(well, goal, plot, normalize, hp, allow_nan, nan_ratio, intervals, factor, grid_size)
+    return m.run_well(well, goal, plot, normalize, hp, allow_nan, nan_ratio, intervals, factor, grid_size, verbose)
     #        if('choke' in d_dict.keys()):
 #            self.plot_fig(X, y, y_hat, well, brk=self.get_multi_breakpoints())
 #            self.test3d(d_dict, 15)
