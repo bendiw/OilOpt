@@ -11,8 +11,6 @@ import tens
 import math
 
 
-
-
 phasenames = ["oil", "gas"]
 sepnames = ["LP", "HP"]
 invars = ["gas lift", "choke"]
@@ -38,21 +36,33 @@ sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
 
 #dict with binary var describing whether or not wells are producing in initial setting
 w_initial_prod = {well : 0 for well in wellnames}
-#w_initial_prod["A8"] = 1
+
+
+#dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
+w_initial_vars = {well : [0,0] for well in wellnames}
 
 #dict with maximum gaslift in each well
 w_max_glift = {"A2":124200.2899, "A3":99956.56739, "A5":125615.4024, "A6":150090.517, "A7":95499.28792, "A8":94387.68607, "B1":118244.94, "B2":112660.5625, "B3":138606.6016,
                "B4":197509.0709, "B5":210086.0959, "B6":117491.1591, "B7":125035.4286, "C1":106860.5264, "C2":132718.54, "C3" : 98934.12, "C4":124718.303}
 
+w_max_lims = [w_max_glift, {well:1 for well in wellnames}]
+
 #dict with allowed relative change, {well: [glift_delta, choke_delta]}
 w_relative_change = {well : [1.0, 1.0] for well in wellnames}
+
+#Case relevant numerics
+glift_caps = [260000]
+tot_exp_cap = 500000
+sep_cap = {"LP": 200000, "HP":math.inf}
+glift_groups = [["A", "B"]]
+max_changes = 5
 
 # =============================================================================
 # initialize an optimization model
 # =============================================================================
 m = Model("Ekofisk")
 
-#weights, biases = getNeuralNets(mode)
+#multidims, weights, biases = getNeuralNets(mode)
 
 w_route_flow_vars = {}
 w_route_bin_vars = {}
@@ -64,6 +74,7 @@ w_route_bin_vars = {}
 alpha_M = {}
 beta_M = {}             
                     
+
 # =============================================================================
 # variable creation                    
 # =============================================================================
@@ -71,20 +82,17 @@ betas = m.addVars([(well,phase,sep)  for phase in range(len(phasenames)) for wel
 alphas = m.addVars([(well,phase,sep, maxout)  for phase in range(len(phasenames)) for well in wellnames for sep in well_to_sep[well] for maxout in range(2)], vtype = GRB.CONTINUOUS, name="alpha")
 lambdas = m.addVars([(well,phase,sep, maxout, neuron)  for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in range(2) for neuron in biases[well][phase][sep][maxout]], vtype = GRB.BINARY, name="lambda")
 mus = m.addVars([(well,phase,sep, maxout, neuron)  for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in range(2) for neuron in biases[well][phase][sep][maxout]], vtype = GRB.CONTINUOUS, name="mu")
-inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in multidims[well][phase][sep]], vtype = GRB.CONTINUOUS, name="input")
+inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][phase][sep])], vtype = GRB.CONTINUOUS, name="input")
 
 routes = m.addVars([(well, sep) for well in wellnames for sep in well_to_sep[well]], vtype = GRB.BINARY, name="routing")
-changes = m.addVars([(well, sep, dim)] for well in wellnames for sep in well_to_sep[well] for dim in multidims[well][0][sep])
-#change_mult = m.addVars([(well, c) for p in platforms  for well in multiwells[p] for c in [0,1]], vtype = GRB.BINARY)
-#change_sing = m.addVars([w  for p in platforms for w in multiwells[p]], vtype = GRB.BINARY)
-
+changes = m.addVars([(well, sep, dim)] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep]))
 
 
 # =============================================================================
 # NN MILP constraints creation
 # =============================================================================
 #neuron output constraints 7.2
-m.addConstrs(mus[well, phase, sep, maxout, neuron] - quicksum(weights[well][phase][separator][maxout][dim][neuron]*inputs[well, separator, dim] for dim in multidims[well][phase][sep]) == biases[well][phase][separator][maxout][dim][neuron] for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in range(2) for neuron in biases[well][phase][sep][maxout] )
+m.addConstrs(mus[well, phase, sep, maxout, neuron] - quicksum(weights[well][phase][separator][maxout][dim][neuron]*inputs[well, separator, dim] for dim in range(multidims[well][phase][sep])) == biases[well][phase][separator][maxout][dim][neuron] for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in range(2) for neuron in biases[well][phase][sep][maxout] )
 
 #maxout convexity constraint 7.3
 m.addConstrs(quicksum(lambdas[well, phase, sep, maxout, neuron] for neuron in biases[well][phase][sep][maxout]) == 1 for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in range(2))
@@ -105,26 +113,24 @@ m.addConstrs(betas[well, phase, sep] - routes[well, sep]*beta_M[SOMETHING] <= 0 
 # =============================================================================
 # change tracking
 # =============================================================================
-m.addConstrs(w_initial_vars[well][0] - inputs[well, invars[0]] <= changevar*w_initial_vars[well][0]*w_relative_change[well][0])
-m.addConstrs(inputs[well, invars[0]] - w_initial_vars[well][0] <= changevar*w_initial_vars[well][0]*w_relative_change[well][0]+(1-w_initial_prod[well])*w_max_glift[well]*changes[well][0][sep] for well in wellnames for )
-#for well in wellnames:
-#    changevar = m.addVar(vtype = GRB.BINARY, name=well+"_glift_change_binary")
-#    w_change_vars[well].append(changevar)
-#    for separator in well_to_sep[well]:
-#        pass
-#        print(well, multidims[OIL][well])
-    #    for separator in well_to_sep[well]:
-#        m.addConstr(w_initial_vars[well][0] - quicksum([a*b[0] for a,b in w_breakpoints[OIL][well][separator].items()]) <=  changevar*w_initial_vars[well][0]*w_relative_change[well][0])
-#        m.addConstr(quicksum([a*b[0] for a,b in w_breakpoints[OIL][well][separator].items()]) - w_initial_vars[well][0] <=  changevar*w_initial_vars[well][0]*w_relative_change[well][0]+(1-w_initial_prod[well])*w_max_glift[well]*changevar)
+m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep]))
+m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well]*changes[well, sep, dim] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep]))
 
 # =============================================================================
 # separator gas constraints
 # =============================================================================
+m.addConstr(quicksum(betas[well, GAS, "LP"] for w in sep_p_route["LP"] for well in p_dict[w] ) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= sep_cap["LP"])
+m.addConstr(quicksum(betas[well, GAS, "HP"] for w in sep_p_route["HP"] for well in p_dict[w]) <= sep_cap["HP"])
 
 
 # =============================================================================
 # gas lift constraints
 # =============================================================================
+m.addConstrs()
+for i in range(len(glift_groups)):
+    m.addConstr(quicksum([quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][n][z].items()]) for n in p_dict["A"]]) for z in p_sep_names["A"]])
+    + quicksum([quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][m][z].items()]) for m in p_dict["B"]]) for z in p_sep_names["B"]])<= glift_caps[i], "glift_a_b")
+
 
 # =============================================================================
 # routing
@@ -132,32 +138,6 @@ m.addConstrs(inputs[well, invars[0]] - w_initial_vars[well][0] <= changevar*w_in
 m.addConstrs(quicksum(routes[well, sep] for sep in well_to_sep[well]) <= 1 for well in wellnames)
 
 
-#brkpoints_mult = m.addVars( [(phase,well,sep,poly, brk)  for phase in range(len(phasenames)) for well in wellnames for sep in well_to_sep[well] for poly in range(len(polytopes[phase][well][sep])) for brk in range(3) if multidims[OIL][well][sep]], vtype=GRB.CONTINUOUS)
-#pwls = m.addVars([(phase, well, sep) for phase in range(len(phasenames)) for well in wellnames for sep in well_to_sep[well]], vtype=GRB.CONTINUOUS, name="PWL" )
-#ptopes_sing = m.addVars( [(phase,well,sep,poly)  for phase in range(len(phasenames)) for well in wellnames for sep in well_to_sep[well] for poly in range(len(polytopes[phase][well][sep]))if not multidims[phase][well][sep]] , vtype=GRB.CONTINUOUS)
-#ptopes_mult = m.addVars( [(phase,well,sep,poly)  for phase in range(len(phasenames)) for well in wellnames for sep in well_to_sep[well] for poly in range(len(polytopes[phase][well][sep]))if multidims[phase][well][sep]] , vtype=GRB.BINARY)
-#routes = m.addVars([(well, sep) for well in wellnames for sep in well_to_sep[well]], vtype = GRB.BINARY, name="routing")
-#change_mult = m.addVars([(well, c) for p in platforms  for well in multiwells[p] for c in [0,1]], vtype = GRB.BINARY)
-#change_sing = m.addVars([w  for p in platforms for w in multiwells[p]], vtype = GRB.BINARY)
-
-
-            
-            
-#separator constraints
-#for separator in sepnames:
-##    temp_wells = []
-##    for pform in sep_p_route[separator]:
-##        temp_wells.extend(p_dict[pform])
-#    if(separator=="LP"):
-#        pass
-##        print(w_breakpoints[GAS][p_dict["C"][0]][separator])
-##        m.addConstr(quicksum([w_PWL[GAS][m][separator] for m in temp_wells]) - quicksum([quicksum([a*b[0] for a,b in w_breakpoints[GAS][m][separator].items()]) for m in p_dict["C"]]) <= sep_cap[separator], "LP_sep_gas_constr")                
-#    else:
-#        pass
-##        m.addConstr(quicksum([w_PWL[GAS][m][separator] for m in temp_wells]) <= sep_cap[separator], "HP_sep_gas_constr")
-            
-            
-        
 
 for well in wellnames:
     if(any(multidims[OIL][well].values())):
