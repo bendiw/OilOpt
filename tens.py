@@ -433,7 +433,7 @@ def save_variables(datafile, hp, goal, is_3d):
         file.write(line+"\n")
     file.close()
     
-def load(well, separator, phase):
+def load(well, phase, separator ):
     filename = "" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
@@ -445,14 +445,14 @@ def load(well, separator, phase):
     for k in range(1,3):
         content[k]=content[k].split()
         if(dim == 1):
-            w["maxout_"+str(k)]["input_1"] = [float(x) for x in content[k]]
+            w["maxout_"+str(k)][0] = [float(x) for x in content[k]]
         else:
-            w["maxout_"+str(k)]["input_1"] = []
-            w["maxout_"+str(k)]["input_2"] = []
+            w["maxout_"+str(k)][0] = []
+            w["maxout_"+str(k)][1] = []
             for i in range(int(len(content[k])//2)):
-                w["maxout_"+str(k)]["input_1"].append(float(content[k][i]))
+                w["maxout_"+str(k)][0].append(float(content[k][i]))
             for i in range(int(len(content[k])//2),len(content[k])):
-                w["maxout_"+str(k)]["input_2"].append(float(content[k][i]))
+                w["maxout_"+str(k)][1].append(float(content[k][i]))
     b = {}
     b["maxout_1"] = [float(x.strip()) for x in content[3].split()]
     b["maxout_2"] = [float(x.strip()) for x in content[4].split()]
