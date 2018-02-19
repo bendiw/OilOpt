@@ -50,13 +50,7 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
         df = df.loc[df['prs_dns']>=18.5]
 #        print("zzz")
     else:
-<<<<<<< HEAD
-#        print("adsads")
         df = df.loc[df['prs_dns']<18.5 ]
-#    print(df.shape)
-=======
-        df = df.loc[df['prs_dns']<18.5 ]
->>>>>>> refs/remotes/origin/master
 
     ret = {}
     add_Z = False

@@ -8,20 +8,31 @@ import tools
 import plotter
 import math
 
-def add_layer(inputs, input_size, output_size, activation_function = None):
-    W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True)
-    b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True)
 # =============================================================================
-#     print("inputs",inputs.shape)
-#     print("W",W.shape)
-#     print("b",b.shape)
+# This is the file handling the Tensorflow module, regularization, cross_validation,
+# and a good deal of printing methods, designed for a specific purpose.
 # =============================================================================
+
+# =============================================================================
+# add_layer creates a new Tensorflow layer, with biases and weights uniformly distributed
+# between -1 and 1. It performs tf.matmul as default, and any additional activation function
+# when it is provided by the caller. input_size and output_size is the number of neurons
+#in the previos layer and in the current layer, respectively
+# =============================================================================
+def add_layer(inputs, input_size, output_size, activation_function = None, maxout_unit="0"):
+    weightname = "weight-"+maxout_unit
+    biasname = "bias-"+maxout_unit
+    W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), trainable = True, name=weightname)
+    b = tf.Variable(np.random.uniform(-1, 1, size =output_size), trainable = True,name=biasname)
     output = tf.matmul(inputs, W) + b
     if activation_function is not None:
         output = activation_function(output)
         "With activation function", activation_function
     return output, W, b
 
+# =============================================================================
+# next batch returns an x-batch and an y-batch from "data" of size "size"
+# =============================================================================
 def next_batch(data, size):
     batch_x, batch_y = [], []
     while len(batch_x) < size:
@@ -30,13 +41,11 @@ def next_batch(data, size):
         batch_y.append(data[ran][1])
     return np.array(batch_x), np.array(batch_y)
 
+# =============================================================================
+# returns batches containing the entire "data"
+# =============================================================================
 def total_batch(data):
-    batch_x, batch_y = [], []
-    data.sort()
-    for i in range(len(data)):
-        batch_x.append(data[i][0])
-        batch_y.append(data[i][1])
-    return np.array(batch_x), np.array(batch_y)
+    return next_batch(data,len(data))
 
 def plot_pred(x, pred, y):
     pyplot.figure()
@@ -45,6 +54,9 @@ def plot_pred(x, pred, y):
     a, = pyplot.plot(x,y,color=orange,linestyle='None', marker = '.',markersize=8)
     return bp
 
+# =============================================================================
+# Generates training, validation and test sets
+# =============================================================================
 def generate_sets(data, train_frac, val_frac):
 ##    print("Size data: ", len(data))
     train_set, val_set = [], []
@@ -54,14 +66,14 @@ def generate_sets(data, train_frac, val_frac):
         train_set.append(data.pop(r.randint(0, len(data)-1)))
     while (len(val_set) < val_size):
         val_set.append(data.pop(r.randint(0, len(data)-1)))
-##    print("Train: ", len(train_set))
-##    print("Val: ", len(val_set))
-##    print("Test: ", len(data))
     train_set.sort()
     val_set.sort()
     data.sort()
     return train_set, val_set, data
 
+# =============================================================================
+# Generates sets for cross_validation
+# =============================================================================
 def generate_cross_sets(data, cross_validation):
     size = len(data)//cross_validation
     rest = len(data)%cross_validation
@@ -78,6 +90,9 @@ def generate_cross_sets(data, cross_validation):
         sets.append(new_set)
     return sets
 
+# =============================================================================
+# Converts dictionaries to the correctly dimensioned lists used for TF training
+# =============================================================================
 def convert_from_dict_to_tflists(dict_data):
     data = []
     for value in dict_data["gaslift"]:
@@ -93,6 +108,9 @@ def convert_from_dict_to_tflists(dict_data):
         i += 1
     return data
 
+# =============================================================================
+# Returns the domain space values for the breakpoints (grid lines crossings)
+# =============================================================================
 def get_x_vals(dict_data, grid_size):
     x1_min = np.nanmin(dict_data["gaslift"])
     x1_max = np.nanmax(dict_data["gaslift"])
@@ -108,6 +126,9 @@ def get_x_vals(dict_data, grid_size):
             x_vals.append([x1[i],x2[j]])
     return x_vals
     
+# =============================================================================
+# calculates r-squared
+# =============================================================================
 def r2(ydata, pred):
     tot = 0
     for i in range(len(ydata)):
@@ -136,6 +157,9 @@ def res_ss(ys, pred):
         ss_res += (ys[i][0]-pred[i][0])**2
     return ss_res
 
+# =============================================================================
+# Denormolizes the normalized well data
+# =============================================================================
 def denormalize(x, y, pred, means, stds):
     y_ = tools.simple_denorm([a[0] for a in y], means[-1], stds[-1])
     pred_ = tools.simple_denorm([a[0] for a in pred], means[-1], stds[-1])
@@ -151,7 +175,9 @@ def denormalize(x, y, pred, means, stds):
         new_x = [[x] for x in x1]
     return new_x, new_y, new_pred
 
-<<<<<<< HEAD
+# =============================================================================
+# Plots curves for n TF approximations in the same figure
+# =============================================================================
 def betaplot(datafile, beta, n, train_frac):
     prev = None
     pyplot.figure()
@@ -173,6 +199,7 @@ def betaplot(datafile, beta, n, train_frac):
                 '#009292', linestyle = 'None', marker = '.',markersize=8)
     pyplot.show()
 
+
 def hplp():
     wells = ["B1","B2","B3","B4","B5","B6","B7"]
     w = ["B1","B2"]
@@ -188,6 +215,9 @@ def hplp():
 #        label.set_linewidth(3)  # the legend line width
     pyplot.show()
     
+# =============================================================================
+# finds the up to four nearest neighbors in the coarse grid
+# =============================================================================
 def find_4(point, x_coarse):
     p1=point[0]
     p2=point[1]
@@ -213,7 +243,9 @@ def find_4(point, x_coarse):
         return [[l1,l2], [h1,l2]]
     return [[l1,l2],[l1,h2],[h1,l2],[h1,h2]]
 
-
+# =============================================================================
+# finds distances to nearest breakpoints in the coarse grid
+# =============================================================================
 def err_4(point, closest):
     dist = []
     s = 0.0
@@ -229,7 +261,10 @@ def err_4(point, closest):
         dist=[1.0]
     return dist
         
-
+# =============================================================================
+# calculates the error from coarse grids when applying two grids of different sizes 
+#to a set of wells
+# =============================================================================
 def griderror():
     wells = ["A5","A6","B1","B4","C4"]
     grids = [2,4,7,10,15,20]
@@ -292,7 +327,9 @@ def griderror():
 #                for prediction in pred_coarse:
 #                    z_coarse.append(prediction[0])
 #                breakpoints_coarse = tools.delaunay(x1_coarse,x2_coarse,z_coarse)
-                
+# =============================================================================
+# plots average training loss and validation loss for "runs" runs over "epochs" epochs
+# =============================================================================
 def lossplot(datafile, runs, epochs, train_frac,learning_rate, interval, beta = 0.1):
     train_losses = []
     val_losses = []
@@ -315,7 +352,22 @@ def lossplot(datafile, runs, epochs, train_frac,learning_rate, interval, beta = 
     pyplot.figure()
     pyplot.ylabel("loss")
     pyplot.xlabel('iteration')
-=======
+    pyplot.plot(iterations, trainnp, '#141494', label="Training loss")
+    pyplot.plot(iterations, valnp, '#009292', label="Validation loss")
+    legend = pyplot.legend()
+    pyplot.show()
+
+# =============================================================================
+# Calculates test error    
+# =============================================================================
+def test_error_run(well, iterations, test_frac, hp=1):
+    error = 0
+    prev=None
+    for i in range(iterations):
+        err, prev, mean, std = hey(well, hp=hp, train_frac = 1-test_frac, prev=prev, test_error=True)
+        error += err
+    print(tools.simple_denorm([error],mean[-1],std[-1])[0]/float(iterations))
+
 #def run(datafile, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
 #       epochs = 100, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
 def run2(datafile):
@@ -324,7 +376,6 @@ def run2(datafile):
     pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
     pyplot.ylabel('oil')
     pyplot.xlabel('gaslift')
->>>>>>> refs/remotes/origin/master
     pyplot.title(datafile)
     pyplot.plot(iterations, trainnp, '#141494', label="Training loss")
     pyplot.plot(iterations, valnp, '#009292', label="Validation loss")
@@ -351,41 +402,79 @@ def hplp_run(datafile, color, prev):
     i_ = getmax(pred)
     lp, = pyplot.plot(total_x[i_], pred[i_], color=color, linestyle = "none", marker = 's', label = "LP")
 #    pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
-
     return prev
 
-
-def run2(datafile,beta):
-    is_3d, breakpoints, prev, total_x, pred, total_y, R = hey(datafile, beta=beta, epochs=1000)
-#    plot_pred(total_x, pred, total_y)
-##    pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
-#    pyplot.ylabel('oil')
-#    pyplot.xlabel('gaslift')
-#    pyplot.title(datafile)
-#    colors = ['b', 'g', 'c', 'm', 'y', 'k', 'w']
-#    c = 0
-    for i in range(99):
-        _, _, prev, _, _, _, R2 = hey(datafile, epochs=1000, prev=prev, beta=beta)
-#        bp = pyplot.plot(total_x, pred, colors[c])
-#        pyplot.plot([x[0] for x in breakpoints], [x[1] for x in breakpoints], 'k*')
-#        c+=1
-        R += R2
-    print ("Average:",R/100.0)
-    for p in prev:
-        if (len(p)>1):
-            p[0].close()
-#    pyplot.show()
+def save_variables(datafile, hp, goal, is_3d):
+    if(hp==1):
+        sep = "HP"
+    else:
+        sep = "LP"
+    filename = "" + datafile + "-" + sep + "-" + goal
+    print("Filename:", filename)
+    file = open(filename + ".txt", "w")
+    if (is_3d):
+        file.write("2\n")
+        var=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)[-4:]
+    else:
+        file.write("1\n")
+        var=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)[-8:-4]
+    for i in range(0,3,2):
+        line = ""
+        w = var[i].eval()
+        for x in w:
+            for y in x:
+                line += str(y) + " "
+        file.write(line+"\n")
+    for i in range(1,4,2):
+        line = ""
+        b = var[i].eval()
+        for x in b:
+            line += str(x) + " "
+        file.write(line+"\n")
+    file.close()
     
-def hey(datafile, goal='oil', grid_size = 8, plot = False,learning_rate=0.03, factor = 1.5, cross_validation = None,
+def load(well, separator, phase):
+    filename = "" + well + "-" + separator + "-" + phase + ".txt"
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    dim = int(content[0])
+    w = {}
+    w["maxout_1"] = {}
+    w["maxout_2"] = {}
+    for k in range(1,3):
+        content[k]=content[k].split()
+        if(dim == 1):
+            w["maxout_"+str(k)]["input_1"] = [float(x) for x in content[k]]
+        else:
+            w["maxout_"+str(k)]["input_1"] = []
+            w["maxout_"+str(k)]["input_2"] = []
+            for i in range(int(len(content[k])//2)):
+                w["maxout_"+str(k)]["input_1"].append(float(content[k][i]))
+            for i in range(int(len(content[k])//2),len(content[k])):
+                w["maxout_"+str(k)]["input_2"].append(float(content[k][i]))
+    b = {}
+    b["maxout_1"] = [float(x.strip()) for x in content[3].split()]
+    b["maxout_2"] = [float(x.strip()) for x in content[4].split()]
+    return dim, w, b
+        
+            
+
+# =============================================================================
+#  Initiates a new TF network if an old one is not provided. If an old one is provided, the
+# weights and biases are reinitialized. Sends prev back and forth between methods. Prev has
+#    all the necessary TF session information
+# =============================================================================
+def hey(datafile, test_error = False, goal='oil', grid_size = 8, plot = False,learning_rate=0.03, factor = 1.5, cross_validation = None,
         epochs = 500, beta = 0.1, val_interval = None, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
-        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=1, prev = None):
+        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=1, prev = None, save = False):
     if (prev == None):
         prev = [0]*2
         x = tf.placeholder(tf.float64, [None,1])
         y_ = tf.placeholder(tf.float64, [None,1])
         keep_prob = tf.placeholder(tf.float64)
-        L1, W1, b1 = add_layer(x, 1, 5, activation_function = None)
-        L2, W2, b2 = add_layer(x, 1, 5, activation_function = None) 
+        L1, W1, b1 = add_layer(x, 1, 5, activation_function = None,maxout_unit="1")
+        L2, W2, b2 = add_layer(x, 1, 5, activation_function = None, maxout_unit="2") 
         regularizers = tf.nn.l2_loss(W1) + tf.nn.l2_loss(W2)
         dropout1 = tf.nn.dropout(L1, keep_prob)
         dropout2 = tf.nn.dropout(L2, keep_prob)
@@ -401,8 +490,8 @@ def hey(datafile, goal='oil', grid_size = 8, plot = False,learning_rate=0.03, fa
         x2 = tf.placeholder(tf.float64, [None,2])
         y_2 = tf.placeholder(tf.float64, [None,1])
         keep_prob2 = tf.placeholder(tf.float64)
-        L12, W12, b12 = add_layer(x2, 2, 5, activation_function = None)
-        L22, W22, b22 = add_layer(x2, 2, 5, activation_function = None) 
+        L12, W12, b12 = add_layer(x2, 2, 5, activation_function = None,maxout_unit="1")
+        L22, W22, b22 = add_layer(x2, 2, 5, activation_function = None,maxout_unit="2") 
         regularizers2 = tf.nn.l2_loss(W12) + tf.nn.l2_loss(W22)
         dropout12 = tf.nn.dropout(L12, keep_prob2)
         dropout22 = tf.nn.dropout(L22, keep_prob2)
@@ -413,19 +502,17 @@ def hey(datafile, goal='oil', grid_size = 8, plot = False,learning_rate=0.03, fa
         train_step2 = tf.train.AdamOptimizer(learning_rate).minimize(loss2)
         prev[1] = [sess, train_step2, x2, y_2, keep_prob2, out2, loss2]
     tf.global_variables_initializer().run()
-    return run(datafile, prev, goal=goal, 
+    return run(datafile, prev, goal=goal, test_error=test_error,
                hp=hp, grid_size=grid_size, plot=plot, epochs=epochs, beta=beta, val_interval = val_interval, train_frac=train_frac,
                val_frac=val_frac, n_hidden=n_hidden, k_prob=k_prob, normalize=normalize, intervals=intervals,
-               nan_ratio=nan_ratio, factor=factor, cross_validation=cross_validation)
+               nan_ratio=nan_ratio, factor=factor, cross_validation=cross_validation, save = save)
 
-<<<<<<< HEAD
-def run(datafile, prev, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
+# =============================================================================
+# Runs through a series of training runs
+# =============================================================================
+def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
         epochs = 500, beta = 0.1,  val_interval = None, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
-=======
-def run(datafile, prev=None, goal='oil', grid_size = 8, plot = False, factor = 1.5, cross_validation = None,
-        epochs = 500, beta = 0.1, train_frac = 1.0, val_frac = 0.0, n_hidden = 5,
->>>>>>> refs/remotes/origin/master
-        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=0):
+        k_prob = 1.0, normalize = True, intervals = 20, nan_ratio = 0.3, hp=1, save = False):
     df = cl.load("welltests_new.csv")
     dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=True, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
@@ -438,7 +525,7 @@ def run(datafile, prev=None, goal='oil', grid_size = 8, plot = False, factor = 1
     else:
         sess, train_step, x, y_, keep_prob, out, regloss = prev[0][0], prev[0][1], prev[0][2], prev[0][3], prev[0][4], prev[0][5], prev[0][6]
         print("Well",datafile, goal, "- Gaslift only")
-    loss = tf.reduce_mean(tf.square(y_ - out))
+    loss = tf.reduce_mean(tf.abs(y_ - out))
     all_data_points = data.copy()
     val_loss = []
     train_loss = []
@@ -513,6 +600,15 @@ def run(datafile, prev=None, goal='oil', grid_size = 8, plot = False, factor = 1
 #         print ("Average loss: ", float(total_error)/float(cross_validation))
 # =============================================================================
         
+    if (test_error):
+        y_vals = [[0] for i in range(len(test_set))]
+        test_xs, test_ys = next_batch(test_set, len(test_set))
+        pred = sess.run(out, feed_dict={x: test_xs, y_: y_vals, keep_prob: 1.0})
+        error = 0
+        for i in range(len(test_xs)):
+            error+=abs(pred[i][0]-test_ys[i][0])
+        return error, prev, means, stds
+        
     total_x, total_y = total_batch(all_data_points)
     pred = sess.run(out, feed_dict={x: total_x, y_: total_y, keep_prob: 1.0})
     R2 = r2(total_y, pred)
@@ -565,7 +661,9 @@ def run(datafile, prev=None, goal='oil', grid_size = 8, plot = False, factor = 1
         prev[1] = [sess, train_step, x, y_, keep_prob, out, loss]
     else:
         prev[0] = [sess, train_step, x, y_, keep_prob, out, loss]
-
+    
+    if (save):
+        save_variables(datafile, hp, goal, is_3d)
     return is_3d, breakpoints, prev, total_x, pred, total_y, R2, dict_data, means, stds, train_loss, val_loss
     
     
