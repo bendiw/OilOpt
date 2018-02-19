@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 def load(path, well=None):
-    df = pd.read_csv(path, sep=",")
+    df = pd.read_csv(path,sep=',')
     if(well):
         df = df.loc[df['well'] == well]
     return df
