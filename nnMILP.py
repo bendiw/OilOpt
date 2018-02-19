@@ -111,10 +111,11 @@ m.addConstrs(betas[well, phase, sep] - routes[well, sep]*beta_M[SOMETHING] <= 0 
 
 
 # =============================================================================
-# change tracking
+# change tracking and total changes
 # =============================================================================
 m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep]))
 m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well]*changes[well, sep, dim] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep]))
+m.addConstr(quicksum(changes[well, sep, dim] for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well][0][sep])) <= max_changes)
 
 # =============================================================================
 # separator gas constraints
@@ -126,10 +127,13 @@ m.addConstr(quicksum(betas[well, GAS, "HP"] for w in sep_p_route["HP"] for well 
 # =============================================================================
 # gas lift constraints
 # =============================================================================
-m.addConstrs()
-for i in range(len(glift_groups)):
-    m.addConstr(quicksum([quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][n][z].items()]) for n in p_dict["A"]]) for z in p_sep_names["A"]])
-    + quicksum([quicksum([quicksum([a*b[0] for a,b in w_breakpoints[OIL][m][z].items()]) for m in p_dict["B"]]) for z in p_sep_names["B"]])<= glift_caps[i], "glift_a_b")
+m.addConstrs(quicksum(inputs[well, sep, 0] for well in p_dict[grp] for sep in well_to_sep[well]) <= glift_caps[glift_groups.index(grp)] for grp in glift_groups)
+
+
+# =============================================================================
+# total gas export
+# =============================================================================
+m.addConstr(quicksum(betas[well, GAS, sep] for well in wellnames for sep in well_to_sep[well]) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
 
 
 # =============================================================================
@@ -138,19 +142,13 @@ for i in range(len(glift_groups)):
 m.addConstrs(quicksum(routes[well, sep] for sep in well_to_sep[well]) <= 1 for well in wellnames)
 
 
-
-for well in wellnames:
-    if(any(multidims[OIL][well].values())):
-        changevar_g = m.addVar(vtype = GRB.BINARY, name=well+"_choke_change_binary")
-        w_change_vars[well].append(changevar_g)
-        for separator in well_to_sep[well]:
-            if(multidims[OIL][well][separator]):
-                pass
-#                m.addConstr(w_initial_vars[well][1] - quicksum([a*b[1] for a,b in w_breakpoints[OIL][well][separator].items()]) <=  changevar_g*w_initial_vars[well][1]*w_relative_change[well][1])
-#                m.addConstr(quicksum([a*b[1] for a,b in w_breakpoints[OIL][well][separator].items()]) - w_initial_vars[well][1] <=  changevar_g*w_initial_vars[well][1]*w_relative_change[well][1]+ (1-w_initial_prod[well])*100*changevar_g)
-        
-        
-        
+# =============================================================================
+# objective
+# =============================================================================
+m.setObjective(quicksum(betas[well, OIL, sep] for well in wellnames for sep in well_to_sep[well]), GRB.MAXIMIZE)
+m.setParam(GRB.Param.Heuristics, 0)
+m.setParam(GRB.Param.Presolve, 0)
+m.optimize()
         
 # =============================================================================
 # get neural nets either by loading existing ones or training new ones
