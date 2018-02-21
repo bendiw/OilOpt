@@ -18,26 +18,30 @@ import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
 def add_layer(input_layer, name, neurons, activation = 'relu'):
-    layer = Dense(neurons, activation = activation, name = name, kernel_initializer=initializers.random_uniform(minval=-0.5,maxval=0.5),
-                  kernel_regularizer=regularizers.l2(0.5), bias_regularizer=regularizers.l2(0.1), activity_regularizer=regularizers.l2(0.1))(input_layer)
+    layer = Dense(neurons, activation = activation, name = name, kernel_initializer=initializers.random_uniform(minval=-0.5, maxval=0.5),
+                  use_bias=True, bias_initializer=initializers.random_uniform(minval=-500,maxval=500),
+                  bias_regularizer=regularizers.l2(0.001),
+                  kernel_regularizer=regularizers.l2(0.01))(input_layer)
     return layer
 
-def build_models(neurons = 40):
+def build_models(neurons = 20):
     inputs_1 = Input(shape=(1,))
     inputs_2 = Input(shape=(2,))
     
-    layer_1 = add_layer(inputs_1, "relu_1D", neurons)
-    layer_2 = add_layer(inputs_2, "relu_2D", neurons)
+    layer_1 = add_layer(inputs_1, "relu_1D-1", neurons)
+    layer_2 = add_layer(inputs_2, "relu_2D-1", neurons)
     
-    output_1 = Lambda(lambda x: backend.sum(x), output_shape = (1,))(layer_1)
-    output_2 = Lambda(lambda x: backend.sum(x), output_shape = (1,))(layer_2)
+    layer_21 = add_layer(layer_1, "relu_1D-2", neurons//2)
+    layer_22 = add_layer(layer_2, "relu_2D-2", neurons//2)
+    
+    output_1 = Lambda(lambda x: backend.sum(x, axis=0))(layer_21)
+    output_2 = Lambda(lambda x: backend.sum(x, axis=0))(layer_22)
     
     model_1 = Model(inputs = inputs_1, outputs = output_1)
     model_2 = Model(inputs = inputs_2, outputs = output_2)
-    Model.get_output_shape_at()
         
-    model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = losses.mean_squared_error)
-    model_2.compile(optimizer=optimizers.adam(lr=0.01), loss = losses.mean_squared_error)
+    model_1.compile(optimizer=optimizers.adam(lr=0.001), loss = losses.mean_squared_error)
+    model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = losses.mean_squared_error)
     return model_1, model_2
 
 
@@ -57,7 +61,7 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
     else:
         model = models[0]
         print("Well",datafile, goal, "- Gaslift only")
-        
+    all_data_points = data.copy()
     train_set, validation_set, test_set = tens.generate_sets(data, train_frac, val_frac)
     model.fit(np.array([x[0] for x in train_set]), np.array([x[1] for x in train_set]), epochs = 1000, batch_size=20, verbose=1)
     grid_size=10
@@ -77,11 +81,15 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
             plotter.plot3d(x1, x2, z, datafile)
         breakpoints = tools.delaunay(x1,x2,z) 
     else:
-#        total_x, total_y, pred = denormalize(total_x, total_y, pred, means, stds)
+        total_x, total_y = tens.total_batch(all_data_points)
+        print(total_x)
         xvalues, yvalues = [], []
+        prediction = [[x] for x in model.predict(total_x)]
+        print(prediction)
+        print(total_y)
         for i in range(len(total_x)):
             xvalues.append(total_x[i][0])
-            yvalues.append(pred[i][0])
+            yvalues.append(prediction[i][0])
         breakpoints = [[xvalues[0],yvalues[0]]]
         breakpoints_y = [yvalues[0]]
         breakpoints_x = [xvalues[0]]
@@ -97,7 +105,7 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
         breakpoints_y.append(yvalues[-1])
         breakpoints_x.append(xvalues[-1])
         if (plot):
-            plot_pred(total_x, pred, total_y)
+            tens.plot_pred(total_x, prediction, total_y)
             pyplot.ylabel(goal)
             pyplot.xlabel('gas lift')
             pyplot.title(datafile)
