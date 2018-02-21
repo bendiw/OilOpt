@@ -45,7 +45,9 @@ def next_batch(data, size):
 # returns batches containing the entire "data"
 # =============================================================================
 def total_batch(data):
-    return next_batch(data,len(data))
+    batch_x = [x[0] for x in data]
+    batch_y = [x[1] for x in data]
+    return np.array(batch_x), np.array(batch_y)
 
 def plot_pred(x, pred, y):
     pyplot.figure()
