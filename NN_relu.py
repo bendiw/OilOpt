@@ -59,7 +59,7 @@ class NN:
         # =============================================================================
         # big-M
         # =============================================================================
-        alpha_M = {well : {phase : {sep : {maxout : [10000000 for n in range(len(self.biases[well][phase][sep])]} for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}
+        alpha_M = {well : {phase : {sep : {maxout : [10000000 for n in range(len(self.biases[well][phase][sep]))]} for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}
         beta_M = {well : {phase : {sep : 1000000 for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}             
         
         
@@ -80,8 +80,8 @@ class NN:
         print(self.weights)
 
         #indicator constraints
-        self.m.addConstrs((lambdas[well, phase, sep, neuron] == 1) >> (mus[well, phase, sep, neuron] <= 0) for for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])))
-        self.m.addConstrs((lambdas[well, phase, sep, neuron] == 0) >> (rhos[well, phase, sep, neuron] <= 0) for for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])))
+        self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 1) >> (mus[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])))
+        self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 0) >> (rhos[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])))
 
     
     
