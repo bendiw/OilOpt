@@ -4,7 +4,11 @@ Created on Wed Feb 21 10:33:12 2018
 
 @author: bendiw
 """
-
+from gurobipy import *
+import numpy as np
+import tens
+import math
+import tools
 class NN:
     well_to_sep = {}
     wellnames = []
@@ -17,10 +21,11 @@ class NN:
     GAS = 1
     LOAD = 0
     TRAIN = 1
-    w_max_glifts = {"A2":{"HP":124200.2899}, "A3":{"HP":99956.56739}, "A5":{"HP":125615.4024}, "A6":{"HP":150090.517}, "A7":{"HP":95499.28792}, "A8":{"HP":94387.68607}, "B1":{"HP":118244.94, "LP":118244.94}, 
-               "B2":{"HP":112660.5625, "LP":112660.5625}, "B3":{"HP":238606.6016, "LP":138606.6016},
-               "B4":{"HP":90000.0709, "LP":90000.0709}, "B5":{"HP":210086.0959, "LP":210086.0959}, "B6":{"HP":117491.1591, "LP":117491.1591}, "B7":{"HP":113035.4286, "LP":113035.4286}, 
-               "C1":{"LP":106860.5264}, "C2":{"LP":132718.54}, "C3" : {"LP":98934.12}, "C4":{"LP":124718.303}}
+
+#    w_max_glifts = {"A2":{"HP":124200.2899}, "A3":{"HP":99956.56739}, "A5":{"HP":125615.4024}, "A6":{"HP":150090.517}, "A7":{"HP":95499.28792}, "A8":{"HP":94387.68607}, "B1":{"HP":118244.94, "LP":118244.94}, 
+#               "B2":{"HP":112660.5625, "LP":112660.5625}, "B3":{"HP":238606.6016, "LP":138606.6016},
+#               "B4":{"HP":90000.0709, "LP":90000.0709}, "B5":{"HP":210086.0959, "LP":210086.0959}, "B6":{"HP":117491.1591, "LP":117491.1591}, "B7":{"HP":113035.4286, "LP":113035.4286}, 
+#               "C1":{"LP":106860.5264}, "C2":{"LP":132718.54}, "C3" : {"LP":98934.12}, "C4":{"LP":124718.303}}
 
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
@@ -52,25 +57,35 @@ class NN:
         self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD, well, sep)
         
         
+        # =============================================================================
+        # get input variable bounds        
+        # =============================================================================
+        w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
+        w_min_choke, w_max_choke = tools.get_limits("choke", self.wellnames, self.well_to_sep)
+        w_max_lims = [w_max_glift, w_max_choke]
+        w_min_lims = [w_min_glift, w_min_choke]
+        input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
+        input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
         
-        w_max_lims = [{self.wellnames[0]:self.w_max_glifts[self.wellnames[0]]}, {well:{sep:100 for sep in self.well_to_sep[well]} for well in self.wellnames}]
-        input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well][self.phasenames[0]][sep])}
+#        self.w_min_glifts, self.w_max_glifts = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
+#        w_max_lims = [{self.wellnames[0]:self.w_max_glifts[self.wellnames[0]]}, {well:{sep:100 for sep in self.well_to_sep[well]} for well in self.wellnames}]
+#        input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well][self.phasenames[0]][sep])}
 
         # =============================================================================
         # big-M
         # =============================================================================
-        alpha_M = {well : {phase : {sep : {maxout : [10000000 for n in range(len(self.biases[well][phase][sep]))]} for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}
-        beta_M = {well : {phase : {sep : 1000000 for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}             
+#        alpha_M = {well : {phase : {sep : {maxout : [10000000 for n in range(len(self.biases[well][phase][sep]))]} for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}
+#        beta_M = {well : {phase : {sep : 1000000 for sep in self.well_to_sep[well]} for phase in self.phasenames} for well in self.wellnames}             
         
         
         # =============================================================================
         # variable creation                    
         # =============================================================================
         #inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["gas"][sep])], vtype = GRB.CONTINUOUS, name="input")
-        inputs = self.m.addVars(input_dict.keys(), ub = input_dict, name="input", vtype=GRB.CONTINUOUS)
+        inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.CONTINUOUS)
 #        routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
         lambdas = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.BINARY, name="lambda")
-        mus = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][maxout]))], vtype = GRB.CONTINUOUS, name="mu")
+        mus = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.CONTINUOUS, name="mu")
         rhos = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.CONTINUOUS, name="rho")
 
         # =============================================================================

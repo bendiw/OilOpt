@@ -1,5 +1,25 @@
 import numpy as np
 import matplotlib.tri as mtri
+import pandas as pd
+
+
+def get_limits(target, wellnames, well_to_sep):
+    df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
+    lower = {well:{} for well in wellnames}
+    upper = {well:{} for well in wellnames}
+    for well in wellnames:
+        for sep in well_to_sep[well]:
+            dfw = df.loc[df["well"]==well]
+            if(dfw["prs_dns"].isnull().sum()/dfw.shape[0] >= 0.7):
+                lower[well][sep] = dfw[target].min()
+                upper[well][sep] = dfw[target].max()
+            elif(sep=="HP"):
+                lower[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].min()
+                upper[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].max()
+            else:
+                lower[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].min()
+                upper[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].max()
+    return lower, upper
 
 def normalize(data):
     X = np.array([d for d in data[0][0]])

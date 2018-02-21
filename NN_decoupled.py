@@ -2,6 +2,7 @@ from gurobipy import *
 import numpy as np
 import tens
 import math
+import tools
 
 
 class NN:
@@ -52,9 +53,14 @@ class NN:
         self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD, well, sep)
         
         
-        
-        w_max_lims = [{self.wellnames[0]:self.w_max_glifts[self.wellnames[0]]}, {well:{sep:100 for sep in self.well_to_sep[well]} for well in self.wellnames}]
-        input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well][self.phasenames[0]][sep])}
+        w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
+        w_min_choke, w_max_choke = tools.get_limits("choke", self.wellnames, self.well_to_sep)
+        w_max_lims = [w_max_glift, w_max_choke]
+        w_min_lims = [w_min_glift, w_min_choke]
+        input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
+        input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
+#        w_max_lims = [{self.wellnames[0]:self.w_max_glifts[self.wellnames[0]]}, {well:{sep:100 for sep in self.well_to_sep[well]} for well in self.wellnames}]
+#        input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well][self.phasenames[0]][sep])}
 
         # =============================================================================
         # big-M
@@ -68,7 +74,7 @@ class NN:
         # =============================================================================
         #inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["gas"][sep])], vtype = GRB.CONTINUOUS, name="input")
         betas = self.m.addVars([(well,phase,sep)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="beta") #, lb = -math.inf
-        inputs = self.m.addVars(input_dict.keys(), ub = input_dict, name="input", vtype=GRB.CONTINUOUS)
+        inputs = self.m.addVars(input_upper.keys(), ub = input_upper,lb=input_lower, name="input", vtype=GRB.CONTINUOUS)
 #        routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
         alphas = self.m.addVars([(well,phase,sep, maxout)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for maxout in self.maxouts], vtype = GRB.CONTINUOUS, lb=-math.inf, name="alpha")
         lambdas = self.m.addVars([(well,phase,sep, maxout, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for maxout in self.maxouts for neuron in range(len(self.biases[well][phase][sep][maxout]))], vtype = GRB.BINARY, name="lambda")
