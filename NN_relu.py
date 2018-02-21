@@ -67,9 +67,6 @@ class NN:
         input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
         input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
         
-#        self.w_min_glifts, self.w_max_glifts = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
-#        w_max_lims = [{self.wellnames[0]:self.w_max_glifts[self.wellnames[0]]}, {well:{sep:100 for sep in self.well_to_sep[well]} for well in self.wellnames}]
-#        input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well][self.phasenames[0]][sep])}
 
         # =============================================================================
         # big-M
@@ -81,9 +78,7 @@ class NN:
         # =============================================================================
         # variable creation                    
         # =============================================================================
-        #inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["gas"][sep])], vtype = GRB.CONTINUOUS, name="input")
         inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.CONTINUOUS)
-#        routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
         lambdas = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.BINARY, name="lambda")
         mus = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.CONTINUOUS, name="mu")
         rhos = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep]))], vtype = GRB.CONTINUOUS, name="rho")
@@ -92,7 +87,6 @@ class NN:
         # NN MILP constraints creation
         # =============================================================================
         constr = self.m.addConstrs(mus[well, phase, sep, neuron] - rhos[well, phase, sep, neuron] - quicksum((self.weights[well][phase][sep][dim][neuron]*inputs[well, sep, dim]) for dim in range(self.multidims[well][phase][sep])) == self.biases[well][phase][sep][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])) )
-        print(self.weights)
 
         #indicator constraints
         self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 1) >> (mus[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep])))
