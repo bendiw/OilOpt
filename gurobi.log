@@ -18683,3 +18683,1263 @@ Solution count 3: 146039 138104 1.11698
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective 1.460387088422e+05, best bound 1.460387088422e+05, gap 0.0000%
+
+Gurobi 7.5.2 (win64, Python) logging started 02/21/18 08:27:17
+
+Academic license - for non-commercial use only
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 34 rows, 25 columns and 85 nonzeros
+Variable types: 14 continuous, 11 integer (11 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 14 continuous, 11 integer (11 binary)
+
+Root relaxation: objective 1.000000e+06, 8 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     2 1000000.000    0    2          - 1000000.000      -     -    0s
+*   13     2               5      -0.0000000 56781.9690      -   3.2    0s
+*   17     0               6    56781.968971 56781.9690  0.00%   2.8    0s
+
+Explored 19 nodes (67 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 56782 -0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.678196897135e+04, best bound 5.678196897135e+04, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 68 rows, 48 columns and 171 nonzeros
+Variable types: 27 continuous, 21 integer (21 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 21 integer (21 binary)
+
+Root relaxation: objective 1.000000e+06, 16 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     2 1000000.000    0    2          - 1000000.000      -     -    0s
+*   13     1               5      -0.0000000 5834.48455      -   2.8    0s
+*   18     1               7       0.6377592 5834.48455      -   2.4    0s
+*   23     0              11    5834.4845529 5834.48455  0.00%   2.2    0s
+
+Explored 24 nodes (73 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 3: 5834.48 0.637759 -0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552875e+03, best bound 5.834484552875e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 68 rows, 48 columns and 171 nonzeros
+Variable types: 27 continuous, 21 integer (21 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 21 integer (21 binary)
+
+Root relaxation: objective 1.000000e+06, 16 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     2 1000000.000    0    2          - 1000000.000      -     -    0s
+*   13     1               5      -0.0000000 5834.48455      -   2.8    0s
+*   18     1               7       0.6377592 5834.48455      -   2.4    0s
+*   23     0              11    5834.4845529 5834.48455  0.00%   2.2    0s
+
+Explored 24 nodes (73 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 3: 5834.48 0.637759 -0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552875e+03, best bound 5.834484552875e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 68 rows, 48 columns and 171 nonzeros
+Variable types: 27 continuous, 21 integer (21 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 21 integer (21 binary)
+
+Root relaxation: objective 1.000000e+06, 16 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     0 1000000.000    0    2          - 1000000.000      -     -    0s
+     0     2 1000000.000    0    2          - 1000000.000      -     -    0s
+*   13     1               5      -0.0000000 5834.48455      -   2.8    0s
+*   18     1               7       0.6377592 5834.48455      -   2.4    0s
+*   23     0              11    5834.4845529 5834.48455  0.00%   2.2    0s
+
+Explored 24 nodes (73 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 3: 5834.48 0.637759 -0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552875e+03, best bound 5.834484552875e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000801e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0008e+07    0    5          - 8.0008e+07      -     -    0s
+     0     0 7.5011e+07    0    5          - 7.5011e+07      -     -    0s
+     0     2 7.5011e+07    0    5          - 7.5011e+07      -     -    0s
+*    7     0               4    56781.968971 56781.9690  0.00%   4.6    0s
+
+Explored 9 nodes (67 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 56782 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.678196897133e+04, best bound 5.678196897133e+04, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.04 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 163 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 21 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*   14     4               6       0.6377592 5834.48455      -   2.1    0s
+*   27     2              10    5834.4845529 5834.48455  0.00%   1.8    0s
+
+Explored 28 nodes (74 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 5834.48 0.637759 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.834484552888e+03, best bound 5.834484552888e+03, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [5e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [3e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*    7     0               4       0.5048276    0.50483  0.00%   2.1    0s
+
+Explored 9 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.504828 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.048276484013e-01, best bound 5.048276484013e-01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+
+Explored 9 nodes (49 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [5e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [3e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+*    7     0               4       0.5048276    0.50483  0.00%   2.1    0s
+
+Explored 9 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.504828 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.048276484013e-01, best bound 5.048276484013e-01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+
+Explored 9 nodes (49 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+
+Explored 9 nodes (49 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+
+Explored 9 nodes (49 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000000e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0000e+07    0    5          - 8.0000e+07      -     -    0s
+     0     0 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+     0     2 7.5000e+07    0    5          - 7.5000e+07      -     -    0s
+
+Explored 9 nodes (49 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.000832e+07, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 8.0008e+07    0    7          - 8.0008e+07      -     -    0s
+     0     0 8.0008e+07    0    7          - 8.0008e+07      -     -    0s
+     0     2 8.0008e+07    0    7          - 8.0008e+07      -     -    0s
+*   15     0               8       0.1848200 2.0595e+07      -   2.9    0s
+*   16     0               8       0.2618456    0.26185  0.00%   3.2    0s
+
+Explored 17 nodes (83 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 0.261846 0.18482 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.618455819310e-01, best bound 2.618455819310e-01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 1.600000e+08, 23 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1.6000e+08    0   10          - 1.6000e+08      -     -    0s
+     0     2 1.5000e+08    0   10          - 1.5000e+08      -     -    0s
+*   17     2               8       0.7594142 5.0011e+07      -   2.4    0s
+
+Explored 25 nodes (72 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.759414 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.594141506853e-01, best bound 7.594141506853e-01, gap 0.0000%
+
+Gurobi 7.5.2 (win64, Python) logging started 02/21/18 09:53:07
+
+Academic license - for non-commercial use only
+
+Gurobi 7.5.2 (win64, Python) logging started 02/21/18 09:53:34
+
+Academic license - for non-commercial use only
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+08]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 1.600000e+08, 23 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1.6000e+08    0   10          - 1.6000e+08      -     -    0s
+     0     2 1.5000e+08    0   10          - 1.5000e+08      -     -    0s
+*   17     2               8       0.7594142 5.0011e+07      -   2.4    0s
+
+Explored 25 nodes (72 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.759414 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.594141506853e-01, best bound 7.594141506853e-01, gap 0.0000%
+
+Gurobi 7.5.2 (win64, Python) logging started 02/21/18 09:54:20
+
+Academic license - for non-commercial use only
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+08]
+  Objective range  [2e+00, 2e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+08]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 1.600166e+08, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1.6002e+08    0    7          - 1.6002e+08      -     -    0s
+     0     0 1.6002e+08    0    7          - 1.6002e+08      -     -    0s
+     0     2 1.6002e+08    0    7          - 1.6002e+08      -     -    0s
+*   15     0               8       0.3696401 4.1190e+07      -   2.9    0s
+*   16     0               8       0.5236912    0.52369  0.00%   3.2    0s
+
+Explored 17 nodes (83 simplex iterations) in 0.04 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 0.523691 0.36964 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.236911638619e-01, best bound 5.236911638619e-01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+06]
+  Objective range  [2e+00, 2e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 1.616636e+06, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 1616635.94    0    7          - 1616635.94      -     -    0s
+     0     0 1616635.94    0    7          - 1616635.94      -     -    0s
+     0     2 1616635.94    0    7          - 1616635.94      -     -    0s
+*   12     0               7       0.3696401 411896.589      -   2.7    0s
+*   13     0               7       0.5236912    0.52369  0.00%   2.8    0s
+
+Explored 14 nodes (68 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 0.523691 0.36964 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.236911641550e-01, best bound 5.236911641550e-01, gap 0.0000%
+
+Gurobi 7.5.2 (win64, Python) logging started 02/21/18 10:01:00
+
+Academic license - for non-commercial use only
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [4e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.083180e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 808317.971    0    7          - 808317.971      -     -    0s
+     0     0 808317.971    0    7          - 808317.971      -     -    0s
+     0     2 808317.971    0    7          - 808317.971      -     -    0s
+*   12     0               7       0.1848201 205948.294      -   2.7    0s
+*   13     0               7       0.2618456    0.26185  0.00%   2.8    0s
+
+Explored 14 nodes (68 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 0.261846 0.18482 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.618455820775e-01, best bound 2.618455820775e-01, gap 0.0000%
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 166 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [6e-03, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999992e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799999.165    0    5          - 799999.165      -     -    0s
+     0     0 749999.297    0    5          - 749999.297      -     -    0s
+     0     2 749999.297    0    5          - 749999.297      -     -    0s
+*    7     0               4       0.0187177    0.01872  0.00%   2.9    0s
+
+Explored 9 nodes (53 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.0187177 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.871765439864e-02, best bound 1.871765439864e-02, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 165 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [2e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     0 749999.071    0    5          - 749999.071      -     -    0s
+     0     2 749999.071    0    5          - 749999.071      -     -    0s
+*   17     2               8       0.1444948 10518.2179      -   2.3    0s
+*   23     0              10    10518.217867 10518.2179  0.00%   2.1    0s
+
+Explored 24 nodes (76 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 10518.2 0.144495 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 1.051821786713e+04, best bound 1.051821786713e+04, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     0 749999.127    0    5          - 749999.127      -     -    0s
+     0     2 749999.127    0    5          - 749999.127      -     -    0s
+
+Explored 9 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [5e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [6e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999992e+05, 18 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799999.194    0    5          - 799999.194      -     -    0s
+     0     0 749999.320    0    5          - 749999.320      -     -    0s
+     0     2 749999.320    0    5          - 749999.320      -     -    0s
+*    7     0               4       0.2517719    0.25177  0.00%   3.3    0s
+
+Explored 9 nodes (54 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.251772 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.517718916642e-01, best bound 2.517718916642e-01, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [3e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [2e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999994e+05, 19 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799999.441    0    5          - 799999.441      -     -    0s
+     0     0 749999.640    0    5          - 749999.640      -     -    0s
+     0     2 749999.640    0    5          - 749999.640      -     -    0s
+*    7     0               4       0.2588008    0.25880  0.00%   2.9    0s
+
+Explored 9 nodes (56 simplex iterations) in 0.02 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 0.258801 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.588008452440e-01, best bound 2.588008452440e-01, gap 0.0000%
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 48 columns and 166 nonzeros
+Variable types: 28 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [2e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 28 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 8.049418e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 804941.782    0    5          - 804941.782      -     -    0s
+     0     0 762503.491    0    5          - 762503.491      -     -    0s
+     0     2 762503.491    0    5          - 762503.491      -     -    0s
+*    7     0               4    50015.042947 50015.0429  0.00%   3.0    0s
+
+Explored 9 nodes (55 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 1: 50015 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 5.001504294656e+04, best bound 5.001504294656e+04, gap 0.0000%
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     0 749999.127    0    5          - 749999.127      -     -    0s
+     0     2 749999.127    0    5          - 749999.127      -     -    0s
+
+Explored 9 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [7e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     0 749999.127    0    5          - 749999.127      -     -    0s
+     0     2 749999.127    0    5          - 749999.127      -     -    0s
+
+Explored 9 nodes (46 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [7e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     0 749999.127    0    5          - 749999.127      -     -    0s
+     0     2 749999.127    0    5          - 749999.127      -     -    0s
+
+Explored 9 nodes (48 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Changed value of parameter NumericFocus to 3
+   Prev: 0  Min: 0  Max: 3  Default: 0
+Changed value of parameter Heuristics to 0.0
+   Prev: 0.05  Min: 0.0  Max: 1.0  Default: 0.05
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Optimize a model with 66 rows, 47 columns and 164 nonzeros
+Variable types: 27 continuous, 20 integer (20 binary)
+Coefficient statistics:
+  Matrix range     [4e-13, 1e+06]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [7e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+Variable types: 27 continuous, 20 integer (20 binary)
+
+Root relaxation: objective 7.999989e+05, 20 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 799998.943    0    5          - 799998.943      -     -    0s
+     0     2 799998.943    0    5          - 799998.943      -     -    0s
+
+Explored 9 nodes (42 simplex iterations) in 0.03 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
