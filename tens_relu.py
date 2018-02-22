@@ -160,6 +160,7 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
         breakpoints.append([xvalues[-1],yvalues[-1]])
         breakpoints_y.append(yvalues[-1])
         breakpoints_x.append(xvalues[-1])
+        
         if (plot):
             tens.plot_pred(total_x, pred, total_y)
             pyplot.ylabel(goal)
