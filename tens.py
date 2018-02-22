@@ -30,6 +30,7 @@ def add_layer(inputs, input_size, output_size, activation_function = None, maxou
         "With activation function", activation_function
     return output, W, b
 
+
 # =============================================================================
 # next batch returns an x-batch and an y-batch from "data" of size "size"
 # =============================================================================
@@ -40,6 +41,7 @@ def next_batch(data, size):
         batch_x.append(data[ran][0])
         batch_y.append(data[ran][1])
     return np.array(batch_x), np.array(batch_y)
+
 
 # =============================================================================
 # returns batches containing the entire "data"

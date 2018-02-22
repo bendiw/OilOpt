@@ -24,18 +24,18 @@ def add_layer(input_layer, name, neurons, activation = 'relu'):
                   kernel_regularizer=regularizers.l2(0.01))(input_layer)
     return layer
 
-def build_models(neurons = 20):
+def build_models(neurons = 40):
     inputs_1 = Input(shape=(1,))
     inputs_2 = Input(shape=(2,))
     
     layer_1 = add_layer(inputs_1, "relu_1D-1", neurons)
     layer_2 = add_layer(inputs_2, "relu_2D-1", neurons)
     
-    layer_21 = add_layer(layer_1, "relu_1D-2", neurons//2)
-    layer_22 = add_layer(layer_2, "relu_2D-2", neurons//2)
+#    layer_21 = add_layer(layer_1, "relu_1D-2", neurons//2)
+#    layer_22 = add_layer(layer_2, "relu_2D-2", neurons//2)
     
-    output_1 = Lambda(lambda x: backend.sum(x, axis=0))(layer_21)
-    output_2 = Lambda(lambda x: backend.sum(x, axis=0))(layer_22)
+    output_1 = Lambda(lambda x: backend.sum(x, axis=1), output_shape = (1,))(layer_1)
+    output_2 = Lambda(lambda x: backend.sum(x, axis=1), output_shape = (1,))(layer_2)
     
     model_1 = Model(inputs = inputs_1, outputs = output_1)
     model_2 = Model(inputs = inputs_2, outputs = output_2)
@@ -84,7 +84,8 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
         total_x, total_y = tens.total_batch(all_data_points)
         print(total_x)
         xvalues, yvalues = [], []
-        prediction = [[x] for x in model.predict(total_x)]
+        
+        prediction = [[x] for x in model.predict(np.array(total_x))]
         print(prediction)
         print(total_y)
         for i in range(len(total_x)):
