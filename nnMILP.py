@@ -9,6 +9,7 @@ from gurobipy import *
 import numpy as np
 import tens
 import math
+import tools
 
 # =============================================================================
 # get neural nets either by loading existing ones or training new ones
@@ -67,14 +68,17 @@ w_initial_prod = {well : 0 for well in wellnames}
 w_initial_vars = {well : [0,0] for well in wellnames}
 
 #dict with maximum gaslift in each well
-w_max_glift = {"A2":{"HP":124200.2899}, "A3":{"HP":99956.56739}, "A5":{"HP":125615.4024}, "A6":{"HP":150090.517}, "A7":{"HP":95499.28792}, "A8":{"HP":94387.68607}, "B1":{"HP":118244.94, "LP":118244.94}, 
-               "B2":{"HP":112660.5625, "LP":112660.5625}, "B3":{"HP":138606.6016, "LP":138606.6016},
-               "B4":{"HP":90000.0709, "LP":90000.0709}, "B5":{"HP":210086.0959, "LP":210086.0959}, "B6":{"HP":117491.1591, "LP":117491.1591}, "B7":{"HP":113035.4286, "LP":113035.4286}, 
-               "C1":{"LP":106860.5264}, "C2":{"LP":132718.54}, "C3" : {"LP":98934.12}, "C4":{"LP":124718.303}}
+#w_max_glift = {"A2":{"HP":124200.2899}, "A3":{"HP":99956.56739}, "A5":{"HP":125615.4024}, "A6":{"HP":150090.517}, "A7":{"HP":95499.28792}, "A8":{"HP":94387.68607}, "B1":{"HP":118244.94, "LP":118244.94}, 
+#               "B2":{"HP":112660.5625, "LP":112660.5625}, "B3":{"HP":138606.6016, "LP":138606.6016},
+#               "B4":{"HP":90000.0709, "LP":90000.0709}, "B5":{"HP":210086.0959, "LP":210086.0959}, "B6":{"HP":117491.1591, "LP":117491.1591}, "B7":{"HP":113035.4286, "LP":113035.4286}, 
+#               "C1":{"LP":106860.5264}, "C2":{"LP":132718.54}, "C3" : {"LP":98934.12}, "C4":{"LP":124718.303}}
 
-w_max_lims = [w_max_glift, {well:{sep:100 for sep in well_to_sep[well]} for well in wellnames}]
+w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", wellnames, well_to_sep)
+w_min_choke, w_max_choke = tools.get_limits("choke", wellnames, well_to_sep)
+w_max_lims = [w_max_glift, w_max_choke]
+w_min_lims = [w_min_glift, w_min_choke]
 
-print(w_max_lims[1])
+#print(w_max_lims[1])
 
 
 
@@ -103,8 +107,8 @@ multidims, weights, biases = getNeuralNets(LOAD)
 w_route_flow_vars = {}
 w_route_bin_vars = {}
 
-input_dict = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["oil"][sep])}
-
+input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["oil"][sep])}
+input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["oil"][sep])}
 # =============================================================================
 # big-M
 # =============================================================================
@@ -116,7 +120,7 @@ beta_M = {well : {phase : {sep : 1000000 for sep in well_to_sep[well]} for phase
 # variable creation                    
 # =============================================================================
 #inputs = m.addVars([(well,sep, dim) for well in wellnames for sep in well_to_sep[well] for dim in range(multidims[well]["gas"][sep])], vtype = GRB.CONTINUOUS, name="input")
-inputs = m.addVars(input_dict.keys(), ub = input_dict, name="input", vtype=GRB.CONTINUOUS)
+inputs = m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.CONTINUOUS)
 routes = m.addVars([(well, sep) for well in wellnames for sep in well_to_sep[well]], vtype = GRB.BINARY, name="routing")
 betas = m.addVars([(well,phase,sep)  for phase in phasenames for well in wellnames for sep in well_to_sep[well]], vtype = GRB.CONTINUOUS, name="beta") #, lb = -math.inf
 alphas = m.addVars([(well,phase,sep, maxout)  for phase in phasenames for well in wellnames for sep in well_to_sep[well] for maxout in maxouts], vtype = GRB.CONTINUOUS, lb=-math.inf, name="alpha")
@@ -144,7 +148,7 @@ m.addConstrs(alphas[well, phase, sep, maxout] + (lambdas[well, phase, sep, maxou
 
 
 #beta value constraint 7.6
-m.addConstrs(betas[well, phase, sep] <= alphas[well, phase, sep, maxouts[0]] - alphas[well, phase, sep, maxouts[1]] for phase in phasenames for well in wellnames for sep in well_to_sep[well])
+m.addConstrs(betas[well, phase, sep] == alphas[well, phase, sep, maxouts[0]] - alphas[well, phase, sep, maxouts[1]] for phase in phasenames for well in wellnames for sep in well_to_sep[well])
 
 #beta big-M constraint 7.7
 m.addConstrs(betas[well, phase, sep] - routes[well, sep]*beta_M[well][phase][sep] <= 0 for phase in phasenames for well in wellnames for sep in well_to_sep[well])
