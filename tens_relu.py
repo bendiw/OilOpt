@@ -199,7 +199,6 @@ def load(well, phase, separator ):
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-    print(content)
     dim = int(content[0])
     w = []
     b = []
