@@ -5,6 +5,8 @@ import math
 import tools
 
 
+#ok
+
 class NN:
     well_to_sep = {}
     wellnames = []
