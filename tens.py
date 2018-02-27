@@ -421,7 +421,7 @@ def save_variables(datafile, hp, goal, is_3d):
         var=tf.trainable_variables()[-4:]
     else:
         file.write("1\n")
-        var=tf.trainable_variables[-8:-4]
+        var=tf.trainable_variables()[-8:-4]
     for i in range(0,3,2):
         line = ""
         w = var[i].eval()
