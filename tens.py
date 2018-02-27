@@ -529,7 +529,9 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
     else:
         sess, train_step, x, y_, keep_prob, out, regloss = prev[0][0], prev[0][1], prev[0][2], prev[0][3], prev[0][4], prev[0][5], prev[0][6]
         print("Well",datafile, goal, "- Gaslift only")
-    loss = tf.reduce_mean(tf.abs(y_ - out))
+#    loss = tf.reduce_mean(tf.abs(y_ - out))
+    loss = tf.losses.mean_squared_error(y_, out)
+
     all_data_points = data.copy()
     val_loss = []
     train_loss = []
@@ -572,7 +574,7 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
                 val_loss.append(vloss)
                 tloss = sess.run(loss, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: 1.0})
                 train_loss.append(tloss)
-#                print ("Step %04d" %i, " validation loss = %g" %vloss, "  training loss = %g" %tloss)
+                print ("Step %04d" %i, " validation loss = %g" %vloss, "  training loss = %g" %tloss)
 # =============================================================================
 #         test_x, test_y = total_batch(test_set)
 #         test_error = sess.run(loss, feed_dict={x: test_x, y_: test_y, keep_prob: 1.0})

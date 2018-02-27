@@ -1,9 +1,12 @@
 from gurobipy import *
+from gurobipy import Model
 import numpy as np
 import tens
 import math
 import tools
 
+
+#ok
 
 class NN:
     well_to_sep = {}
@@ -51,7 +54,7 @@ class NN:
         # =============================================================================
         self.m = Model("Ekofisk")
         self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD, well, sep)
-        
+        print(self.weights, "\n", self.biases)
         
         w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
         w_min_choke, w_max_choke = tools.get_limits("choke", self.wellnames, self.well_to_sep)
@@ -80,7 +83,7 @@ class NN:
         lambdas = self.m.addVars([(well,phase,sep, maxout, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for maxout in self.maxouts for neuron in range(len(self.biases[well][phase][sep][maxout]))], vtype = GRB.BINARY, name="lambda")
         mus = self.m.addVars([(well,phase,sep, maxout, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for maxout in self.maxouts for neuron in range(len(self.biases[well][phase][sep][maxout]))], vtype = GRB.CONTINUOUS, lb = -math.inf, name="mu")
     
-        print(inputs)
+#        print(inputs)
         # =============================================================================
         # NN MILP constraints creation
         # =============================================================================
@@ -92,7 +95,7 @@ class NN:
                     for maxout in self.maxouts:
                         for neuron in range(len(self.biases[well][phase][sep][maxout])):
                             self.m.addConstr(mus[well, phase, sep, maxout, neuron] - self.weights[well][phase][sep][maxout][0][neuron]*inputs[well, sep, 0] == self.biases[well][phase][sep][maxout][neuron])
-        print(self.weights)
+#        print(self.weights)
 
             
         
