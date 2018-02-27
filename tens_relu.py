@@ -198,13 +198,16 @@ def load(well, phase, separator ):
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-    print (content)
+#    print (content)
     dim = int(content[0])
     w = []
     b = []
     for k in range(1,3):
         if(dim == 1):
-            w.append([float(x) for x in content[k].split()])
+            if(k==1):
+                w.append([[float(x) for x in content[k].split()]])
+            else:
+                w.append([float(x) for x in content[k].split()])
             b.append([float(x) for x in content[k+2].split()])
         else:
             return
