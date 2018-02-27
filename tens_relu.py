@@ -43,7 +43,7 @@ def leaky_relu(x):
 # weights and biases are reinitialized. Sends prev back and forth between methods. Prev has
 #    all the necessary TF session information
 # =============================================================================
-def hey(datafile, test_error = False, goal='oil', grid_size = 8, plot = False,learning_rate=0.001, factor = 1.5, cross_validation = None,
+def hey(datafile, test_error = False, goal='oil', grid_size = 8, plot = False,learning_rate=0.01, factor = 1.5, cross_validation = None,
         epochs = 15000, beta = 0.01, val_interval = None, train_frac = 1.0, val_frac = 0.0, n_hidden = 15,
         k_prob = 1.0, normalize = False, intervals = 20, nan_ratio = 0.3, hp=1, prev = None, save = False):
     if (prev == None):
@@ -189,6 +189,7 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
     
     if (save):
         tens.save_variables(datafile, hp, goal, is_3d)
+    sess.close()
     return is_3d, breakpoints, prev, total_x, pred, total_y, R2, dict_data, means, stds, train_loss, val_loss
     
 
@@ -198,17 +199,26 @@ def load(well, phase, separator ):
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
+
 #    print (content)
+
     dim = int(content[0])
     w = []
     b = []
     for k in range(1,3):
+        b.append([float(x) for x in content[k+2].split()])
         if(dim == 1):
-            if(k==1):
+
+            if (k==1):
                 w.append([[float(x) for x in content[k].split()]])
             else:
                 w.append([float(x) for x in content[k].split()])
-            b.append([float(x) for x in content[k+2].split()])
+
         else:
-            return
+            content[k]=content[k].split()
+            if (k==1):
+                w.append([[float(content[k][x]) for x in range(len(content[k])//2)],
+                       [float(content[k][x]) for x in range(len(content[k])//2,len(content[k]))]])
+            else:
+                w.append([float(x) for x in content[k]])
     return dim, w, b
