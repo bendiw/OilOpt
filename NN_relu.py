@@ -62,7 +62,7 @@ class NN:
         # =============================================================================
         w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
         w_min_choke, w_max_choke = tools.get_limits("choke", self.wellnames, self.well_to_sep)
-        w_max_lims = [w_max_glift, w_max_choke]
+        w_max_lims = [w_max_glift, w_max_choke] 
         w_min_lims = [w_min_glift, w_min_choke]
         input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
         input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
