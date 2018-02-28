@@ -7,6 +7,7 @@ import caseloader as cl
 import tools
 import plotter
 import tens
+from sklearn.preprocessing import RobustScaler
 
 # =============================================================================
 # This is the file handling the Tensorflow module, regularization, cross_validation,
@@ -23,8 +24,8 @@ def add_layer(inputs, input_size, output_size, bias = True, activation_function 
     weightname = "weight-"+relu_unit
     biasname = "bias-"+relu_unit
     if (bias == True):
-        W = tf.Variable(np.random.uniform(-1, 1, size = (input_size, output_size)), name=weightname)
-        b = tf.Variable(np.random.uniform(-10000, 10000, size =output_size), name=biasname)
+        W = tf.Variable(np.random.uniform(-0.05, 0.05, size = (input_size, output_size)), name=weightname)
+        b = tf.Variable(np.random.uniform(0, 0, size =output_size), name=biasname)
         output = tf.matmul(inputs, W) + b
     else:
         W = tf.Variable(np.ones((input_size, output_size)), name=weightname)
@@ -36,7 +37,7 @@ def add_layer(inputs, input_size, output_size, bias = True, activation_function 
     return output, W, b
 
 def leaky_relu(x):
-    return tf.nn.relu(x) - 0.3*tf.nn.relu(-x)
+    return tf.nn.relu(x) - 0.001*tf.nn.relu(-x)
 
 # =============================================================================
 #  Initiates a new TF network if an old one is not provided. If an old one is provided, the
@@ -44,7 +45,7 @@ def leaky_relu(x):
 #    all the necessary TF session information
 # =============================================================================
 def hey(datafile, test_error = False, goal='oil', grid_size = 8, plot = False,learning_rate=0.01, factor = 1.5, cross_validation = None,
-        epochs = 15000, beta = 0.01, val_interval = None, train_frac = 1.0, val_frac = 0.0, n_hidden = 15,
+        epochs = 100000, beta = 0.01, val_interval = None, train_frac = 1.0, val_frac = 0.0, n_hidden = 40,
         k_prob = 1.0, normalize = False, intervals = 20, nan_ratio = 0.3, hp=1, prev = None, save = False):
     if (prev == None):
         prev = [0]*2
@@ -64,7 +65,7 @@ def hey(datafile, test_error = False, goal='oil', grid_size = 8, plot = False,le
         x2 = tf.placeholder(tf.float64, [None,2])
         y_2 = tf.placeholder(tf.float64, [None,1])
         keep_prob2 = tf.placeholder(tf.float64)
-        L2, W2, b2 = add_layer(x2, 2, n_hidden, activation_function = leaky_relu, relu_unit="2-1")
+        L2, W2, b2 = add_layer(x2, 2, n_hidden, activation_function = tf.nn.relu, relu_unit="2-1")
         regularizers2 = tf.nn.l2_loss(W2)
         L22, W22, b22 = add_layer(L2, n_hidden, 1, activation_function = None, bias=True, relu_unit="2-2")
         out2 = tf.nn.dropout(L22, keep_prob2)
@@ -105,7 +106,7 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
     if (cross_validation == None):
         train_set, validation_set, test_set = tens.generate_sets(data, train_frac, val_frac)
         for i in range(epochs + 1):
-            batch_xs, batch_ys = tens.total_batch(train_set)
+            batch_xs, batch_ys = tens.next_batch(train_set, 20)
 #            print (batch_xs, batch_ys)
             sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys, keep_prob: k_prob})
             if (val_interval != None and val_frac > 0 and i%val_interval == 0):
