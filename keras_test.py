@@ -9,7 +9,7 @@ from keras.models import Model, Sequential
 import numpy as np
 from matplotlib import pyplot
 import caseloader as cl
-import tools
+import tools as t
 import plotter
 from sklearn.preprocessing import normalize, RobustScaler
 import random
@@ -18,87 +18,146 @@ import copy
 import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
-def run(epochs = 1000, neurons = 40, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, hp = 1, train_frac = 0.8,
-                  val_frac = 0.1, plot = True):
-    
-    
+def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+                  val_frac = 0.1, plot = False, save=False, regu = 0.001):
+    pyplot.ioff()
+    if separator == "HP":
+        hp=1
+    else:
+        hp=0
+    #TODO: add regularization, validation etc
 # =============================================================================
-#     old architecture
+#     load and normalize data
 # =============================================================================
-    model_1= Sequential()
-    model_1.add(Dense(neurons, input_shape=(1,)))
-    model_1.add(Activation("relu"))
+    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+    if (len(data[0][0]) >= 2):
+        is_3d = True
+        dim = 2
+    else:
+        is_3d = False
+        dim=1
+    rs = RobustScaler(with_centering =False)
+    if is_3d:
+        glift_orig = np.array([x[0][0] for x in data])
+        choke_orig = np.array([x[0][1] for x in data])
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        glift = rs.fit_transform(glift_orig.reshape(-1,1))
+        choke = rs.transform(choke_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-2, 1))
+        X =[[glift[i][0], choke[i][0]] for i in range(len(glift))]
+    else:
+        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        X = rs.fit_transform(X_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-1, 1))
+#    rs.fit(X_orig)
     
-    model_1.add(Dense(1, ))
-    model_1.add(Activation("linear"))
+
+# =============================================================================
+#     ReLU architecture
+# =============================================================================
+    if mode=="relu":
+            
+        model_1= Sequential()
+        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        
+        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("linear"))
 # =============================================================================
 #     maxout architecture
 # =============================================================================
-#    a = Input((1,))
-#    b = (Dense(neurons, input_shape=(1,)))(a)
-#    c = (Dense(neurons, input_shape=(1,)))(a)
-#    d = MaxoutDense(output_dim=1)(b)
-#    e = MaxoutDense(output_dim=1)(c)
-#    f = Subtract()([d,e])
-#    model_1 = Model(a, f)
+    else:
+        a = Input((dim,))
+        b = (Dense(neurons, input_shape=(dim,)))(a)
+        c = (Dense(neurons, input_shape=(dim,)))(a)
+        d = MaxoutDense(output_dim=1)(b)
+        e = MaxoutDense(output_dim=1)(c)
+        f = Subtract()([d,e])
+        model_1 = Model(a, f)
         
+    #compile model
+    model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
+    
+    print(model_1.summary())
+# =============================================================================
+#     train model on normalized data
+# =============================================================================
+    model_1.fit(X, y, 
+            epochs = epochs, batch_size=100, verbose=0)
     
 # =============================================================================
+#     initialize new model with pretrained weights
+# =============================================================================
+    model_2= Sequential()
+    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dense(1,  weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1), rs.inverse_transform(model_1.layers[2].get_weights()[1].reshape(-1,1)).reshape(1,)]))
+    model_2.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
 
-    
-    model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
-    deg = 2
-#    all_data_orig= [[i, random.randint(0, i+5*(i+1))] for i in range(10)]
-#    all_data_orig = [[x, x**deg] for x in np.arange(-3, 3, 0.5)]
-    all_data_orig = [[x, math.sin(x)] for x in np.arange(-5, 5, 0.5)]
-#    for i in range(0,len(all_data_orig), 2):
-#        all_data_orig[i][1] = random.randint(-i, i)
-#    all_data_orig = [[94218.22902686402, 202.88931920759566], [98382.84899564099, 137.42681397671845], [100147.06876999052, 36.34664144212609], [103971.12043888686, 82.04293442285885], [104921.42497957515, 147.50283790283785], [119435.29586281738, 46.55084437315633], [120773.1523822956, 71.94729306017095], [122231.47520490436, 56.97724788683303], [124718.30296345525, 47.911507710447616]]
-#    
-#    all_data_orig = normalize(all_data_orig, axis=0)
-#    print(all_data_orig)
+    if save or plot:
+        if(is_3d):
+            X = rs.inverse_transform(X)
+            y = rs.inverse_transform(y)
+            prediction = [x for x in model_2.predict(X)]
+            plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
+        else:
+            X = rs.inverse_transform(X)
+            y = rs.inverse_transform(y)
+            prediction = [x for x in model_2.predict(X)]
+            fig = pyplot.figure()
+            pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
+            pyplot.plot(X, prediction, color='green', linestyle='dashed')
+        if save:
+            fig.savefig(well + "-" + separator + "-" + goal+"-fig")
+        if plot:
+            pyplot.show()
+        else:
+            pyplot.close(fig)
 
-    all_data_orig = pos_norm(all_data_orig)
-#    X = np.array([x[0] for x in all_data_orig])
-#    y = np.array([x[1] for x in all_data_orig])
-#    all_data_orig = RobustScaler().fit_transform(X.reshape(-1,1), y.reshape(-1, 1))
-    
-    
-    all_data = copy.deepcopy(all_data_orig)
-    print(all_data)
-    random.shuffle(all_data)
-    train_set = all_data[0:math.floor(len(all_data)*train_frac)]
-    validation_set = all_data[len(train_set):len(all_data)]
-#    model_1.fit(train_set, y, 
-#            epochs = epochs, batch_size=20, verbose=0)
-    model_1.fit(np.array([x[0] for x in train_set]), np.array([x[1] for x in train_set]), 
-                epochs = epochs, batch_size=20, verbose=0)
-    print(model_1.summary())
-#    weights = model_1.layers[0].get_weights()[0]
-#    biases = model_1.layers[0].get_weights()[1]
-#    print("w:", weights)
-#    print("\n b:", biases)
-#    total_y = y
-#    total_x = X
-    total_x = [[x[0]] for x in all_data_orig]
-    total_y = [[x[1]] for x in all_data_orig]
-#    print(total_x)
-    prediction = [x for x in model_1.predict(total_x)]
-#    for i in range(len(prediction)):
-#        print("x:", total_x[i], "pred:", prediction[i])
-    pyplot.figure()
-    pyplot.plot(total_x, total_y, linestyle='None', marker = '.',markersize=8)
-    pyplot.plot(total_x, prediction, color='green', linestyle='dashed')
+# =============================================================================
+#     save denormalized model to file
+# =============================================================================
+    if save:
+        save_variables(well, hp, goal, is_3d, model_2.get_weights())
 
-def pos_norm(data):
-    max_in = 0
-    max_out = 0
-    min_in = 0
-    min_out = 0
-    for i in data:
-        max_in = max(max_in, i[0])
-        min_in = min(min_in, i[0])
-        max_out = max(max_out, i[1])
-        min_out = min(min_out, i[1])    
-#    print(min_out)
-    return [[(data[i][0]-min_in)/(max_in-min_in), (data[i][1]-min_out)/(max_out-min_out)] for i in range(len(data))]
+def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
+    df = cl.load("welltests_new.csv")
+    dict_data,_,_ = cl.gen_targets(df, well+"", goal=goal, normalize=False, intervals=intervals,
+                               factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
+    data = tens.convert_from_dict_to_tflists(dict_data)
+    return data
+
+def save_variables(datafile, hp, goal, is_3d, neural):
+    if(hp==1):
+        sep = "HP"
+    else:
+        sep = "LP"
+    filename = "" + datafile + "-" + sep + "-" + goal
+#    print("Filename:", filename)
+    file = open(filename + ".txt", "w")
+    if (is_3d):
+        file.write("2\n")
+    else:
+        file.write("1\n")
+        for i in range(0,3,2):
+            line = ""
+            w = neural[i]
+            for x in w:
+                for y in x:
+                    line += str(y) + " "
+            file.write(line+"\n")
+        for i in range(1,4,2):
+            line = ""
+            b = neural[i]
+            for x in b:
+                line += str(x) + " "
+            file.write(line+"\n")
+    file.close()
+    
+def save_all():
+    for well in t.wellnames:
+        for phase in t.phasenames:
+            for sep in t.well_to_sep[well]:
+                print(well, phase, sep)
+                run(well, separator=sep, goal=phase, save=True, nan_ratio=0)
