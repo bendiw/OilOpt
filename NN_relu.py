@@ -8,7 +8,7 @@ from gurobipy import *
 import numpy as np
 import tens_relu
 import math
-import tools
+import tools as t
 class NN:
     well_to_sep = {}
     wellnames = []
@@ -30,38 +30,46 @@ class NN:
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
     # =============================================================================
-    def getNeuralNet(self, mode, well, sep):
+    def getNeuralNet(self, mode):
         weights = {well : {} for well in self.wellnames}
         biases = {well : {} for well in self.wellnames}
         multidims = {well : {} for well in self.wellnames}
-        for platform in self.platforms:
-            for well in self.p_dict[platform]:
-                for phase in self.phasenames:
-                    weights[well][phase] = {}
-                    biases[well][phase] = {}
-                    multidims[well][phase] = {}
-                    for separator in self.p_sep_names[platform]:
-                        if mode==self.LOAD:
-    #                        print(well, separator)
-                            multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.load(well, phase, separator)
-                        else:
-                            multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.train(well, phase, separator)
+        for well in self.wellnames:
+            for phase in self.phasenames:
+                weights[well][phase] = {}
+                biases[well][phase] = {}
+                multidims[well][phase] = {}
+                for separator in self.well_to_sep[well]:
+                    if mode==self.LOAD:
+#                        print(well, separator)
+                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.load(well, phase, separator)
+                    else:
+                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.train(well, phase, separator)
         return multidims, weights, biases
     
     
-    def run(self, well, sep):
+    def run_all(self):
+        self.wellnames = t.wellnames
+        self.well_to_sep = t.well_to_sep
+        self.platforms= t.platforms
+        self.p_dict = t.p_dict
+        self.p_sep_names = t.p_sep_names
+        self.phasenames = t.phasenames
+        self.run()
+            
+    def run(self):
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
         self.m = Model("Ekofisk")
-        self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD, well, sep)
+        self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD)
         
         
         # =============================================================================
         # get input variable bounds        
         # =============================================================================
-        w_min_glift, w_max_glift = tools.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
-        w_min_choke, w_max_choke = tools.get_limits("choke", self.wellnames, self.well_to_sep)
+        w_min_glift, w_max_glift = t.get_limits("gaslift_rate", self.wellnames, self.well_to_sep)
+        w_min_choke, w_max_choke = t.get_limits("choke", self.wellnames, self.well_to_sep)
         w_max_lims = [w_max_glift, w_max_choke] 
         w_min_lims = [w_min_glift, w_min_choke]
         input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])}
@@ -105,8 +113,8 @@ class NN:
         # =============================================================================
         self.m.setParam(GRB.Param.NumericFocus, 3)
         self.m.setObjective(quicksum(mus[well, "oil", sep, neuron]*self.weights[well]["oil"][sep][1][neuron] for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well]["oil"][sep][0]))) + quicksum([self.biases[well]["oil"][sep][1][0] for well in self.wellnames for sep in self.well_to_sep[well]]), GRB.MAXIMIZE)
-        self.m.setParam(GRB.Param.Heuristics, 0)
-        self.m.setParam(GRB.Param.Presolve, 0)
+#        self.m.setParam(GRB.Param.Heuristics, 0)
+        self.m.setParam(GRB.Param.Presolve, 2)
         self.m.optimize()
     
     
@@ -121,4 +129,4 @@ class NN:
         self.p_dict[well[0]] = [well]
         self.p_sep_names[self.platforms[0]] = [sep]
         self.phasenames = ["oil", "gas"]
-        self.run(well, sep)
+        self.run()

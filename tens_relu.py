@@ -200,7 +200,7 @@ def load(well, phase, separator ):
         content = f.readlines()
     content = [x.strip() for x in content]
     
-    print (content)
+#    print (content)
 
     dim = int(content[0])
     w = []

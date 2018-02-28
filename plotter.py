@@ -10,6 +10,7 @@ import matplotlib.tri as mtri
 
 def plot3d(x, y, z, well):
     fig = plt.figure()
+    print(x,y,z)
     ax = fig.add_subplot(111, projection='3d')
     x = np.array(x)
     y = np.array(y)

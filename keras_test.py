@@ -9,7 +9,7 @@ from keras.models import Model, Sequential
 import numpy as np
 from matplotlib import pyplot
 import caseloader as cl
-import tools
+import tools as t
 import plotter
 from sklearn.preprocessing import normalize, RobustScaler
 import random
@@ -18,30 +18,59 @@ import copy
 import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
-def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, hp = 1, train_frac = 1.0,
-                  val_frac = 0.1, plot = True, save=False):
-    
-    
+def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+                  val_frac = 0.1, plot = False, save=False, regu = 0.001):
+    pyplot.ioff()
+    if separator == "HP":
+        hp=1
+    else:
+        hp=0
     #TODO: add regularization, validation etc
+# =============================================================================
+#     load and normalize data
+# =============================================================================
+    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+    if (len(data[0][0]) >= 2):
+        is_3d = True
+        dim = 2
+    else:
+        is_3d = False
+        dim=1
+    rs = RobustScaler(with_centering =False)
+    if is_3d:
+        glift_orig = np.array([x[0][0] for x in data])
+        choke_orig = np.array([x[0][1] for x in data])
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        glift = rs.fit_transform(glift_orig.reshape(-1,1))
+        choke = rs.transform(choke_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-2, 1))
+        X =[[glift[i][0], choke[i][0]] for i in range(len(glift))]
+    else:
+        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        X = rs.fit_transform(X_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-1, 1))
+#    rs.fit(X_orig)
     
+
 # =============================================================================
 #     ReLU architecture
 # =============================================================================
     if mode=="relu":
             
         model_1= Sequential()
-        model_1.add(Dense(neurons, input_shape=(1,)))
+        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
         
-        model_1.add(Dense(1, ))
+        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
 # =============================================================================
 #     maxout architecture
 # =============================================================================
     else:
-        a = Input((1,))
-        b = (Dense(neurons, input_shape=(1,)))(a)
-        c = (Dense(neurons, input_shape=(1,)))(a)
+        a = Input((dim,))
+        b = (Dense(neurons, input_shape=(dim,)))(a)
+        c = (Dense(neurons, input_shape=(dim,)))(a)
         d = MaxoutDense(output_dim=1)(b)
         e = MaxoutDense(output_dim=1)(c)
         f = Subtract()([d,e])
@@ -50,54 +79,41 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
     #compile model
     model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
     
-    
-# =============================================================================
-#     load and normalize data
-# =============================================================================
-    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
-    if (len(data[0][0]) >= 2):
-        is_3d = True
-    else:
-        is_3d = False
-        
-    rs = RobustScaler(with_centering =False)
-    if(not is_3d):
-        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
-        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
-    rs.fit(X_orig)
-    X = rs.fit_transform(X_orig.reshape(-1,1))
-    y = rs.transform(y_orig.reshape(-1, 1))
-    
-    
+    print(model_1.summary())
 # =============================================================================
 #     train model on normalized data
 # =============================================================================
     model_1.fit(X, y, 
             epochs = epochs, batch_size=100, verbose=0)
     
-    if plot:
-        prediction = [x for x in model_1.predict(X)]
-        pyplot.figure()
-        pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
-        pyplot.plot(X, prediction, color='green', linestyle='dashed')
-        
 # =============================================================================
 #     initialize new model with pretrained weights
 # =============================================================================
     model_2= Sequential()
-    model_2.add(Dense(neurons, input_shape=(1,), weights = [model_1.layers[0].get_weights()[0].reshape(1,neurons), rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
     model_2.add(Activation("relu"))
     model_2.add(Dense(1,  weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1), rs.inverse_transform(model_1.layers[2].get_weights()[1].reshape(-1,1)).reshape(1,)]))
     model_2.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
 
-    if plot:
-        X = rs.inverse_transform(X)
-        y = rs.inverse_transform(y)
-        prediction = [x for x in model_2.predict(X)]
-        pyplot.figure()
-        pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
-        pyplot.plot(X, prediction, color='green', linestyle='dashed')
-
+    if save or plot:
+        if(is_3d):
+            X = rs.inverse_transform(X)
+            y = rs.inverse_transform(y)
+            prediction = [x for x in model_2.predict(X)]
+            plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
+        else:
+            X = rs.inverse_transform(X)
+            y = rs.inverse_transform(y)
+            prediction = [x for x in model_2.predict(X)]
+            fig = pyplot.figure()
+            pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
+            pyplot.plot(X, prediction, color='green', linestyle='dashed')
+        if save:
+            fig.savefig(well + "-" + separator + "-" + goal+"-fig")
+        if plot:
+            pyplot.show()
+        else:
+            pyplot.close(fig)
 
 # =============================================================================
 #     save denormalized model to file
@@ -113,8 +129,6 @@ def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
     return data
 
 def save_variables(datafile, hp, goal, is_3d, neural):
-    for l in neural:
-        print("\n", l)
     if(hp==1):
         sep = "HP"
     else:
@@ -140,3 +154,10 @@ def save_variables(datafile, hp, goal, is_3d, neural):
                 line += str(x) + " "
             file.write(line+"\n")
     file.close()
+    
+def save_all():
+    for well in t.wellnames:
+        for phase in t.phasenames:
+            for sep in t.well_to_sep[well]:
+                print(well, phase, sep)
+                run(well, separator=sep, goal=phase, save=True, nan_ratio=0)
