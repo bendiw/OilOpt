@@ -31,8 +31,8 @@ def add_layer(input_layer, name, neurons, activation = 'relu'):
                   kernel_regularizer=regularizers.l2(0.01))(input_layer)
     return layer
 
-def build_models(neurons = 5):
-    regu = 0.001
+def build_models(neurons = 10):
+    regu = 0.00001
     
     model_1= Sequential()
     model_2 = Sequential()
@@ -45,19 +45,17 @@ def build_models(neurons = 5):
 # =============================================================================
 #     old, regularized
 # =============================================================================
-    model_1.add(Dense(neurons, input_shape=(1,),kernel_initializer=initializers.random_uniform(minval=-5, maxval=5),
-                  use_bias=True, bias_initializer=initializers.random_uniform(minval=-100,maxval=100),
-                  bias_regularizer=regularizers.l2(regu),
-                  kernel_regularizer=regularizers.l2(regu)))
+    model_1.add(Dense(neurons, input_shape=(1,)))
     model_1.add(Activation("relu"))
     
-    model_1.add(Dense(neurons,kernel_initializer=initializers.random_uniform(minval=-5, maxval=5),
-                  use_bias=True, bias_initializer=initializers.random_uniform(minval=-100,maxval=100),
-                  bias_regularizer=regularizers.l2(regu),
-                  kernel_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
-    model_1.add(Dense(1, trainable=False))
-    model_1.add(Lambda(lambda x: backend.sum(x, axis=1),output_shape=(1,)))
+#    model_1.add(Dense(neurons,kernel_initializer=initializers.random_uniform(minval=0, maxval=5),
+#                  use_bias=True, bias_initializer=initializers.random_uniform(minval=0,maxval=100),
+#                  bias_regularizer=regularizers.l2(regu),
+#                  kernel_regularizer=regularizers.l2(regu)))
+#    model_1.add(Activation("relu"))
+    model_1.add(Dense(1,))
+#    model_1.add(Activation("relu"))
+#    model_1.add(Lambda(lambda x: backend.sum(x, axis=0),output_shape=(1,)))
 # =============================================================================
 
     
@@ -66,7 +64,7 @@ def build_models(neurons = 5):
     model_2.add(Activation("relu"))
 #    model_2.add(Dense(1))
 #    model_2.add(Activation("softmax"))
-    model_2.add(Dense(1, trainable=False))
+    model_2.add(Dense(1, trainable=True))
     model_2.add(Lambda(lambda x: backend.sum(x, axis=1), output_shape=(1,)))
 
 #    inputs_1 = Input(shape=(1,))
@@ -84,15 +82,17 @@ def build_models(neurons = 5):
 #    model_1 = Model(inputs = inputs_1, outputs = output_1)
 #    model_2 = Model(inputs = inputs_2, outputs = output_2)
 #        
-    model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = losses.mean_squared_error)
+    model_1.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
+
     model_2.compile(optimizer=optimizers.adam(lr=0.01), loss = losses.mean_squared_error)
-    print(model_1)
     return model_1, model_2
 
 
-    
+def run(well):
+    train_on_well(well, build_models(), plot=True)
+
 def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, hp = 1, train_frac = 0.8,
-                  val_frac = 0.1, plot = False):
+                  val_frac = 0.1, plot = True):
     df = cl.load("welltests_new.csv")
     dict_data, means, stds = cl.gen_targets(df, datafile+"", goal=goal, normalize=False, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
@@ -108,9 +108,12 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
         print("Well",datafile, goal, "- Gaslift only")
     all_data_points = data.copy()
     train_set, validation_set, test_set = tens.generate_sets(data, train_frac, val_frac)
-    print(train_set[0])
-    model.fit(np.array([x[0] for x in train_set]), np.array([x[1] for x in train_set]), epochs = 1000, batch_size=20, verbose=1)
+    print("train", train_set)
+    model.fit(np.array([x[0] for x in train_set]), np.array([x[1] for x in train_set]), 
+              epochs = 1000, batch_size=20, verbose=0)
     grid_size=10
+    print(model.summary())
+
     if (is_3d):
         x_vals = tens.get_x_vals(dict_data, grid_size)
         prediction = model.predict(np.array(x_vals))
@@ -128,10 +131,10 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
         breakpoints = tools.delaunay(x1,x2,z) 
     else:
         total_x, total_y = tens.total_batch(all_data_points)
-#        print(total_x)
+        print("total x\n",total_x)
         xvalues, yvalues = [], []
         prediction = [[x] for x in model.predict(total_x)]
-#        print(prediction)
+#        print(prediction[0][0])
 #        print(total_y)
         for i in range(len(total_x)):
             xvalues.append(total_x[i][0])
@@ -151,7 +154,8 @@ def train_on_well(datafile, models, goal = 'oil', intervals = 20, factor = 1.5, 
         breakpoints_y.append(yvalues[-1])
         breakpoints_x.append(xvalues[-1])
         if (plot):
-            tens.plot_pred(total_x, prediction, total_y)
+#            print(total_x, prediction, total_y)
+            tens.plot_pred(total_x, [prediction[i][0] for i in range(len(prediction))], total_y)
             pyplot.ylabel(goal)
             pyplot.xlabel('gas lift')
             pyplot.title(datafile)

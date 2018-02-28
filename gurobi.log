@@ -20460,6 +20460,7 @@ Best objective 2.895026207951e+04, best bound 2.895026207951e+04, gap 0.0000%
 
 Gurobi 7.5.2 (win64, Python) logging started 02/27/18 14:20:32
 
+
 Academic license - for non-commercial use only
 Changed value of parameter NumericFocus to 3
    Prev: 0  Min: 0  Max: 3  Default: 0
@@ -20476,7 +20477,7 @@ Coefficient statistics:
 Iteration    Objective       Primal Inf.    Dual Inf.      Time
        0   -0.0000000e+00   0.000000e+00   0.000000e+00      0s
 
-Solved in 0 iterations and 0.08 seconds
+
 Optimal objective -0.000000000e+00
 Changed value of parameter NumericFocus to 3
    Prev: 0  Min: 0  Max: 3  Default: 0
@@ -20493,5 +20494,3 @@ Coefficient statistics:
 Iteration    Objective       Primal Inf.    Dual Inf.      Time
        0   -0.0000000e+00   0.000000e+00   0.000000e+00      0s
 
-Solved in 0 iterations and 0.02 seconds
-Optimal objective -0.000000000e+00
