@@ -9,6 +9,8 @@ import plotter
 import tens
 from sklearn.preprocessing import RobustScaler
 
+per=True
+
 # =============================================================================
 # This is the file handling the Tensorflow module, regularization, cross_validation,
 # and a good deal of printing methods, designed for a specific purpose.
