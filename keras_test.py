@@ -91,10 +91,20 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 # =============================================================================
 #     initialize new model with pretrained weights
 # =============================================================================
-    model_2= Sequential()
-    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
-    model_2.add(Activation("relu"))
-    model_2.add(Dense(1,  weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1), rs.inverse_transform(model_1.layers[2].get_weights()[1].reshape(-1,1)).reshape(1,)]))
+    if(mode=="relu"):
+        model_2= Sequential()
+        model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+        model_2.add(Activation("relu"))
+        model_2.add(Dense(1,  weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1), rs.inverse_transform(model_1.layers[2].get_weights()[1].reshape(-1,1)).reshape(1,)]))
+
+    else:
+        a_2 = Input((dim,))
+        b_2 = (Dense(neurons, input_shape=(dim,), weights = [model_1.layers[1].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[1].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))(a_2)
+        c_2 = (Dense(neurons, input_shape=(dim,), weights = [model_1.layers[2].get_weights()[0].reshape(dim,neurons), rs.inverse_transform(model_1.layers[2].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))(a_2)
+        d_2 = MaxoutDense(output_dim=1, weights = [model_1.layers[3].get_weights()[0], rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1))])(b_2)
+        e_2 = MaxoutDense(output_dim=1, weights = [model_1.layers[4].get_weights()[0], rs.inverse_transform(model_1.layers[4].get_weights()[1].reshape(-1,1))])(c_2)
+        f_2 = Subtract()([d_2,e_2])
+        model_2 = Model(a_2, f_2)
     model_2.compile(optimizer=optimizers.adam(lr=0.01), loss = "mean_squared_error")
 
     if save or plot:
