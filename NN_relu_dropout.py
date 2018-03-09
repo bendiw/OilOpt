@@ -44,7 +44,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         glift = rs.fit_transform(glift_orig.reshape(-1,1))
         choke = rs.transform(choke_orig.reshape(-1,1))
         y = rs.transform(y_orig.reshape(-2, 1))
-        X =[[glift[i][0], choke[i][0]] for i in range(len(glift))]
+        X =np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
     else:
         X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
         y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
@@ -63,12 +63,14 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
-        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
-        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
+# =============================================================================
+#         model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#         model_1.add(Activation("relu"))
+#         model_1.add(Dropout(dropout))
+#         model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#         model_1.add(Activation("relu"))
+#         model_1.add(Dropout(dropout))
+# =============================================================================
         model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
 # =============================================================================
@@ -106,14 +108,16 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
                           rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
-        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-        model_2.add(Activation("relu"))
-        model_2.add(Dropout(dropout))
-        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
-                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-        model_2.add(Activation("relu"))
-        model_2.add(Dropout(dropout))
+# =============================================================================
+#         model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+#                           rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#         model_2.add(Activation("relu"))
+#         model_2.add(Dropout(dropout))
+#         model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+#                           rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#         model_2.add(Activation("relu"))
+#         model_2.add(Dropout(dropout))
+# =============================================================================
         model_2.add(Dense(1,  weights = [model_1.layers[-2].get_weights()[0].reshape(neurons,1),rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(1,)],
                                          kernel_regularizer=regularizers.l2(regu)))
         model_2.compile(optimizer=optimizers.adam(lr=lr), loss = "mean_squared_error")
@@ -126,7 +130,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
     if save or plot:
         if(is_3d):
             prediction = [x for x in model_2.predict(X)]
-            plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
+            fig=plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
             steps = 50
             step_size = int(np.round((X.max()-X.min())/float(steps)))
@@ -198,22 +202,23 @@ def save_variables(datafile, hp, goal, is_3d, neural):
 #    print("Filename:", filename)
     file = open(filename + ".txt", "w")
     if (is_3d):
+        print("HER")
         file.write("2\n")
     else:
         file.write("1\n")
-        for i in range(0,3,2):
-            line = ""
-            w = neural[i]
-            for x in w:
-                for y in x:
-                    line += str(y) + " "
-            file.write(line+"\n")
-        for i in range(1,4,2):
-            line = ""
-            b = neural[i]
-            for x in b:
-                line += str(x) + " "
-            file.write(line+"\n")
+    for i in range(0,3,2):
+        line = ""
+        w = neural[i]
+        for x in w:
+            for y in x:
+                line += str(y) + " "
+        file.write(line+"\n")
+    for i in range(1,4,2):
+        line = ""
+        b = neural[i]
+        for x in b:
+            line += str(x) + " "
+        file.write(line+"\n")
     file.close()
     
 def save_all():
