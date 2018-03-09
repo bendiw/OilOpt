@@ -49,9 +49,9 @@ class NN:
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
 #                        print(well, separator)
-                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.load(well, phase, separator)
+                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = t.load(well, phase, separator)
                     else:
-                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = tens_relu.train(well, phase, separator)
+                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = t.train(well, phase, separator)
         return multidims, weights, biases
     
     

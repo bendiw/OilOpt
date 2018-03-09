@@ -2092,3 +2092,655 @@ Solution count 2: 1321.8 1290.84
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective 1.321804577704e+03, best bound 1.321804577704e+03, gap 0.0000%
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:30:03
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve added 5298 rows and 3087 columns
+Presolve time: 0.12s
+
+Explored 0 nodes (0 simplex iterations) in 0.13 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:30:17
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:31:27
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:32:52
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:33:20
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5781 rows, 5892 columns and 12333 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4695 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:33:59
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:34:44
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve added 5298 rows and 3087 columns
+Presolve time: 0.12s
+
+Explored 0 nodes (0 simplex iterations) in 0.12 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:34:48
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:35:39
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:37:03
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:37:07
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4502 rows and 4146 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.04 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:38:26
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4502 rows and 4146 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.03 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:38:30
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 5842 rows, 5892 columns and 12453 nonzeros
+Model has 156 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve removed 4756 rows and 4402 columns
+Presolve time: 0.02s
+
+Explored 0 nodes (0 simplex iterations) in 0.02 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:38:34
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve added 5298 rows and 3087 columns
+Presolve time: 0.12s
+
+Explored 0 nodes (0 simplex iterations) in 0.13 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:38:59
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve added 5298 rows and 3087 columns
+Presolve time: 0.10s
+
+Explored 0 nodes (0 simplex iterations) in 0.13 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:39:38
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Presolve added 5298 rows and 3087 columns
+Presolve time: 0.12s
+
+Explored 0 nodes (0 simplex iterations) in 0.12 seconds
+Thread count was 1 (of 4 available processors)
+
+Solution count 0
+
+Model is infeasible or unbounded
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:43:26
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Changed value of parameter timeLimit to 120.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Variable types: 7914 continuous, 4002 integer (4002 binary)
+
+Root relaxation: unbounded, 0 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     2  postponed    0               -          -      -     -    0s
+ 31548   484 infeasible 2223               -          -      -   0.0   15s
+ 75813   756 infeasible 3131               -          -      -   0.0   30s
+ 122533  1022 infeasible 1972               -          -      -   0.0   45s
+ 169619  1240  postponed 3114               -          -      -   0.0   60s
+ 212317  1305 infeasible 3490               -          -      -   0.0   75s
+ 253974  1224  postponed 3404               -          -      -   0.0   90s
+ 292891  1208  postponed 2869               -          -      -   0.0  105s
+ 331757  1282 infeasible 2715               -          -      -   0.0  120s
+
+Explored 332268 nodes (0 simplex iterations) in 120.02 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 0
+
+Time limit reached
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:45:52
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Changed value of parameter timeLimit to 360.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Variable types: 7914 continuous, 4002 integer (4002 binary)
+
+Root relaxation: unbounded, 0 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     2  postponed    0               -          -      -     -    0s
+ 37289   508 infeasible 2931               -          -      -   0.0   15s
+ 75265   761  postponed 3063               -          -      -   0.0   30s
+ 115833   988  postponed 3408               -          -      -   0.0   45s
+ 155132  1213  postponed 3199               -          -      -   0.0   60s
+ 196373  1280  postponed 2859               -          -      -   0.0   75s
+ 238481  1212 infeasible 2637               -          -      -   0.0   90s
+ 280620  1172  postponed 3340               -          -      -   0.0  105s
+ 323265  1239 infeasible 2952               -          -      -   0.0  120s
+ 365081  1205 infeasible 3406               -          -      -   0.0  135s
+ 405414  1282 infeasible 2572               -          -      -   0.0  150s
+ 447646  1421 infeasible 3094               -          -      -   0.0  165s
+ 488032  1494 infeasible 3329               -          -      -   0.0  180s
+ 527319  1539 infeasible 3274               -          -      -   0.0  195s
+ 567756  1418  postponed 3212               -          -      -   0.0  210s
+ 610408  1444  postponed 3260               -          -      -   0.0  225s
+ 652283  1392  postponed 2524               -          -      -   0.0  240s
+ 689547  1431  postponed 3137               -          -      -   0.0  255s
+ 726287  1369 infeasible 3496               -          -      -   0.0  270s
+ 767323  1321  postponed 3390               -          -      -   0.0  285s
+ 808294  1300 infeasible 2679               -          -      -   0.0  300s
+ 848749  1254 infeasible 3306               -          -      -   0.0  315s
+ 888654  1272  postponed 3359               -          -      -   0.0  330s
+ 928138  1253 infeasible 2771               -          -      -   0.0  345s
+ 966936  1182 infeasible 2183               -          -      -   0.0  360s
+
+Explored 967340 nodes (0 simplex iterations) in 360.02 seconds
+Thread count was 4 (of 4 available processors)
+
+Solution count 0
+
+Time limit reached
+Best objective -, best bound -, gap -
+
+Gurobi 7.5.2 (win64) logging started 03/09/18 14:58:25
+
+Changed value of parameter LogFile to log.txt
+   Prev: gurobi.log  Default: 
+Changed value of parameter DisplayInterval to 15
+   Prev: 5  Min: 1  Max: 2000000000  Default: 5
+Changed value of parameter Presolve to 0
+   Prev: -1  Min: -1  Max: 2  Default: -1
+Changed value of parameter timeLimit to 360.0
+   Prev: 1e+100  Min: 0.0  Max: 1e+100  Default: 1e+100
+Optimize a model with 2002 rows, 5892 columns and 6032 nonzeros
+Model has 3996 general constraints
+Variable types: 3888 continuous, 1974 integer (1974 binary)
+Semi-Variable types: 30 continuous, 0 integer
+Coefficient statistics:
+  Matrix range     [2e-13, 2e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+05]
+  RHS range        [3e-02, 1e+06]
+Warning: Model contains large matrix coefficient range
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Variable types: 7914 continuous, 4002 integer (4002 binary)
+
+Root relaxation: unbounded, 0 iterations, 0.00 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     2  postponed    0               -          -      -     -    0s

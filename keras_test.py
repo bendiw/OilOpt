@@ -20,8 +20,8 @@ import tensorflow
 from keras import losses, optimizers, backend, regularizers, initializers
 KERAS_BACKEND = tensorflow
 
-def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
-                  val_frac = 0.1, plot = False, save=False, regu = 0.001):
+def run(well, separator="HP", epochs = 10000, mode="relu", neurons = 40, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+                  val_frac = 0.1, plot = False, save=False, regu = 0.00001):
     pyplot.ioff()
     if separator == "HP":
         hp=1
@@ -126,12 +126,11 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             pyplot.show()
         else:
             pyplot.close(fig)
-
 # =============================================================================
 #     save denormalized model to file
 # =============================================================================
     if save:
-        save_variables(well, hp, goal, is_3d, model_2.get_weights())
+        t.save_variables(well, hp, goal, is_3d, model_2.get_weights())
 
 def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
     df = cl.load("welltests_new.csv")
@@ -140,36 +139,10 @@ def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
     data = tens.convert_from_dict_to_tflists(dict_data)
     return data
 
-def save_variables(datafile, hp, goal, is_3d, neural):
-    if(hp==1):
-        sep = "HP"
-    else:
-        sep = "LP"
-    filename = "" + datafile + "-" + sep + "-" + goal
-#    print("Filename:", filename)
-    file = open(filename + ".txt", "w")
-    if (is_3d):
-        file.write("2\n")
-    else:
-        file.write("1\n")
-        for i in range(0,3,2):
-            line = ""
-            w = neural[i]
-            for x in w:
-                for y in x:
-                    line += str(y) + " "
-            file.write(line+"\n")
-        for i in range(1,4,2):
-            line = ""
-            b = neural[i]
-            for x in b:
-                line += str(x) + " "
-            file.write(line+"\n")
-    file.close()
     
 def save_all():
     for well in t.wellnames:
         for phase in t.phasenames:
             for sep in t.well_to_sep[well]:
                 print(well, phase, sep)
-                run(well, separator=sep, goal=phase, save=True, nan_ratio=0)
+                run(well, separator=sep, goal=phase, save=True, nan_ratio=0.3)
