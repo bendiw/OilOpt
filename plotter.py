@@ -28,6 +28,7 @@ def plot3d(x, y, z, well):
 #    delaunay(x, y, z)
     ax.plot_trisurf(triang, z,linewidth=0.2, antialiased=True, cmap=plt.cm.PuBu)
     plt.show()
+    return fig
 
 #plot3d(0,0,0)
 

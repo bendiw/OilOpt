@@ -112,7 +112,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             X = rs.inverse_transform(X)
             y = rs.inverse_transform(y)
             prediction = [x for x in model_2.predict(X)]
-            plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
+            fig = plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
             X = rs.inverse_transform(X)
             y = rs.inverse_transform(y)
@@ -126,7 +126,6 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             pyplot.show()
         else:
             pyplot.close(fig)
-
 # =============================================================================
 #     save denormalized model to file
 # =============================================================================
@@ -152,19 +151,19 @@ def save_variables(datafile, hp, goal, is_3d, neural):
         file.write("2\n")
     else:
         file.write("1\n")
-        for i in range(0,3,2):
-            line = ""
-            w = neural[i]
-            for x in w:
-                for y in x:
-                    line += str(y) + " "
-            file.write(line+"\n")
-        for i in range(1,4,2):
-            line = ""
-            b = neural[i]
-            for x in b:
-                line += str(x) + " "
-            file.write(line+"\n")
+    for i in range(0,3,2):
+        line = ""
+        w = neural[i]
+        for x in w:
+            for y in x:
+                line += str(y) + " "
+        file.write(line+"\n")
+    for i in range(1,4,2):
+        line = ""
+        b = neural[i]
+        for x in b:
+            line += str(x) + " "
+        file.write(line+"\n")
     file.close()
     
 def save_all():
