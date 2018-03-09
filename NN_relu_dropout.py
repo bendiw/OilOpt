@@ -128,11 +128,17 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             prediction = [x for x in model_2.predict(X)]
             plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
+<<<<<<< HEAD
             steps = 50
             step_size = int(np.round((X.max()-X.min())/float(steps)))
             mean_input = [[i] for i in range(int(np.round(X.min()-20000)),
                           int(np.round(X.max()+20000))+step_size, step_size)]
             mean, var = get_mean_var(model_2, dropout, regu, mean_input, 50000.0, 100)
+=======
+            mean_input = [[i] for i in range(int(np.round(X.min())),
+                          int(np.round(X.max()))+1, int(np.round((X.max()-X.min())/1000.0)))]
+            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 1.5, 50)
+>>>>>>> refs/remotes/origin/master
             prediction = [x for x in model_2.predict(X)]
             fig = pyplot.figure()
             pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)

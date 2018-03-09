@@ -55,16 +55,16 @@ class NN:
         return multidims, weights, biases
     
     
-    def run_all(self):
+    def run_all(self, verbose=False, save=False):
         self.wellnames = t.wellnames
         self.well_to_sep = t.well_to_sep
         self.platforms= t.platforms
         self.p_dict = t.p_dict
         self.p_sep_names = t.p_sep_names
         self.phasenames = t.phasenames
-        self.run()
+        self.run(verbose=verbose, save=save)
             
-    def run(self):
+    def run(self, verbose, save):
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
@@ -93,7 +93,7 @@ class NN:
         # =============================================================================
         # variable creation                    
         # =============================================================================
-        inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.CONTINUOUS)
+        inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.SEMICONT)
         lambdas = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0]))], vtype = GRB.BINARY, name="lambda")
         mus = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0]))], vtype = GRB.CONTINUOUS, name="mu")
         rhos = self.m.addVars([(well,phase,sep, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0]))], vtype = GRB.CONTINUOUS, name="rho")
@@ -118,22 +118,46 @@ class NN:
         # =============================================================================
         # objective
         # =============================================================================
+        
         self.m.setParam(GRB.Param.NumericFocus, 3)
-        self.m.setObjective(quicksum(mus[well, "oil", sep, neuron]*self.weights[well]["oil"][sep][1][neuron] for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well]["oil"][sep][0]))) + quicksum([self.biases[well]["oil"][sep][1][0] for well in self.wellnames for sep in self.well_to_sep[well]]), GRB.MAXIMIZE)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
         self.m.setParam(GRB.Param.Presolve, 2)
-        self.m.optimize()
+        self.m.setParam(GRB.Param.OutputFlag,0)
+        for well in self.wellnames:
+            for phase in self.phasenames:
+                for sep in self.well_to_sep[well]:
+                    M_values = []
+                    for neuron in range(len(self.biases[well][phase][sep][0])):
+                        self.m.setObjective(mus[well, phase, sep, neuron], GRB.MAXIMIZE)
+                        self.m.optimize()
+                        if verbose:
+                            print(well, sep, phase, "neuron "+str(neuron))
+                            print("gas lift\t weight:", self.weights[well][phase][sep][0][0][neuron], "bias:", self.biases[well][phase][sep][0][neuron])
+                            print("lb:", input_lower[well, sep, 0], "ub:", input_upper[well, sep, 0])
+                            if(self.multidims[well][phase][sep]==2):
+                                print("choke\t weight:", self.weights[well][phase][sep][0][1][neuron])
+                                print("lb:", input_lower[well, sep, 1], "ub:", input_upper[well, sep, 1])
+                            print("x:", self.m.objVal)
+                        x_M = self.m.objVal
+                        self.m.setObjective(rhos[well, phase, sep, neuron], GRB.MAXIMIZE)
+                        self.m.optimize()
+                        if verbose:
+                            print("s:", self.m.objVal)
+                            print("\n\n")
+                        s_M = self.m.objVal
+                        M_values.append((abs(x_M), abs(s_M)))
+                    if save:
+                        filename = well+"_"+phase+"_"+sep+"_bigM.txt"
+                        f =  open(filename, 'w')
+                        for line in M_values:
+                            f.write(str(line)[1:-1]+"\n")
     
     
-        for v in self.m.getVars()[0:150]:
-            print(v)
-    
-    
-    def nn(self, well, sep):
+    def nn(self, well, sep, verbose=False, save=False):
         self.wellnames = [well]
         self.well_to_sep[well]= [sep]
         self.platforms= [well[0]]
         self.p_dict[well[0]] = [well]
         self.p_sep_names[self.platforms[0]] = [sep]
         self.phasenames = ["oil", "gas"]
-        self.run()
+        self.run(verbose=verbose, save=save)

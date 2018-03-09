@@ -27,13 +27,13 @@ def run(well="A5", sep="HP", hp=1, goal="oil", intervals = 20, factor = 1.5, nan
     X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
     y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
     X = rs.fit_transform(X_orig.reshape(-1,1))
-    y = rs.transform(y_orig.reshape(-1, 1)).reshape(14,)
+    n = X.shape[0]
+    y = rs.transform(y_orig.reshape(-1, 1)).reshape(n,)
     σ_true = 2.0
     # Define the true covariance function and its parameters
     ℓ_true = 1.0
     η_true = 3.0
     mean_func = pm.gp.mean.Zero()
-    n = X.shape[0]
 #    n = 100
     cov_func = η_true**2 * pm.gp.cov.Matern52(1, ℓ_true)
     
