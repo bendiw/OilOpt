@@ -112,7 +112,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             X = rs.inverse_transform(X)
             y = rs.inverse_transform(y)
             prediction = [x for x in model_2.predict(X)]
-            plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
+            fig=plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
             X = rs.inverse_transform(X)
             y = rs.inverse_transform(y)
