@@ -116,7 +116,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         else:
             mean_input = [[i] for i in range(int(np.round(X.min())),
                           int(np.round(X.max()))+1, int(np.round((X.max()-X.min())/1000.0)))]
-            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 0.1, 50)
+            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 1.5, 50)
             prediction = [x for x in model_2.predict(X)]
             fig = pyplot.figure()
             pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
