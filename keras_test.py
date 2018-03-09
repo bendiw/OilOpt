@@ -20,8 +20,8 @@ import tensorflow
 from keras import losses, optimizers, backend, regularizers, initializers
 KERAS_BACKEND = tensorflow
 
-def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
-                  val_frac = 0.1, plot = False, save=False, regu = 0.001):
+def run(well, separator="HP", epochs = 10000, mode="relu", neurons = 40, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+                  val_frac = 0.1, plot = False, save=False, regu = 0.00001):
     pyplot.ioff()
     if separator == "HP":
         hp=1
@@ -145,4 +145,4 @@ def save_all():
         for phase in t.phasenames:
             for sep in t.well_to_sep[well]:
                 print(well, phase, sep)
-                run(well, separator=sep, goal=phase, save=True, nan_ratio=0)
+                run(well, separator=sep, goal=phase, save=True, nan_ratio=0.3)

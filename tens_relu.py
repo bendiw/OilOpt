@@ -197,29 +197,4 @@ def run(datafile, prev, test_error=False, goal='oil', grid_size = 8, plot = Fals
     
 
     
-def load(well, phase, separator ):
-    filename = "" + well + "-" + separator + "-" + phase + ".txt"
-    with open(filename) as f:
-        content = f.readlines()
-    content = [x.strip() for x in content]
-#    print (content)
-    dim = int(content[0])
-    w = []
-    b = []
-    for k in range(1,3):
-        b.append([float(x) for x in content[k+2].split()])
-        if(dim == 1):
 
-            if (k==1):
-                w.append([[float(x) for x in content[k].split()]])
-            else:
-                w.append([float(x) for x in content[k].split()])
-
-        else:
-            content[k]=content[k].split()
-            if (k==1):
-                w.append([[float(content[k][x]) for x in range(len(content[k])//2)],
-                       [float(content[k][x]) for x in range(len(content[k])//2,len(content[k]))]])
-            else:
-                w.append([float(x) for x in content[k]])
-    return dim, w, b
