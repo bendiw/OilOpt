@@ -46,6 +46,61 @@ def normalize(data):
     y = [(y-y_mean)/y_std for y in y]
     return X,y
 
+def load(well, phase, separator ):
+    filename = "" + well + "-" + separator + "-" + phase + ".txt"
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+#    print (content)
+    dim = int(content[0])
+    w = []
+    b = []
+    for k in range(1,3):
+        b.append([float(x) for x in content[k+2].split()])
+        if(dim == 1):
+
+            if (k==1):
+                w.append([[float(x) for x in content[k].split()]])
+            else:
+                w.append([float(x) for x in content[k].split()])
+
+        else:
+            content[k]=content[k].split()
+            if (k==1):
+                w.append([[float(content[k][x]) for x in range(len(content[k])//2)],
+                       [float(content[k][x]) for x in range(len(content[k])//2,len(content[k]))]])
+            else:
+                w.append([float(x) for x in content[k]])
+    return dim, w, b
+
+def save_variables(datafile, hp, goal, is_3d, neural):
+    if(hp==1):
+        sep = "HP"
+    else:
+        sep = "LP"
+    filename = "" + datafile + "-" + sep + "-" + goal
+#    print("Filename:", filename)
+    file = open(filename + ".txt", "w")
+    if (is_3d):
+        print("HER")
+        file.write("2\n")
+    else:
+        file.write("1\n")
+    for i in range(0,3,2):
+        line = ""
+        w = neural[i]
+        for x in w:
+            for y in x:
+                line += str(y) + " "
+        file.write(line+"\n")
+    for i in range(1,4,2):
+        line = ""
+        b = neural[i]
+        for x in b:
+            line += str(x) + " "
+        file.write(line+"\n")
+    file.close()
+
 def get_big_M(well, phase, sep):
     M =[]
     with open(well+"_"+phase+"_"+sep+"_bigM.txt", 'r') as f:
