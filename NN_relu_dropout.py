@@ -63,6 +63,12 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
         model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
 # =============================================================================
@@ -81,7 +87,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_1 = Model(a, i)
         
     #compile model
-    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = "mean_squared_error")
+    model_1.compile(optimizer=optimizers.adam(lr=lr,decay=0.001), loss = "mean_squared_error")
     
     print(model_1.summary())
 # =============================================================================
@@ -100,7 +106,15 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
                           rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
-        model_2.add(Dense(1,  weights = [model_1.layers[3].get_weights()[0].reshape(neurons,1),rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(1,)],
+        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(1,  weights = [model_1.layers[-2].get_weights()[0].reshape(neurons,1),rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(1,)],
                                          kernel_regularizer=regularizers.l2(regu)))
         model_2.compile(optimizer=optimizers.adam(lr=lr), loss = "mean_squared_error")
 
@@ -114,16 +128,21 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             prediction = [x for x in model_2.predict(X)]
             plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
-            mean_input = [[i] for i in range(int(np.round(X.min())),
-                          int(np.round(X.max()))+1, int(np.round((X.max()-X.min())/1000.0)))]
-            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 0.1, 50)
+            steps = 50
+            step_size = int(np.round((X.max()-X.min())/float(steps)))
+            mean_input = [[i] for i in range(int(np.round(X.min()-20000)),
+                          int(np.round(X.max()+20000))+step_size, step_size)]
+            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 50000.0, 100)
             prediction = [x for x in model_2.predict(X)]
             fig = pyplot.figure()
             pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
             pyplot.plot([x[0] for x in mean_input], mean, color='#089FFF')
-            pyplot.fill_between([x[0] for x in mean_input], mean-2*np.power(var,0.5),
-                                mean+2*np.power(var,0.5),
+            pyplot.fill_between([x[0] for x in mean_input], mean-np.power(var,0.5),
+                                mean+np.power(var,0.5),
                                alpha=0.2, facecolor='#089FFF', linewidth=1)
+            pyplot.fill_between([x[0] for x in mean_input], mean-0.5*np.power(var,0.5),
+                                mean+0.5*np.power(var,0.5),
+                               alpha=0.2, facecolor='#089FFF', linewidth=1)                   
             pyplot.plot(X,prediction,color='green',linestyle='dashed')
         if save:
             fig.savefig(well + "-" + separator + "-" + goal+"-fig")
