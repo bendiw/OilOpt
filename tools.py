@@ -46,6 +46,14 @@ def normalize(data):
     y = [(y-y_mean)/y_std for y in y]
     return X,y
 
+def get_big_M(well, phase, sep):
+    M =[]
+    with open(well+"_"+phase+"_"+sep+"_bigM.txt", 'r') as f:
+        lines = f.readlines()
+        M = [line.strip().split(", ") for line in lines]
+        M = [[float(l) for l in line] for line in M]
+    return M        
+
 def get_stats(data):
 
     return mean, stdev

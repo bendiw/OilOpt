@@ -50,16 +50,16 @@ class NN:
         return multidims, weights, biases
     
     
-    def run_all(self):
+    def run_all(self, load_M = False):
         self.wellnames = t.wellnames
         self.well_to_sep = t.well_to_sep
         self.platforms= t.platforms
         self.p_dict = t.p_dict
         self.p_sep_names = t.p_sep_names
         self.phasenames = t.phasenames
-        self.run()
+        self.run(load_M=load_M)
             
-    def run(self):
+    def run(self, load_M):
         
         #Case relevant numerics
         sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
@@ -74,19 +74,29 @@ class NN:
         #dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
         w_initial_vars = {well : [0,0] for well in self.wellnames}
         
-        glift_caps = [2000000]
-        tot_exp_cap = 5000000
-        sep_cap = {"LP": 2000000, "HP":math.inf}
+        glift_caps = [100000]
+        tot_exp_cap = 1200000
+        sep_cap = {"LP": 200000, "HP":math.inf}
         glift_groups = ["A", "B"]
-        max_changes = 25
+        max_changes = 35
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
         self.m = Model("Ekofisk")
         self.multidims, self.weights, self.biases = self.getNeuralNet(self.LOAD)
-        
         bigM_routes = {well :{sep:1000 for sep in self.well_to_sep[well]} for well in self.wellnames}
         
+
+        # =============================================================================
+        # load big M values from file
+        # =============================================================================
+        big_M = {well:{} for well in self.wellnames}
+        for well in self.wellnames:
+            for phase in self.phasenames:
+                big_M[well][phase] = {}
+                for sep in self.well_to_sep[well]:
+                    big_M[well][phase][sep] = t.get_big_M(well, phase, sep)
+            
         # =============================================================================
         # get input variable bounds        
         # =============================================================================
@@ -127,8 +137,13 @@ class NN:
         self.m.addConstrs(mus[well, phase, sep, neuron] - rhos[well, phase, sep, neuron] - quicksum((self.weights[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim]) for dim in range(self.multidims[well][phase][sep])) == self.biases[well][phase][sep][0][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])) )
 
         #indicator constraints
-        self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 1) >> (mus[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
-        self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 0) >> (rhos[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
+        if(load_M):
+            self.m.addConstrs(mus[well, phase, sep, neuron] <= (big_M[well][phase][sep][neuron][0])*(1-lambdas[well, phase, sep, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
+            self.m.addConstrs(rhos[well, phase, sep, neuron] <= (big_M[well][phase][sep][neuron][1])*(lambdas[well, phase, sep, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
+
+        else:
+            self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 1) >> (mus[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
+            self.m.addConstrs( (lambdas[well, phase, sep, neuron] == 0) >> (rhos[well, phase, sep, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
 
 
         # =============================================================================
@@ -143,7 +158,7 @@ class NN:
         # =============================================================================
 #        self.m.addConstrs( mus[well, phase, sep, neuron] <= routes[well, sep]*bigM_routes[well][sep] for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
 #        self.m.addConstrs( (routes[well, sep] == 1) >> (input_dummies[well, sep, dim] == inputs[well, sep, dim]) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-        self.m.addConstrs( (routes[well, sep] == 1) >> (inputs[well, sep, dim] >= 0.1) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]) )
+        self.m.addConstrs( (routes[well, sep] == 1) >> (inputs[well, sep, dim] >= 10) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]) )
         self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]) )
 
     
@@ -188,29 +203,31 @@ class NN:
         # =============================================================================
         # objective
         # =============================================================================
-        self.m.setParam(GRB.Param.NumericFocus, 3)
+#        self.m.setParam(GRB.Param.NumericFocus, 3)
+#        self.m.setParam(GRB.Param.LogToConsole, 0)
 #        self.m.setObjective(quicksum(mus[well, "oil", sep, neuron]*self.weights[well]["oil"][sep][1][neuron] for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well]["oil"][sep][0]))) + quicksum([self.biases[well]["oil"][sep][1][0] for well in self.wellnames for sep in self.well_to_sep[well]]), GRB.MAXIMIZE)
         self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
-        self.m.setParam(GRB.Param.Presolve, 2)
+        self.m.setParam(GRB.Param.LogFile, "log.txt")
+        self.m.setParam(GRB.Param.DisplayInterval, 15.0)
+#        self.m.setParam(GRB.Param.Presolve, 2)
         self.m.Params.timeLimit = 120.0
 
         self.m.optimize()
-    
+        
+        
         print("well\t", "sep\t\t", "oil\t\t\t", "gas\t\t\tgas lift")
         for well in self.wellnames:
             for sep in self.well_to_sep[well]:
                 if(routes[well, sep].x > 0.1):
-                    print(well,"\t", sep,"\toil:","\t", outputs[well, "oil", sep].x,"\t", outputs[well, "gas", sep].x, "\t", inputs[well, sep, 0].x)
-#        for v in self.m.getVars()[0:150]:
-#            print(v)
+                    print(well,"\t", sep,"\t", outputs[well, "oil", sep].x,"\t", outputs[well, "gas", sep].x, "\t", inputs[well, sep, 0].x)
     
     
-    def nn(self, well, sep):
+    def nn(self, well, sep, load_M = False):
         self.wellnames = [well]
         self.well_to_sep[well]= [sep]
         self.platforms= [well[0]]
         self.p_dict[well[0]] = [well]
         self.p_sep_names[self.platforms[0]] = [sep]
         self.phasenames = ["oil", "gas"]
-        self.run()
+        self.run(load_M=load_M)
