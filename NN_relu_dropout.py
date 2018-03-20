@@ -19,7 +19,7 @@ import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
 def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
-                  val_frac = 0.1, plot = False, save=False, regu = 0.001, dropout = 0.2, lr = 0.01):
+                  val_frac = 0.1, plot = False, save=False, regu = 0.001, dropout = 0.2, lr = 0.01, length_scale = 10):
     pyplot.ioff()
     if separator == "HP":
         hp=1
@@ -30,6 +30,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 #     load and normalize data
 # =============================================================================
     data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+#    data = [[[x], [x**3]] for x in range(-300, 300)]
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -64,15 +65,16 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
 # =============================================================================
-#         model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#         model_1.add(Activation("relu"))
-#         model_1.add(Dropout(dropout))
-#         model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#         model_1.add(Activation("relu"))
-#         model_1.add(Dropout(dropout))
+#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#        model_1.add(Activation("relu"))
+#        model_1.add(Dropout(dropout))
+#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#        model_1.add(Activation("relu"))
+#        model_1.add(Dropout(dropout))
 # =============================================================================
         model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
+        
 # =============================================================================
 #     maxout architecture
 # =============================================================================
@@ -90,6 +92,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         
     #compile model
     model_1.compile(optimizer=optimizers.adam(lr=lr,decay=0.001), loss = "mean_squared_error")
+#    model_1.compile(loss="mean_squared_error", optimizer="sgd")
     
     print(model_1.summary())
 # =============================================================================
@@ -109,17 +112,18 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
 # =============================================================================
-#         model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-#                           rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-#         model_2.add(Activation("relu"))
-#         model_2.add(Dropout(dropout))
-#         model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
-#                           rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-#         model_2.add(Activation("relu"))
-#         model_2.add(Dropout(dropout))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#        model_2.add(Activation("relu"))
+#        model_2.add(Dropout(dropout))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#        model_2.add(Activation("relu"))
+#        model_2.add(Dropout(dropout))
 # =============================================================================
         model_2.add(Dense(1,  weights = [model_1.layers[-2].get_weights()[0].reshape(neurons,1),rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(1,)],
                                          kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("linear"))
         model_2.compile(optimizer=optimizers.adam(lr=lr), loss = "mean_squared_error")
 
 #    else:
@@ -134,9 +138,9 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         else:
             steps = 50
             step_size = int(np.round((X.max()-X.min())/float(steps)))
-            mean_input = [[i] for i in range(int(np.round(X.min()-20000)),
-                          int(np.round(X.max()+20000))+step_size, step_size)]
-            mean, var = get_mean_var(model_2, dropout, regu, mean_input, 50000.0, 100)
+            mean_input = [[i] for i in range(int(np.round(X.min()*0.5)),
+                          int(np.round(X.max()*1.2))+step_size, step_size)]
+            mean, var = get_mean_var(model_2, dropout, regu, mean_input, length_scale, 100)
 
             prediction = [x for x in model_2.predict(X)]
             fig = pyplot.figure()
@@ -149,6 +153,9 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
                                 mean+0.5*np.power(var,0.5),
                                alpha=0.2, facecolor='#089FFF', linewidth=1)                   
             pyplot.plot(X,prediction,color='green',linestyle='dashed')
+            pyplot.xlabel('gas lift')
+            pyplot.ylabel(goal)
+            pyplot.title(well+"\nlength scale: "+ str(length_scale) + ", dropout: "+str(dropout))
         if save:
             fig.savefig(well + "-" + separator + "-" + goal+"-fig")
         if plot:
