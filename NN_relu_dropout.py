@@ -29,8 +29,10 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 # =============================================================================
 #     load and normalize data
 # =============================================================================
-    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
-#    data = [[[x], [x**3]] for x in range(-300, 300)]
+#    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
+    data.append([[8.2], [30]])
+    data.append([[8.5], [-2]])
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -65,6 +67,12 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
 # =============================================================================
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
@@ -74,7 +82,6 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 # =============================================================================
         model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
-        
 # =============================================================================
 #     maxout architecture
 # =============================================================================
@@ -112,12 +119,20 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
 # =============================================================================
-#        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-#                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[9].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
 #        model_2.add(Dropout(dropout))
-#        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
-#                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[12].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[12].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
 #        model_2.add(Dropout(dropout))
 # =============================================================================
@@ -137,9 +152,9 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             fig=plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
             steps = 50
-            step_size = int(np.round((X.max()-X.min())/float(steps)))
-            mean_input = [[i] for i in range(int(np.round(X.min()*0.5)),
-                          int(np.round(X.max()*1.2))+step_size, step_size)]
+            step_size = float((X.max()-X.min())/float(steps))
+            mean_input = [[i] for i in np.arange((np.round(X.min()*0.5)),
+                          (np.round(X.max()*1.3))+step_size, step_size)]
             mean, var = get_mean_var(model_2, dropout, regu, mean_input, length_scale, 100)
 
             prediction = [x for x in model_2.predict(X)]
