@@ -15,12 +15,36 @@ from keras.models import Model, Sequential
 from keras import losses, optimizers, backend, regularizers, initializers
 from scipy.special import logsumexp
 from keras import backend as K
+import numpy as np
 
+
+class NeuralRegressor(KerasRegressor):
+        def score(self, x, y, **kwargs):
+            """Returns the mean loss on the given test data and labels.
+            # Arguments
+                x: array-like, shape `(n_samples, n_features)`
+                    Test samples where `n_samples` is the number of samples
+                    and `n_features` is the number of features.
+                y: array-like, shape `(n_samples,)`
+                    True labels for `x`.
+                **kwargs: dictionary arguments
+                    Legal arguments are the arguments of `Sequential.evaluate`.
+            # Returns
+                score: float
+                    Mean accuracy of predictions on `x` wrt. `y`.
+            """
+            kwargs = self.filter_sk_params(Sequential.evaluate, kwargs)
+            loss = self.model.evaluate(x, y, **kwargs)
+            print(self.model.metrics_names)
+            print(loss)
+            if isinstance(loss, list):
+                return loss[-1]
+            return -loss
 
 def log_likelihood(tau, N):
     def ll(y_true, y_pred):
 #        print(y_true.eval())
-        return (K.logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) - 0.5*K.log(tau))
+        return K.mean((K.logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) + 0.5*K.log(tau)))
 #        return logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) - np.log(N) - 0.5*np.log(2*np.pi) + 0.5*np.log(tau)
     return ll
 
@@ -63,7 +87,8 @@ def create_model(tau=0.005, dim=1, length_scale=0.001, dropout=0.05, score="ll",
 def search(well, separator, parameters=t.param_dict):
     X, y = cl.BO_load(well, separator)
     parameters['N'] = [len(X)]
-    model = KerasRegressor(build_fn=create_model, epochs = 600, batch_size=128, verbose=0)
+    model = NeuralRegressor(build_fn=create_model, epochs = 600, batch_size=128, verbose=0)
     gs = GridSearchCV(model, parameters, verbose=2)
-    gs.fit(X, y)
-    print(gs.best_params_)
+    gs_result = gs.fit(X, y)
+    print(gs.best_score_, gs.best_params_)
+    print(gs_result)
