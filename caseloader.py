@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import math
+import tens
+from sklearn.preprocessing import normalize, RobustScaler
+
 
 def load(path, well=None):
     df = pd.read_csv(path,sep=',')
@@ -25,6 +28,42 @@ def gen_test_case(cases=30):
         data.append([[x],[y]])
     return data
 
+
+def BO_load(well, separator, goal="oil"):
+    if separator == "HP":
+        hp=1
+    else:
+        hp=0
+    #TODO: add regularization, validation etc
+# =============================================================================
+#     load and normalize data
+# =============================================================================
+#    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+    df = load("welltests_new.csv")
+    dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
+    data = tens.convert_from_dict_to_tflists(dict_data)
+#    data = [[[x], [x**3]] for x in range(-300, 300)]
+    if (len(data[0][0]) >= 2):
+        is_3d = True
+        dim = 2
+    else:
+        is_3d = False
+        dim=1
+    rs = RobustScaler(with_centering =False)
+    if is_3d:
+        glift_orig = np.array([x[0][0] for x in data])
+        choke_orig = np.array([x[0][1] for x in data])
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        glift = rs.fit_transform(glift_orig.reshape(-1,1))
+        choke = rs.transform(choke_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-2, 1))
+        X =np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
+    else:
+        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
+        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        X = rs.fit_transform(X_orig.reshape(-1,1))
+        y = rs.transform(y_orig.reshape(-1, 1))
+    return X, y
 
 ##############
 ##              Generates targets from a dataframe                      ##

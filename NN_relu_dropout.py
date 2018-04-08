@@ -95,6 +95,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 #    model_1.compile(loss="mean_squared_error", optimizer="sgd")
     
     print(model_1.summary())
+    print(model_1.trainable_weights[3].op.outputs)
 # =============================================================================
 #     train model on normalized data
 # =============================================================================
@@ -138,21 +139,21 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         else:
             steps = 50
             step_size = int(np.round((X.max()-X.min())/float(steps)))
-            mean_input = [[i] for i in range(int(np.round(X.min()*0.5)),
-                          int(np.round(X.max()*1.2))+step_size, step_size)]
+            mean_input = [[i] for i in range(int(np.round(X.min())),
+                          int(np.round(X.max()*1.1))+step_size, step_size)]
             mean, var = get_mean_var(model_2, dropout, regu, mean_input, length_scale, 100)
 
             prediction = [x for x in model_2.predict(X)]
             fig = pyplot.figure()
-            pyplot.plot(X, y, linestyle='None', marker = '.',markersize=8)
+            pyplot.plot(X, y, linestyle='None', marker = '.',markersize=15)
             pyplot.plot([x[0] for x in mean_input], mean, color='#089FFF')
             pyplot.fill_between([x[0] for x in mean_input], mean-np.power(var,0.5),
                                 mean+np.power(var,0.5),
                                alpha=0.2, facecolor='#089FFF', linewidth=1)
             pyplot.fill_between([x[0] for x in mean_input], mean-0.5*np.power(var,0.5),
                                 mean+0.5*np.power(var,0.5),
-                               alpha=0.2, facecolor='#089FFF', linewidth=1)                   
-            pyplot.plot(X,prediction,color='green',linestyle='dashed')
+                               alpha=0.2, facecolor='#089FFF', linewidth=2)                   
+            pyplot.plot(X,prediction,color='green',linestyle='dashed', linewidth=3)
             pyplot.xlabel('gas lift')
             pyplot.ylabel(goal)
             pyplot.title(well+"\nlength scale: "+ str(length_scale) + ", dropout: "+str(dropout))
