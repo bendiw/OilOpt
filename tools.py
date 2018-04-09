@@ -15,6 +15,10 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
+param_dict = {'dropout':[0.01, 0.02], 'tau':[0.0005, 0.001], 'length_scale':[0.1, 10]}
+
+#param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
+
 
 def get_limits(target, wellnames, well_to_sep):
     df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
