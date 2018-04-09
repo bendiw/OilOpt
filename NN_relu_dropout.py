@@ -153,15 +153,9 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             fig=plotter.plot3d([x[0] for x in X], [x[1] for x in X], [n[0] for n in prediction] , well)
         else:
             steps = 50
-<<<<<<< HEAD
-            step_size = int(np.round((X.max()-X.min())/float(steps)))
-            mean_input = [[i] for i in range(int(np.round(X.min())),
-                          int(np.round(X.max()*1.1))+step_size, step_size)]
-=======
             step_size = float((X.max()-X.min())/float(steps))
             mean_input = [[i] for i in np.arange((np.round(X.min()*0.5)),
                           (np.round(X.max()*1.3))+step_size, step_size)]
->>>>>>> ac2683c294ff626872e09a6b34929f8b853a3fef
             mean, var = get_mean_var(model_2, dropout, regu, mean_input, length_scale, 100)
 
             prediction = [x for x in model_2.predict(X)]

@@ -6,7 +6,6 @@ Created on Sun Apr  8 12:00:28 2018
 """
 
 from sklearn.model_selection import GridSearchCV
-from BOestimator import NetEstimator
 import tools as t
 import caseloader as cl
 from keras.wrappers.scikit_learn import KerasRegressor
@@ -18,6 +17,9 @@ from keras import backend as K
 import numpy as np
 
 
+# =============================================================================
+# Wrapper class for Keras net to use in sklearn's grid search
+# =============================================================================
 class NeuralRegressor(KerasRegressor):
         def score(self, x, y, **kwargs):
             """Returns the mean loss on the given test data and labels.
@@ -88,7 +90,7 @@ def search(well, separator, parameters=t.param_dict):
     X, y = cl.BO_load(well, separator)
     parameters['N'] = [len(X)]
     model = NeuralRegressor(build_fn=create_model, epochs = 600, batch_size=128, verbose=0)
-    gs = GridSearchCV(model, parameters, verbose=2)
+    gs = GridSearchCV(model, parameters, verbose=2, n_jobs=-1)
     gs_result = gs.fit(X, y)
     print(gs.best_score_, gs.best_params_)
     print(gs_result)
