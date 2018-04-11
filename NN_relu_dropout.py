@@ -33,11 +33,14 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 #    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
 #    data.append([[8.2], [30]])
 #    data.append([[8.5], [-2]])
+<<<<<<< HEAD
 #    data = [[[140000],[120]], [[142000],[130]],[[148000],[140]],[[158000],[150]],[[151000],[155]]]
     for i in data:
         i[0][0]=i[0][0]/5000.0
     print (data)
     data.sort()
+=======
+>>>>>>> master
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -68,6 +71,7 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
             
         model_1= Sequential()
 #        model_1.add(Dropout(dropout, input_shape=(dim,)))
+<<<<<<< HEAD
         model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(0.1)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
@@ -81,11 +85,26 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
+=======
+        model_1.add(Dense(int(neurons),input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+# =============================================================================
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("sigmoid"))
+        model_1.add(Dropout(dropout))
+>>>>>>> master
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
 # =============================================================================
-        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
         model_1.add(Activation("linear"))
 # =============================================================================
 #     maxout architecture
@@ -107,7 +126,11 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 #    model_1.compile(loss="mean_squared_error", optimizer="sgd")
     
     print(model_1.summary())
+<<<<<<< HEAD
 
+=======
+#    print(model_1.trainable_weights[3].op.outputs)
+>>>>>>> master
 # =============================================================================
 #     train model on normalized data
 # =============================================================================
@@ -127,6 +150,7 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
 # =============================================================================
+<<<<<<< HEAD
 #        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
 #                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
@@ -139,6 +163,20 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 #                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
 #        model_2.add(Dropout(dropout))
+=======
+        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[9].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("sigmoid"))
+        model_2.add(Dropout(dropout))
+>>>>>>> master
 #        model_2.add(Dense(neurons, weights = [model_1.layers[12].get_weights()[0].reshape(neurons,neurons),
 #                          rs.inverse_transform(model_1.layers[12].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
