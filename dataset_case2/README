@@ -1,0 +1,43 @@
+# Short format description
+
+Each row represent a case: A interval without any changes to the chokes.
+Each column is some statistic calculated on the interval for a given measurement.
+
+First column is index (case number)
+
+Columns applicable to all wells
+- T1   : Start time of case (milliseconds since epoch)
+- T2   : End time of case (milliseconds since epoch)
+
+General column name format for well measurement
+$WELL_$MEASUREMENT_$STAT
+
+$WELL on of W1, W2, W3, W4, W5, W6, W7
+
+$MEASUREMENT one of
+- CHK  : Choke opening in percentage
+- QOIL : Oil rate (Sm3/h I believe)
+- QGAS : Gas rate (MMSm3/h I believe)
+- PBH  : Bottom hole pressure (NB: measurements for W4, W6 and W7 are low quality)
+- PWH  : Well head pressure
+- PDC  : Downstream choke pressure
+
+Relevant $STATs:
+- wsp_mea : Weak stationary process mean (NB: nan when the interval have no samples)
+- wsp_sem : Weak stationary process standard error (NB: nan when the interval have no samples)
+- mea     : Sample mean
+- var     : Sample variance
+- med     : Median
+- max     : Max value
+- min     : Min value
+- num_num : Number of proper samples
+- num_nan : Number of NaN valued samples
+
+There's some other stats included but those are most likely not relevant.
+
+# Misc
+
+- Read csv into pandas: pd.read_csv(PATH, index_col=0)
+- Some choke values are negative. Clamping these to 0 is probably a good idea.
+
+
