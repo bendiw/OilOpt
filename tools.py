@@ -126,6 +126,41 @@ def simple_denorm(data, mean, stdev):
     denorm = [x*stdev+mean for x in data]
     return denorm
 
+def simple_node_merge(X, y, x_intervals=40, y_intervals=40):
+    x_min = np.min(X)
+    x_max = np.max(X)
+    y_min = np.min(y)
+    y_max = np.max(y)
+    x_step = (x_max - x_min)/float(x_intervals)
+    y_step = (y_max - y_min)/float(y_intervals)
+    for i in np.arange(x_min, x_max, x_step):
+        for j in np.arange(y_min, y_max, y_step):
+            remove_index = []
+            total_x = 0
+            total_y = 0
+            for k in range(len(X)):
+                test_x = X[k][0]
+                test_y = y[k][0]
+                if(i <= test_x <= i+x_step and j <= test_y <= j+y_step):
+                    total_x += test_x
+                    total_y += test_y
+                    remove_index.append(k)
+            if (len(remove_index) > 1):
+                new_x = total_x/float(len(remove_index))
+                new_y = total_y/float(len(remove_index))
+                remove_index.reverse()
+                for k in remove_index:
+                    if (k < len(X)-1):
+                        X = np.append(X[:k],X[k+1:])
+                        y = np.append(y[:k],y[k+1:])
+                    else:
+                        X = X[:k]
+                        y = y[:k]
+                X = np.reshape(np.append(X, new_x), [-1,1])
+                y = np.reshape(np.append(y, new_y), [-1,1])
+    return X,y
+
+
 def delaunay(x, y, z):
     
     data = []

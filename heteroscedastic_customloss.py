@@ -5,6 +5,7 @@ Created on Tue Apr 10 09:41:33 2018
 @author: bendi
 """
 from keras import backend as K
+
 from keras.layers import Dense, Activation, Dropout, LeakyReLU
 from keras.models import Sequential
 from keras import optimizers, regularizers, initializers
@@ -13,6 +14,8 @@ import caseloader as cl
 from tensorflow import multiply
 import numpy as np
 from matplotlib import pyplot
+import tools
+
 
 # =============================================================================
 # builds a neural net
@@ -20,6 +23,7 @@ from matplotlib import pyplot
 # =============================================================================
 def build_model(neurons, dim, regu, dropout, lr):
     model_1= Sequential()
+
     model_1.add(Dense(neurons, input_shape=(dim,),
                       kernel_initializer=initializers.VarianceScaling(),
                       kernel_regularizer=regularizers.l2(regu), 
@@ -53,17 +57,24 @@ def build_model(neurons, dim, regu, dropout, lr):
 # Heteroscedastic loss function. See Yarin Gal
 # =============================================================================
 def sced_loss(y_true, y_pred):
-    y_true = K.reshape(y_true, [-1, 1])
-    y_pred = K.reshape(y_pred, [-1, 1])
-    return K.mean(0.5*y_pred[1] + 0.5*multiply(K.exp(-y_pred[1]),K.square((y_pred[0]-y_true[0]))))
+    return K.mean(0.5*multiply(K.exp(-y_pred[1]),K.square(y_pred[0]-y_true[0])) + 0.5*y_pred[1], axis=0)
+    
+def mse_loss(y_true, y_pred):
+    return K.mean(K.square(y_pred[0]-y_true[0]))
+
 
 
 # =============================================================================
 # load data, create a model and train it
 # =============================================================================
-def run(well=None, separator="HP", case=1, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1, n_iter=100):
+def run(well=None, separator="HP", x_grid=40, y_grid=40, case=1, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1, n_iter=100):
     if(well):
         X, y = cl.BO_load(well, separator)
+        print("Datapoints before merge:",len(X))
+        X=np.array(X)
+        y=np.array(y)
+        X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
+        print("Datapoints after merge:",len(X))
     else:
         #generate simple test data
         #sine curve with some added faulty data
@@ -73,8 +84,8 @@ def run(well=None, separator="HP", case=1, runs=10, neurons=3, dim=1, regu=0.000
         y.extend([[1.,0.],[2.,0.],[0.5,0.], [1.7,0.]])
 
     step = (np.max(X)-np.min(X))/n_iter
-    X_test = [[i] for i in np.arange(np.min(X)-step, np.max(X)*1.2+step, step)]
-    y = [[i[0], 0] for i in y]
+    X_test = np.array([[i] for i in np.arange(np.min(X)-np.max(X)*0.2, np.max(X)*1.2+step, step)])
+    y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr)
 
 
@@ -83,6 +94,7 @@ def run(well=None, separator="HP", case=1, runs=10, neurons=3, dim=1, regu=0.000
     ax = fig.add_subplot(111)
     pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
     pyplot.ylim(np.min([i[0] for i in y])-0.05*np.max([i[0] for i in y]), np.max(y)+0.05*np.max([i[0] for i in y]))
+
     pyplot.autoscale(False)
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
@@ -92,11 +104,42 @@ def run(well=None, separator="HP", case=1, runs=10, neurons=3, dim=1, regu=0.000
     f = K.function([model.layers[0].input, K.learning_phase()],
                           [model.layers[-1].output])
     for r in range(runs):
+
+        
+        #TEST
+#        layer_outputs = functor([[X[0]], 1.])
+#        print("prior weights:", model.get_weights()[-2])
+#        print("tzzT:", layer_outputs)
+        inputs = [[X[0]], # X
+                  [1], # sample weights
+                  [y[0]], # y
+                  1 # learning phase in TEST mode
+              ]
+
+#        print("net output:", layer_outputs[-1])
+#        print("second last layer output:", layer_outputs[-2])
+#        print ("gradients:",get_gradients(inputs)[-2:])
+#        print("y_true:", y[0])
+        #TEST
+
         #train model
         model.fit(X, y, batch_size, epochs, verbose=0)
+#        if r==0:
+#            model.fit(X, y, batch_size, epochs, verbose=0)
+#        else:
+#            rate = lr/(1+np.log10(r))
+#            K.set_value(model.optimizer.lr, rate)
+#            model.fit(X,y,batch_size,epochs,verbose=0)
+#        print(K.get_value(model.optimizer.lr))
+
 
         #gather results from forward pass
         results = np.column_stack(f((X_test,1))[0])
+        if (np.isnan(results[0][0])):
+            print("NAN")
+            return
+#        print(np.column_stack(results))
+
         res_mean = [results[0]]
         res_var = [np.exp(results[1])]
         for i in range(1,n_iter):
