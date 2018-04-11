@@ -1,0 +1,16 @@
+parameters:
+optimizer: Adagrad
+neurons: 2x20
+Act: ReLU
+batch_size = 30
+lr = 0.05
+dropout = 0.05
+run("W1","HP",case=2, neurons=20, epochs=10, runs=1400, batch_size=30, lr=0.05, regu=5e-5, n_iter=100, dropout=0.05)
+
+neuron initializations:
+
+Dense(neurons, input_shape=(dim,),
+                      kernel_initializer=initializers.VarianceScaling(),
+                      kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
