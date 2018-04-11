@@ -18,7 +18,7 @@ import copy
 import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
-def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
                   val_frac = 0.1, plot = False, save=False, regu = 0.001, dropout = 0.2, lr = 0.01, length_scale = 10):
     pyplot.ioff()
     if separator == "HP":
@@ -29,7 +29,7 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 # =============================================================================
 #     load and normalize data
 # =============================================================================
-    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+    X,y = load_well(well, separator, goal, hp, factor, intervals, nan_ratio,case)
 #    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
 #    data.append([[8.2], [30]])
 #    data.append([[8.5], [-2]])
@@ -37,7 +37,7 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 #    for i in data:
 #        i[0][0]=i[0][0]/5000.0
 #    print (data)
-    data.sort()
+#    data.sort()
 
     if (len(data[0][0]) >= 2):
         is_3d = True
@@ -225,14 +225,13 @@ def predict_uncertainty(f, x, n_iter, t):
     pred_var = np.var(results, axis=1) + math.pow(t, -1)
     return pred_mean, pred_var
 
-def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
-    df = cl.load("welltests_new.csv")
-    dict_data,_,_ = cl.gen_targets(df, well+"", goal=goal, normalize=False, intervals=intervals,
-                               factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
-    print (dict_data)
-    data = tens.convert_from_dict_to_tflists(dict_data)
-    print(data)
-    return data
+def load_well(well, separator, goal, hp, factor, intervals, nan_ratio, case):
+#    df = cl.load("welltests_new.csv")
+#    dict_data,_,_ = cl.gen_targets(df, well+"", goal=goal, normalize=False, intervals=intervals,
+#                               factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
+#    data = tens.convert_from_dict_to_tflists(dict_data)
+    X,y = cl.BO_load(well, case = case, separator = separator, goal = goal)
+    return X,y
 
 
     
