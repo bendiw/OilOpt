@@ -19,19 +19,33 @@ def build_model(neurons, dim, regu, dropout, lr):
     model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), trainable=False))
     model_1.add(Activation("relu"))
     model_1.add(Dropout(dropout))
-#    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), trainable=False))
-#    model_1.add(Activation("relu"))
-#    model_1.add(Dropout(dropout))
+    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), trainable=False))
+    model_1.add(Activation("relu"))
+    model_1.add(Dropout(dropout))
+    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), trainable=False))
+    model_1.add(Activation("relu"))
+    model_1.add(Dropout(dropout))
+    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), trainable=False))
+    model_1.add(Activation("relu"))
+    model_1.add(Dropout(dropout))
     model_1.add(Dense(2, kernel_regularizer=regularizers.l2(regu), trainable=False))
     model_1.add(Activation("linear"))
-    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = "mean_squared_error")
+    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = mean_squared_error)
     return model_1
 
-def sced_loss(y_true, outputs):
+def sced_loss(y_true, y_pred):
 #    print(outputs)
-    return 0.5*(outputs[0]-y_true)*(outputs[0]-y_true)*math.exp(-outputs[1])
+#    return np.zeros_like(outputs)
+#    return 0.5*(outputs[0]-y_true)*(outputs[0]-y_true)*math.exp(-outputs[1])
+    z = K.mean(y_true-y_pred, axis=-1)
+    print(z)
+    return K.mean(y_true-y_pred, axis=-1)
+
+def mean_squared_error(y_true, y_pred):
+    return K.mean(K.square(y_pred - y_true), axis=-1)
     
 def mse_loss(y_true, outputs):
+    print("output tensors:", outputs)
     return 0.5*(outputs[0]-y_true)**2
 
 def calc_grads(model, loss, layer_outs, y_true):
@@ -129,7 +143,8 @@ def fit(model, X, y, epochs, batch_size, lr, plot=True, neurons=8):
                       (np.round(X.max()*1.3))+step_size, step_size)]
 #        mean, var = get_mean_var(model, 0.05, 0.0001, mean_input,10, 100)
 
-        prediction = [[x[0], math.exp(x[1])] for x in model.predict(X)]
+#        prediction = [[x[0], math.exp(x[1])] for x in model.predict(X)]
+        prediction = [x[0] for x in model.predict(X)]
         fig = pyplot.figure()
         pyplot.plot(X, y, linestyle='None', marker = '.',markersize=15)
 #        pyplot.plot([x[0] for x in mean_input], mean, color='#089FFF')
@@ -147,6 +162,7 @@ def fit(model, X, y, epochs, batch_size, lr, plot=True, neurons=8):
     
 def run(well, separator, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1):
     X, y = cl.BO_load(well, separator)
+    print(X, y)
     model = build_model(neurons, dim, regu, dropout, lr)
     fit(model, X, y, epochs, batch_size, lr, neurons=neurons)
     

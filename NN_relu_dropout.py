@@ -29,10 +29,10 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 # =============================================================================
 #     load and normalize data
 # =============================================================================
-#    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
-    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
-    data.append([[8.2], [30]])
-    data.append([[8.5], [-2]])
+    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+#    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
+#    data.append([[8.2], [30]])
+#    data.append([[8.5], [-2]])
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -63,24 +63,24 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             
         model_1= Sequential()
 #        model_1.add(Dropout(dropout, input_shape=(dim,)))
-        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(int(neurons),input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
 # =============================================================================
-#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#        model_1.add(Activation("relu"))
-#        model_1.add(Dropout(dropout))
-#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#        model_1.add(Activation("relu"))
-#        model_1.add(Dropout(dropout))
-#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#        model_1.add(Activation("relu"))
-#        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("sigmoid"))
+        model_1.add(Dropout(dropout))
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
 # =============================================================================
-        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
         model_1.add(Activation("linear"))
 # =============================================================================
 #     maxout architecture
@@ -102,7 +102,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 #    model_1.compile(loss="mean_squared_error", optimizer="sgd")
     
     print(model_1.summary())
-    print(model_1.trainable_weights[3].op.outputs)
+#    print(model_1.trainable_weights[3].op.outputs)
 # =============================================================================
 #     train model on normalized data
 # =============================================================================
@@ -128,10 +128,10 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
                           rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
-#        model_2.add(Dense(neurons, weights = [model_1.layers[9].get_weights()[0].reshape(neurons,neurons),
-#                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-#        model_2.add(Activation("relu"))
-#        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[9].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("sigmoid"))
+        model_2.add(Dropout(dropout))
 #        model_2.add(Dense(neurons, weights = [model_1.layers[12].get_weights()[0].reshape(neurons,neurons),
 #                          rs.inverse_transform(model_1.layers[12].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
