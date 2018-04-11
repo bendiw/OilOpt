@@ -4,7 +4,7 @@ Created on Tue Feb 27 10:28:18 2018
 
 @author: bendiw
 """
-from keras.layers import Input, Lambda, Dense, Activation, LeakyReLU, PReLU, ELU, MaxoutDense, merge, Subtract, Dropout
+from keras.layers import Input, Dense, Activation, LeakyReLU, PReLU, ELU, MaxoutDense, merge, Subtract, Dropout
 from keras.models import Model, Sequential
 import numpy as np
 from matplotlib import pyplot
@@ -18,7 +18,7 @@ import copy
 import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
-def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
                   val_frac = 0.1, plot = False, save=False, regu = 0.001, dropout = 0.2, lr = 0.01, length_scale = 10):
     pyplot.ioff()
     if separator == "HP":
@@ -29,10 +29,15 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 # =============================================================================
 #     load and normalize data
 # =============================================================================
-#    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
-    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
-    data.append([[8.2], [30]])
-    data.append([[8.5], [-2]])
+    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
+#    data = [[[x], [math.sin(x)*x**3]] for x in np.arange(0, 9, 1.)]
+#    data.append([[8.2], [30]])
+#    data.append([[8.5], [-2]])
+#    data = [[[140000],[120]], [[142000],[130]],[[148000],[140]],[[158000],[150]],[[151000],[155]]]
+    for i in data:
+        i[0][0]=i[0][0]/5000.0
+    print (data)
+    data.sort()
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -63,16 +68,16 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             
         model_1= Sequential()
 #        model_1.add(Dropout(dropout, input_shape=(dim,)))
-        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(0.1)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
 # =============================================================================
-        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
-        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
+#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#        model_1.add(Activation("relu"))
+#        model_1.add(Dropout(dropout))
+#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
+#        model_1.add(Activation("relu"))
+#        model_1.add(Dropout(dropout))
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
@@ -102,16 +107,18 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
 #    model_1.compile(loss="mean_squared_error", optimizer="sgd")
     
     print(model_1.summary())
-    print(model_1.trainable_weights[3].op.outputs)
+
 # =============================================================================
 #     train model on normalized data
 # =============================================================================
     model_1.fit(X, y, 
             epochs = epochs, batch_size=100, verbose=0)
+
     
 # =============================================================================
 #     initialize new model with pretrained weights
 # =============================================================================
+
     if mode == "relu":        
         model_2= Sequential()
 #        model_2.add(Dropout(dropout,input_shape=(dim,)))
@@ -120,14 +127,14 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
 # =============================================================================
-        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-        model_2.add(Activation("relu"))
-        model_2.add(Dropout(dropout))
-        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
-                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-        model_2.add(Activation("relu"))
-        model_2.add(Dropout(dropout))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#        model_2.add(Activation("relu"))
+#        model_2.add(Dropout(dropout))
+#        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
+#                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+#        model_2.add(Activation("relu"))
+#        model_2.add(Dropout(dropout))
 #        model_2.add(Dense(neurons, weights = [model_1.layers[9].get_weights()[0].reshape(neurons,neurons),
 #                          rs.inverse_transform(model_1.layers[9].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
@@ -154,11 +161,13 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
         else:
             steps = 50
             step_size = float((X.max()-X.min())/float(steps))
-            mean_input = [[i] for i in np.arange((np.round(X.min()*0.5)),
-                          (np.round(X.max()*1.3))+step_size, step_size)]
+            mean_input = [[i] for i in np.arange((np.round(X.min()*0.9)),
+                          (np.round(X.max()*1.05))+step_size, step_size)]
+            pred_input = np.array([[i] for i in np.arange((np.round(X.min())),
+                          (np.round(X.max()))+step_size, step_size)])
             mean, var = get_mean_var(model_2, dropout, regu, mean_input, length_scale, 100)
 
-            prediction = [x for x in model_2.predict(X)]
+            prediction = [x for x in model_2.predict(pred_input)]
             fig = pyplot.figure()
             pyplot.plot(X, y, linestyle='None', marker = '.',markersize=15)
             pyplot.plot([x[0] for x in mean_input], mean, color='#089FFF')
@@ -168,7 +177,7 @@ def run(well, separator="HP", epochs = 20000, mode="relu", neurons = 25, goal = 
             pyplot.fill_between([x[0] for x in mean_input], mean-0.5*np.power(var,0.5),
                                 mean+0.5*np.power(var,0.5),
                                alpha=0.2, facecolor='#089FFF', linewidth=2)                   
-            pyplot.plot(X,prediction,color='green',linestyle='dashed', linewidth=3)
+            pyplot.plot(pred_input,prediction,color='green',linestyle='dashed', linewidth=3)
             pyplot.xlabel('gas lift')
             pyplot.ylabel(goal)
             pyplot.title(well+"\nlength scale: "+ str(length_scale) + ", dropout: "+str(dropout))
@@ -201,7 +210,8 @@ def tau(regu, length_rate, dropout, datapoints):
     return tau/float(2*datapoints*regu)
 
 def predict_uncertainty(f, x, n_iter, t):
-    results = f((x,1))[0]
+    r = f((x,1))
+    results = r[0]
     for i in range(1,n_iter):
         a = f((x,1))[0]
         results = np.insert(results, [0], a, axis=1)

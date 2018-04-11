@@ -50,7 +50,8 @@ def log_likelihood(tau, N):
 #        return logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) - np.log(N) - 0.5*np.log(2*np.pi) + 0.5*np.log(tau)
     return ll
 
-def create_model(tau=0.005, dim=1, length_scale=0.001, dropout=0.05, score="ll", 
+
+def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll", 
                  mode="relu", neurons = 25, learn_rate = 0.1, N=1000):
     #regularization parameter is calc based on hyperparameters
     regu = length_scale**2 * (1 - dropout) / (2. * N * tau)
@@ -86,11 +87,14 @@ def create_model(tau=0.005, dim=1, length_scale=0.001, dropout=0.05, score="ll",
     return model_1
 
 
+
 def search(well, separator, parameters=t.param_dict):
     X, y = cl.BO_load(well, separator)
+    global dim
+    dim = len(X[0])
     parameters['N'] = [len(X)]
     model = NeuralRegressor(build_fn=create_model, epochs = 600, batch_size=128, verbose=0)
-    gs = GridSearchCV(model, parameters, verbose=2, n_jobs=-1)
+    gs = GridSearchCV(model, parameters, verbose=2)
     gs_result = gs.fit(X, y)
     print(gs.best_score_, gs.best_params_)
     print(gs_result)
