@@ -27,6 +27,14 @@ def build_model(neurons, dim, regu, dropout, lr):
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("relu"))
     model_1.add(Dropout(dropout))
+    
+    model_1.add(Dense(neurons, input_shape=(dim,),
+                      kernel_initializer=initializers.VarianceScaling(),
+                      kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
+    model_1.add(Activation("relu"))
+    model_1.add(Dropout(dropout))
 
     model_1.add(Dense(neurons, 
                       kernel_initializer=initializers.VarianceScaling(),
@@ -38,7 +46,7 @@ def build_model(neurons, dim, regu, dropout, lr):
 
     model_1.add(Dense(2, kernel_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("linear"))
-    model_1.compile(optimizer=optimizers.Adagrad(lr=lr), loss=sced_loss)
+    model_1.compile(optimizer=optimizers.Adamax(lr=lr, decay=0.0001), loss=sced_loss)
     return model_1
 
 # =============================================================================
@@ -76,7 +84,7 @@ def run(well=None, separator="HP", case=1, runs=10, neurons=3, dim=1, regu=0.000
     pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
     pyplot.ylim(np.min([i[0] for i in y])-0.05*np.max([i[0] for i in y]), np.max(y)+0.05*np.max([i[0] for i in y]))
     pyplot.autoscale(False)
-    pyplot.xlabel('gas lift')
+    pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
     

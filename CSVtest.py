@@ -19,13 +19,17 @@ df = pd.read_csv("dataset_case2\case2-oil-dataset.csv", delimiter=",", header=0,
 print(df.columns)
 
 for w in wellnames2:
-    x = df[w+'_CHK_mea']
-    y = df[w+'_QGAS_wsp_mea']
-    fig = pyplot.figure()
-    pyplot.title(w)
-    ax = fig.add_subplot(111)
-    ax.plot(x, y, linestyle='None', marker = '.',markersize=15)
-    pyplot.show()
+    for goal in ["GAS", "OIL"]:
+        x = df[w+'_CHK_mea']
+        y = df[w+'_Q'+goal+'_wsp_mea']
+        fig = pyplot.figure()
+        pyplot.title(w+"_"+goal)
+        pyplot.xlabel('choke')
+        pyplot.ylabel(goal)
+        ax = fig.add_subplot(111)
+        ax.plot(x, y, linestyle='None', marker = '.',markersize=10)
+        pyplot.savefig("Data plots\case2"+"\\"+w+"_"+goal+".png")
+        pyplot.show()
 #for well in wellnames:
 #    for sep in well_to_sep[well]:
 #        dfw = df.loc[df["well"]==well]
