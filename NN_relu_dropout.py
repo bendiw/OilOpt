@@ -18,7 +18,7 @@ import copy
 import tens
 from keras import losses, optimizers, backend, regularizers, initializers
 
-def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
+def run(well, case = 2, separator="HP", epochs = 5000, mode="relu", neurons = 5, goal = 'oil', intervals = 20, factor = 1.5, nan_ratio = 0.3, train_frac = 1.0,
                   val_frac = 0.1, plot = False, save=False, regu = 0.001, dropout = 0.2, lr = 0.01, length_scale = 10):
     pyplot.ioff()
     if separator == "HP":
@@ -39,26 +39,25 @@ def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5,
 #    print (data)
 #    data.sort()
 
-    if (len(data[0][0]) >= 2):
+    if (case == 1 and len(X[0]) >= 2):
         is_3d = True
         dim = 2
     else:
         is_3d = False
         dim=1
+
     rs = RobustScaler(with_centering =False)
     if is_3d:
-        glift_orig = np.array([x[0][0] for x in data])
-        choke_orig = np.array([x[0][1] for x in data])
-        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        glift_orig = np.array([x[0] for x in X])
+        choke_orig = np.array([x[0] for x in X])
+        y_orig = np.array([x[0] for x in y]).reshape(-1,1)
         glift = rs.fit_transform(glift_orig.reshape(-1,1))
         choke = rs.transform(choke_orig.reshape(-1,1))
         y = rs.transform(y_orig.reshape(-2, 1))
         X =np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
     else:
-        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
-        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
-        X = rs.fit_transform(X_orig.reshape(-1,1))
-        y = rs.transform(y_orig.reshape(-1, 1))
+        X = rs.fit_transform(X)
+        y = rs.transform(y)
 #    rs.fit(X_orig)
     
 
@@ -73,9 +72,9 @@ def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5,
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
 # =============================================================================
-#        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
-#        model_1.add(Activation("relu"))
-#        model_1.add(Dropout(dropout))
+        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(0.1)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
 #        model_1.add(Dense(int(neurons), kernel_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
 #        model_1.add(Dropout(dropout))
@@ -115,10 +114,6 @@ def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5,
 # =============================================================================
     model_1.fit(X, y, 
             epochs = epochs, batch_size=100, verbose=0)
-    
-    
-    xx = backend.placeholder(ndim=1)
-    losss = backend.sum(backend.square())
 
     
 # =============================================================================
@@ -133,10 +128,10 @@ def run(well, case = 2, separator="HP", epochs = 1000, mode="relu", neurons = 5,
         model_2.add(Activation("relu"))
         model_2.add(Dropout(dropout))
 # =============================================================================
-#        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-#                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
-#        model_2.add(Activation("relu"))
-#        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
 #        model_2.add(Dense(neurons, weights = [model_1.layers[6].get_weights()[0].reshape(neurons,neurons),
 #                          rs.inverse_transform(model_1.layers[6].get_weights()[1].reshape(-1,1)).reshape(neurons,)], kernel_regularizer=regularizers.l2(regu)))
 #        model_2.add(Activation("relu"))
