@@ -115,6 +115,10 @@ def run(well, separator="HP", epochs = 1000, mode="relu", neurons = 5, goal = 'o
 # =============================================================================
     model_1.fit(X, y, 
             epochs = epochs, batch_size=100, verbose=0)
+    
+    
+    xx = backend.placeholder(ndim=1)
+    losss = backend.sum(backend.square())
 
     
 # =============================================================================
@@ -225,7 +229,9 @@ def load_well(well, separator, goal, hp, factor, intervals, nan_ratio):
     df = cl.load("welltests_new.csv")
     dict_data,_,_ = cl.gen_targets(df, well+"", goal=goal, normalize=False, intervals=intervals,
                                factor = factor, nan_ratio = nan_ratio, hp=hp) #,intervals=100
+    print (dict_data)
     data = tens.convert_from_dict_to_tflists(dict_data)
+    print(data)
     return data
 
 
