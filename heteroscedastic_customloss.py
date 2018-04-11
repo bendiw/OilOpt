@@ -17,15 +17,20 @@ from matplotlib import pyplot
 
 def build_model(neurons, dim, regu, dropout, lr):
     model_1= Sequential()
-    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=-0.1)))
-#    model_1.add(Activation("relu"))
-    model_1.add(LeakyReLU(alpha=0.3))
+    model_1.add(Dense(neurons, input_shape=(dim,), 
+                      kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=-0.1),
+                      bias_regularizer=regularizers.l2(regu)))
+    model_1.add(Activation("relu"))
+#    model_1.add(LeakyReLU(alpha=0.3))
 #    model_1.add(Activation("relu"))
 
     model_1.add(Dropout(dropout))
-    model_1.add(Dense(neurons, kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
-    model_1.add(LeakyReLU(alpha=0.3))
-#    model_1.add(Activation("relu"))
+    model_1.add(Dense(neurons, kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
+#    model_1.add(LeakyReLU(alpha=0.3))
+    model_1.add(Activation("relu"))
 
     model_1.add(Dropout(dropout))
 #    model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu), bias_initializer=initializers.Constant(value=0.1)))
@@ -37,55 +42,75 @@ def build_model(neurons, dim, regu, dropout, lr):
     model_1.add(Dense(2, kernel_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("linear"))
 #    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = sced_loss)
-    model_1.compile(optimizer=optimizers.SGD(lr=lr), loss=sced_loss)
+    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
     return model_1
 
 def sced_loss(y_true, y_pred):
     y_true = K.reshape(y_true, [-1, 1])
     y_pred = K.reshape(y_pred, [-1, 1])
-    return K.mean(0.5*multiply(K.exp(-y_pred[1]),K.square((y_pred[0]-y_true[0]))), axis=0)
+    return K.mean(0.5*multiply(K.exp(-y_pred[1]),K.square((y_pred[0]-y_true[0]))) + +0.5*y_pred[1], axis=0)
 #    return K.mean(K.exp(-y_pred[1]))
 #    return (y_pred[0])
 
 
-def run(well, separator, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1, n_iter=100):
+def run(well, separator, case=1, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1, n_iter=100):
     X, y = cl.BO_load(well, separator)
 #    X=2*X
 #    y = 550*y
-    X_test = [[i] for i in np.arange(np.min(X), np.max(X), (np.max(X)-np.min(X))/n_iter)]
+    step = (np.max(X)-np.min(X))/n_iter
+    X_test = [[i] for i in np.arange(np.min(X), np.max(X)*1.2+step, step)]
     y = [[i[0], 0] for i in y]
     model = build_model(neurons, dim, regu, dropout, lr)
     print("model built")
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
-#    ax2 = fig.add_subplot(111, sharex=ax)
+    pyplot.xlim(np.min(X)-0.1*np.min(X), np.max(X)+0.2*np.max(X))
+    pyplot.ylim(np.min([i[0] for i in y])-0.05*np.max([i[0] for i in y]), np.max(y)+0.05*np.max([i[0] for i in y]))
+    pyplot.autoscale(False)
     pyplot.xlabel('gas lift')
     pyplot.ylabel("oil")
     pyplot.show()
 #    pyplot.pause(1)
+    
+    #TEST
+#    inp = model.input                                           
+#    weights = model.trainable_weights
+##        print([n.name for n in model.layers])
+#    layer_outs = [layer.output for layer in model.layers if "activation" in layer.name or "leaky" in layer.name]
+#    gradients = model.optimizer.get_gradients(model.total_loss, weights)
+#    input_tensors = [model.inputs[0], # input data
+#             model.sample_weights[0], # how much to weight each sample by
+#             model.targets[0], # labels
+#             K.learning_phase(), # train or test mode
+#             ]
+#    get_gradients = K.function(inputs=input_tensors, outputs=gradients)
+#    functor = K.function([inp]+ [K.learning_phase()], layer_outs )
+    #TEST
+#    model.fit(X, y, batch_size, 130)
     f = K.function([model.layers[0].input, K.learning_phase()],
                           [model.layers[-1].output])
     for r in range(runs):
         
         #TEST
-        inp = model.input                                           
-        outputs = [layer.output for layer in model.layers if "activation" in layer.name]
-        functor = K.function([inp]+ [K.learning_phase()], outputs )
-        updates = opt.get_updates(model.trainable_weights, [], loss, )
-        layer_outs = functor([[X[0]], 1.], updates=updates)
+#        layer_outputs = functor([[X[0]], 1.])
+#        print("prior weights:", model.get_weights()[-2])
+#        print("tzzT:", layer_outputs)
+        inputs = [[X[0]], # X
+                  [1], # sample weights
+                  [y[0]], # y
+                  1 # learning phase in TEST mode
+              ]
 
-        print("prior weights:", model.get_weights()[-2])
-        print("net output:", results)
-        print("second last layer output:", outputs[-2])
-        print("y_true:", y)
+#        print("net output:", layer_outputs[-1])
+#        print("second last layer output:", layer_outputs[-2])
+#        print ("gradients:",get_gradients(inputs)[-2:])
+#        print("y_true:", y[0])
         #TEST
-#        model.fit([X[0]], [y[0]], batch_size, epochs, verbose=0)
-        print("post weights:", model.get_weights()[-2])
+        model.fit(X, y, batch_size, epochs, verbose=0)
 
-        loss = model.evaluate([X[0]], [y[0]])
+#        loss = model.evaluate(np.array([X[0]]), np.array([y[0]]))
 #        print("run #"+str(r)+" loss:", loss)
         results = np.column_stack(f((X_test,1))[0])
-#        print(results)
 #        print(np.column_stack(results))
         res_mean = [results[0]]
         res_var = [np.exp(results[1])]
@@ -105,11 +130,20 @@ def run(well, separator, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, e
             
 #        print("mean var output:", np.mean(var_mean))
         prediction = [x[0] for x in model.predict(X_test)]
-        ax.clear()
-        ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
-        ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
-#        for i in range(2):
-#            ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1)*0.1, pred_mean-std*(i+1)*0.1, alpha=0.2, facecolor='#089FFF', linewidth=2)
-        ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+#        ax.clear()
+        if r==0:
+            line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
+            line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
+            for i in range(2):
+                (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+            line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+        else:
+            line2[0].set_ydata(prediction)
+            line3[0].set_ydata(pred_mean)
+            pyplot.draw()
+            ax.collections.clear()
+            for i in range(2):
+                (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 
+            
         pyplot.pause(0.01)
