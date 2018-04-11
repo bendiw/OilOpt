@@ -5,9 +5,13 @@ import tens
 from sklearn.preprocessing import normalize, RobustScaler
 
 
-def load(path, well=None):
-    df = pd.read_csv(path,sep=',')
-    if(well):
+def load(path, well=None, case=1):
+    if case!=1:
+        index_col = 0
+    else:
+        index_col = None
+    df = pd.read_csv(path,sep=',', index_col=index_col)
+    if(well and case==1):
         df = df.loc[df['well'] == well]
     return df
 
@@ -29,7 +33,7 @@ def gen_test_case(cases=30):
     return data
 
 
-def BO_load(well, separator, goal="oil"):
+def BO_load(well, case=1, separator="HP", goal="oil"):
     if separator == "HP":
         hp=1
     else:
@@ -39,10 +43,17 @@ def BO_load(well, separator, goal="oil"):
 #     load and normalize data
 # =============================================================================
 #    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
-    df = load("welltests_new.csv")
-    dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
-    data = tens.convert_from_dict_to_tflists(dict_data)
-#    data = [[[x], [x**3]] for x in range(-300, 300)]
+    if case==1:
+        df = load("welltests_new.csv")
+        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
+        data = tens.convert_from_dict_to_tflists(dict_data)
+    else:
+        goal = goal.upper()
+        print("goal:", goal)
+        df = load("dataset_case2\case2-oil-dataset.csv", case=2).dropna(subset=[well+'_Q'+goal+'_wsp_mea', well+'_CHK_mea'])
+        X = df.as_matrix(columns=[well+'_CHK_mea'])
+        y = df.as_matrix(columns=[well+'_Q'+goal+'_wsp_mea'])
+        data = np.array([[X[i], y[i]] for i in range(len(X))])
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2

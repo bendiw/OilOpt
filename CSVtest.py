@@ -6,25 +6,37 @@ Created on Wed Dec  6 16:46:54 2017
 """
 
 import pandas as pd
+from matplotlib import pyplot
 wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", 
              "B3", "B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"]
+wellnames2 = ["W"+str(i) for i in range(1,8)]
 well_to_sep = {"A2" : ["HP"], "A3": ["HP"], "A5": ["HP"], "A6": ["HP"], "A7": ["HP"], "A8": ["HP"], 
                "B1" : ["HP", "LP"], "B2" : ["HP", "LP"], "B3" : ["HP", "LP"], "B4" : ["HP", "LP"], "B5" : ["HP", "LP"], "B6" : ["HP", "LP"], "B7" : ["HP", "LP"], 
                "C1" : ["LP"], "C2" : ["LP"], "C3" : ["LP"], "C4" : ["LP"]}
 #df_new = pd.read_csv("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests_csv.csv", delimiter=",", header=0)
 #df_old = pd.read_csv("C:\\Users\\Bendik\\Documents\\GitHub\\OilOpt\\welltests_old.csv", delimiter=",", header=0)
-df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
-for well in wellnames:
-    for sep in well_to_sep[well]:
-        dfw = df.loc[df["well"]==well]
-        print(well, sep)
-        if(dfw["prs_dns"].isnull().sum()/dfw.shape[0] >= 0.7):
-            print(dfw["gaslift_rate"].min(), dfw["gaslift_rate"].max())
-        elif(sep=="HP"):
-            print(dfw.loc[dfw["prs_dns"]>= 18.5]["gaslift_rate"].min(), dfw.loc[dfw["prs_dns"]>= 18.5]["gaslift_rate"].max())
-        else:
-            print(dfw.loc[dfw["prs_dns"]< 18.5]["gaslift_rate"].min(), dfw.loc[dfw["prs_dns"]< 18.5]["gaslift_rate"].max())
-        print("\n")
+df = pd.read_csv("dataset_case2\case2-oil-dataset.csv", delimiter=",", header=0, index_col=0)
+print(df.columns)
+
+for w in wellnames2:
+    x = df[w+'_CHK_mea']
+    y = df[w+'_QGAS_wsp_mea']
+    fig = pyplot.figure()
+    pyplot.title(w)
+    ax = fig.add_subplot(111)
+    ax.plot(x, y, linestyle='None', marker = '.',markersize=15)
+    pyplot.show()
+#for well in wellnames:
+#    for sep in well_to_sep[well]:
+#        dfw = df.loc[df["well"]==well]
+#        print(well, sep)
+#        if(dfw["prs_dns"].isnull().sum()/dfw.shape[0] >= 0.7):
+#            print(dfw["gaslift_rate"].min(), dfw["gaslift_rate"].max())
+#        elif(sep=="HP"):
+#            print(dfw.loc[dfw["prs_dns"]>= 18.5]["gaslift_rate"].min(), dfw.loc[dfw["prs_dns"]>= 18.5]["gaslift_rate"].max())
+#        else:
+#            print(dfw.loc[dfw["prs_dns"]< 18.5]["gaslift_rate"].min(), dfw.loc[dfw["prs_dns"]< 18.5]["gaslift_rate"].max())
+#        print("\n")
 #print(df.loc[df["well"]=="Well 0"])
 #print(df_new.loc[df_new["well"]=="Well 31"].shape)
 #print(df_new.shape)
