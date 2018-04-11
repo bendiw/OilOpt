@@ -66,11 +66,25 @@ def run(well, separator, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, e
     f = K.function([model.layers[0].input, K.learning_phase()],
                           [model.layers[-1].output])
     for r in range(runs):
-        model.fit(X, y, batch_size, epochs, verbose=0)
-        loss = model.evaluate(X, y)
-        print("run #"+str(r)+" loss:", loss)
+        
+        #TEST
+        inp = model.input                                           
+        outputs = [layer.output for layer in model.layers if "activation" in layer.name]
+        functor = K.function([inp]+ [K.learning_phase()], outputs )
+        updates = opt.get_updates(model.trainable_weights, [], loss, )
+        layer_outs = functor([[X[0]], 1.], updates=updates)
+
+        print("prior weights:", model.get_weights()[-2])
+        print("net output:", results)
+        print("second last layer output:", outputs[-2])
+        print("y_true:", y)
+        #TEST
+#        model.fit([X[0]], [y[0]], batch_size, epochs, verbose=0)
+        print("post weights:", model.get_weights()[-2])
+
+        loss = model.evaluate([X[0]], [y[0]])
+#        print("run #"+str(r)+" loss:", loss)
         results = np.column_stack(f((X_test,1))[0])
-#        print(results)
 #        print(results)
 #        print(np.column_stack(results))
         res_mean = [results[0]]
@@ -89,12 +103,13 @@ def run(well, separator, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, e
 #        print("\n",pred_sq_mean[:3], pred_mean[:3], var_mean[:3], "\n")
         std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
             
+#        print("mean var output:", np.mean(var_mean))
         prediction = [x[0] for x in model.predict(X_test)]
         ax.clear()
         ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
         ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
-        for i in range(2):
-            ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1)*0.1, pred_mean-std*(i+1)*0.1, alpha=0.2, facecolor='#089FFF', linewidth=2)
+#        for i in range(2):
+#            ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1)*0.1, pred_mean-std*(i+1)*0.1, alpha=0.2, facecolor='#089FFF', linewidth=2)
         ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 
         pyplot.pause(0.01)
