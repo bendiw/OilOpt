@@ -30,6 +30,7 @@ def build_model(neurons, dim, regu, dropout, lr):
                       bias_initializer=initializers.Constant(value=0.1),
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("relu"))
+#    model_1.add(LeakyReLU(alpha=0.3))
     model_1.add(Dropout(dropout))
 
     model_1.add(Dense(neurons, 
@@ -38,13 +39,18 @@ def build_model(neurons, dim, regu, dropout, lr):
                       bias_initializer=initializers.Constant(value=0.1),
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("relu"))
+#    model_1.add(LeakyReLU(alpha=0.3))
     model_1.add(Dropout(dropout))
 
-    model_1.add(Dense(2, kernel_regularizer=regularizers.l2(regu)))
+    model_1.add(Dense(2,
+                      kernel_initializer=initializers.VarianceScaling(),
+                      kernel_regularizer=regularizers.l2(regu),
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("linear"))
 
 #    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = sced_loss)
-    model_1.compile(optimizer=optimizers.Adagrad(lr=lr), loss=sced_loss)
+    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
     return model_1
 
 # =============================================================================
@@ -53,36 +59,40 @@ def build_model(neurons, dim, regu, dropout, lr):
 def sced_loss(y_true, y_pred):
 #    y_true = K.reshape(y_true, [-1, 1])
 #    y_pred = K.reshape(y_pred, [-1, 1])
-    return K.mean(0.5*multiply(K.exp(-y_pred[1]),K.square(y_pred[0]-y_true[0])) + 0.5*y_pred[1], axis=0)
+    return K.mean(0.5*multiply(K.exp(-y_pred[:,1]),K.square(y_pred[:,0]-y_true[:,0]))+0.5*y_pred[:,1], axis=0)
 #    return K.mean(K.exp(-y_pred[1]))
 #    return (y_pred[0])
     
 def mse_loss(y_true, y_pred):
-    return K.mean(K.square(y_pred[0]-y_true[0]))
+    return K.mean(0.5*K.square(y_pred[0]-y_true[0]))
 
 
 
 # =============================================================================
 # load data, create a model and train it
 # =============================================================================
-def run(well=None, separator="HP", x_grid=40, y_grid=40, case=1, runs=10, neurons=3, dim=1, regu=0.0001, dropout=0.05, epochs=1000, batch_size=100, lr=0.1, n_iter=100):
+def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
+        neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
+        batch_size=50, lr=0.05, n_iter=50):
     if(well):
         X, y = cl.BO_load(well, separator)
-        print("Datapoints before merge:",len(X))
+        if(x_grid is not None):
+            print("Datapoints before merge:",len(X))
         X=np.array(X)
         y=np.array(y)
-        X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
-        print("Datapoints after merge:",len(X))
+        if(x_grid is not None):
+            X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
+            print("Datapoints after merge:",len(X))
     else:
         #generate simple test data
         #sine curve with some added faulty data
         X = np.arange(-3., 4., 7/40)
         y = [[math.sin(x), 0] for x in X]
-        X = np.append(X, [1.,1.,1.,1.])
-        y.extend([[1.,0.],[2.,0.],[0.5,0.], [1.7,0.]])
+        X = np.append(X, [1.,1.,1.,1.,1.])
+        y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
 
     step = (np.max(X)-np.min(X))/n_iter
-    X_test = np.array([[i] for i in np.arange(np.min(X)-np.max(X)*0.2, np.max(X)*1.2+step, step)])
+    X_test = np.array([[i] for i in np.arange(np.min(X)-0.8*np.max(X), 1.8*np.max(X)+step, step)])
     y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr)
 
@@ -90,8 +100,8 @@ def run(well=None, separator="HP", x_grid=40, y_grid=40, case=1, runs=10, neuron
     #setup plots
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
-    pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
-    pyplot.ylim(np.min([i[0] for i in y])-0.05*np.max([i[0] for i in y]), np.max(y)+0.05*np.max([i[0] for i in y]))
+    pyplot.xlim(np.min(X)-0.8*np.max(X), np.max(X)+0.8*np.max(X))
+    pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
 
     pyplot.autoscale(False)
     pyplot.xlabel('choke')
@@ -129,6 +139,21 @@ def run(well=None, separator="HP", x_grid=40, y_grid=40, case=1, runs=10, neuron
 #            K.set_value(model.optimizer.lr, rate)
 #            model.fit(X,y,batch_size,epochs,verbose=0)
 #        print(K.get_value(model.optimizer.lr))
+#        if (r%50==0):
+#            print ("Run",r)
+#            b_func = K.function([model.layers[0].input, K.learning_phase()],
+#                                  [model.layers[-2].bias])
+#            w_func = K.function([model.layers[0].input, K.learning_phase()],
+#                                  [model.layers[-2].kernel])
+#            out_func = K.function([model.layers[0].input, K.learning_phase()],
+#                                  [model.layers[-1].output])
+#            Q=b_func(([[X[3]]],1))
+#            W=w_func(([[X[3]]],1))
+#            R=out_func(([[X[3]]],1))
+#            print("Bias",Q)
+#            print("Weights",W)
+#            print("Outout",R)
+
 
 
         #gather results from forward pass
