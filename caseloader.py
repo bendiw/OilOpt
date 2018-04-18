@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import math
 import tens
-from sklearn.preprocessing import normalize, RobustScaler
+from sklearn.preprocessing import normalize, RobustScaler, StandardScaler
 
 
 def load(path, well=None, case=1):
@@ -33,16 +33,14 @@ def gen_test_case(cases=30):
     return data
 
 
-def BO_load(well, case=1, separator="HP", goal="oil"):
+def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
     if separator == "HP":
         hp=1
     else:
         hp=0
-    #TODO: add regularization, validation etc
 # =============================================================================
 #     load and normalize data
 # =============================================================================
-#    data = load_well(well, separator, goal, hp, factor, intervals, nan_ratio)
     if case==1:
         df = load("welltests_new.csv")
         dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
@@ -60,7 +58,15 @@ def BO_load(well, case=1, separator="HP", goal="oil"):
     else:
         is_3d = False
         dim=1
-    rs = RobustScaler(with_centering =False)
+    if scaler=="rs":
+        print("Robust scaling of data")
+        rs = RobustScaler(with_centering =False)
+    elif scaler == "std":
+        rs = StandardScaler()
+        print("Standard scaling of data")
+    else:
+        scaler=None
+
     if is_3d:
         glift_orig = np.array([x[0][0] for x in data])
         choke_orig = np.array([x[0][1] for x in data])
@@ -72,8 +78,10 @@ def BO_load(well, case=1, separator="HP", goal="oil"):
     else:
         X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
         y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
-        X = rs.fit_transform(X_orig.reshape(-1,1))
-        y = rs.transform(y_orig.reshape(-1, 1))
+#        scaler = StandardScaler().fit(X, y)
+        if(scaler):
+            X = rs.fit_transform(X_orig.reshape(-1,1))
+            y = rs.transform(y_orig.reshape(-1, 1))
     return X, y
 
 ##############
