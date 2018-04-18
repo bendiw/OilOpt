@@ -32,6 +32,14 @@ def build_model(neurons, dim, regu, dropout, lr):
     model_1.add(Activation("relu"))
 #    model_1.add(LeakyReLU(alpha=0.3))
     model_1.add(Dropout(dropout))
+#    
+#    model_1.add(Dense(neurons, input_shape=(dim,),
+#                      kernel_initializer=initializers.VarianceScaling(),
+#                      kernel_regularizer=regularizers.l2(regu), 
+#                      bias_initializer=initializers.Constant(value=-0.1),
+#                      bias_regularizer=regularizers.l2(regu)))
+#    model_1.add(Activation("relu"))
+#    model_1.add(Dropout(dropout))
 
     model_1.add(Dense(neurons, 
                       kernel_initializer=initializers.VarianceScaling(),
@@ -48,8 +56,6 @@ def build_model(neurons, dim, regu, dropout, lr):
                       bias_initializer=initializers.Constant(value=0.1),
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("linear"))
-
-#    model_1.compile(optimizer=optimizers.adam(lr=lr), loss = sced_loss)
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
     return model_1
 
@@ -57,11 +63,7 @@ def build_model(neurons, dim, regu, dropout, lr):
 # Heteroscedastic loss function. See Yarin Gal
 # =============================================================================
 def sced_loss(y_true, y_pred):
-#    y_true = K.reshape(y_true, [-1, 1])
-#    y_pred = K.reshape(y_pred, [-1, 1])
     return K.mean(0.5*multiply(K.exp(-y_pred[:,1]),K.square(y_pred[:,0]-y_true[:,0]))+0.5*y_pred[:,1], axis=0)
-#    return K.mean(K.exp(-y_pred[1]))
-#    return (y_pred[0])
     
 def mse_loss(y_true, y_pred):
     return K.mean(0.5*K.square(y_pred[0]-y_true[0]))
@@ -75,7 +77,7 @@ def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.05, n_iter=50):
     if(well):
-        X, y = cl.BO_load(well, separator)
+        X, y = cl.BO_load(well, separator, case=case)
         if(x_grid is not None):
             print("Datapoints before merge:",len(X))
         X=np.array(X)
@@ -112,24 +114,6 @@ def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
     f = K.function([model.layers[0].input, K.learning_phase()],
                           [model.layers[-1].output])
     for r in range(runs):
-
-        
-        #TEST
-#        layer_outputs = functor([[X[0]], 1.])
-#        print("prior weights:", model.get_weights()[-2])
-#        print("tzzT:", layer_outputs)
-        inputs = [[X[0]], # X
-                  [1], # sample weights
-                  [y[0]], # y
-                  1 # learning phase in TEST mode
-              ]
-
-#        print("net output:", layer_outputs[-1])
-#        print("second last layer output:", layer_outputs[-2])
-#        print ("gradients:",get_gradients(inputs)[-2:])
-#        print("y_true:", y[0])
-        #TEST
-
         #train model
         model.fit(X, y, batch_size, epochs, verbose=0)
 #        if r==0:
@@ -157,16 +141,15 @@ def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
 
 
         #gather results from forward pass
-        results = np.column_stack(f((X_test,1))[0])
+        results = np.column_stack(f((X_test,1.))[0])
         if (np.isnan(results[0][0])):
             print("NAN")
             return
-#        print(np.column_stack(results))
 
         res_mean = [results[0]]
         res_var = [np.exp(results[1])]
         for i in range(1,n_iter):
-            a = np.column_stack(f((X_test,1))[0])
+            a = np.column_stack(f((X_test,1.))[0])
             res_mean.append(a[0])
             res_var.append(np.exp(a[1]))
         
