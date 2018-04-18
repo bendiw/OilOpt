@@ -114,6 +114,7 @@ def run(well, case = 2, separator="HP", epochs = 5000, mode="relu", neurons = 5,
 # =============================================================================
     model_1.fit(X, y, 
             epochs = epochs, batch_size=100, verbose=0)
+    print("fitted")
 
     
 # =============================================================================
