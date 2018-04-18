@@ -169,6 +169,6 @@ def search_all(case=2):
     else:
         for w in t.wellnames:
             for sep in t.well_to_sep:
-                print(w, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 search(w, sep, verbose=0)
     
