@@ -142,7 +142,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
-    model = NeuralRegressor(build_fn=create_model, epochs = 10, batch_size=128, verbose=0)
+    model = NeuralRegressor(build_fn=create_model, epochs = 1000, batch_size=128, verbose=0)
     gs = GridSearchCV(model, parameters, verbose=2)
     grid_result = gs.fit(X, y)
     # summarize results
