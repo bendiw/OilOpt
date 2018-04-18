@@ -22,7 +22,7 @@ import pandas as pd
 import tempfile
 import keras.models
 import pickle
-
+from datetime import datetime
 
 # =============================================================================
 # Wrapper class for Keras net to use in sklearn's grid search
@@ -154,7 +154,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
-    if(verbose=0):
+    if(verbose==0):
         means = grid_result['mean_test_score']
         stds = grid_result['std_test_score']
         params = grid_result['params']
@@ -164,11 +164,11 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
 def search_all(case=2):
     if(case==2):
         for w in t.wellnames_2:
-            print(w)
+            print(w, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             search(w, case=case, verbose=0)
     else:
         for w in t.wellnames:
             for sep in t.well_to_sep:
-                print(w)
+                print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 search(w, sep, verbose=0)
     
