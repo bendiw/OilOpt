@@ -41,27 +41,37 @@ class NeuralRegressor(KerasRegressor):
             """
             kwargs = self.filter_sk_params(Sequential.evaluate, kwargs)
             loss = self.model.evaluate(x, y, **kwargs)
-            print(self.model.metrics_names)
-            print(loss)
+#            print(self.model.metrics_names)
+#            print(loss)
             if isinstance(loss, list):
                 return loss[-1]
             return -loss
 
-def log_likelihood(tau, N):
+def log_likelihood_homosced(tau, N):
     def ll(y_true, y_pred):
 #        print(y_true.eval())
-        return K.mean((K.logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) + 0.5*K.log(tau)))
+        return K.mean((K.logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) + 0.5*K.log(tau)) - K.log(N)-0.5*K.log(2.*math.pi))
 #        return logsumexp(-0.5 * tau * (y_true - y_pred)**2., 0) - np.log(N) - 0.5*np.log(2*np.pi) + 0.5*np.log(tau)
+    return ll
+
+def log_likelihood_heterosced(N):
+    def ll(y_true, y_pred):
+        return K.mean(K.logsumexp(-0.5 * K.exp(-y_pred[:,1]) * (y_true[:,0] - y_pred[:,0])**2., 0) + 0.5*K.log(K.exp(-y_pred[:,1])) - K.log(N)-0.5*K.log(2.*math.pi))
     return ll
 
 
 def sced_loss(y_true, y_pred):
-    return K.mean(0.5*y_pred[1] + 0.5*multiply(K.exp(-y_pred[1]),K.square(y_pred[0]-y_true[0])), axis=0) # 
+    return K.mean(0.5*multiply(K.exp(-y_pred[:,1]),K.square(y_pred[:,0]-y_true[:,0]))+0.5*y_pred[:,1], axis=0)
 
 def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll", 
-                 mode="relu", neurons = 25, learn_rate = 0.1, N=1000, variance="homosced"):
+                 mode="relu", neurons = 25, learn_rate = 0.001, N=1000., variance="heterosced", regu=0.0001):
     #regularization parameter is calc based on hyperparameters
-    regu = length_scale**2 * (1 - dropout) / (2. * N * tau)
+    if(variance!="homosced"):
+        tau=1.
+        output_dim = 2
+    else:
+        output_dim = 1
+#    regu = length_scale**2 * (1 - dropout) / (2. * N * tau)
     model_1 = None
     #ReLU
     
@@ -82,7 +92,7 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
                       bias_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
-        model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(output_dim, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
     
     #maxout
@@ -100,30 +110,45 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
     else:
         raise ValueError('mode/architecture not supported!')
     #compile model
-    loglik = log_likelihood(tau, N)
     if(variance=="homosced"):
         loss="mse"
+        loglik = log_likelihood_homosced(tau, N)
     else:
         loss=sced_loss
+        loglik = log_likelihood_heterosced(N)
     model_1.compile(optimizer=optimizers.adam(lr=learn_rate), loss = loss, metrics=[loglik])
     return model_1
 
 
 
-def search(well, separator, parameters=t.param_dict):
-    make_keras_picklable()
-    X, y = cl.BO_load(well, separator)
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None):
+    if(well):
+        X, y = cl.BO_load(well, separator, case=case)
+        if(x_grid is not None):
+            print("Datapoints before merge:",len(X))
+        X=np.array(X)
+        y=np.array(y)
+        if(x_grid is not None):
+            X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
+            print("Datapoints after merge:",len(X))
+    else:
+        #generate simple test data
+        #sine curve with some added faulty data
+        X = np.arange(-3., 4., 7/40)
+        y = [[math.sin(x), 0] for x in X]
+        X = np.append(X, [1.,1.,1.,1.,1.])
+        y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
     global dim
-<<<<<<< HEAD
-    dim = len(X[0])
-    parameters['N'] = [len(X)]
-=======
     global N
     dim = len(X[0])
-    N = len(X)
->>>>>>> master
-    model = NeuralRegressor(build_fn=create_model, epochs = 600, batch_size=128, verbose=0)
+    N = float(len(X))
+    model = NeuralRegressor(build_fn=create_model, epochs = 10, batch_size=128, verbose=0)
     gs = GridSearchCV(model, parameters, verbose=2)
-    gs_result = gs.fit(X, y)
-    print(gs.best_score_, gs.best_params_)
-    print(gs_result)
+    grid_result = gs.fit(X, y)
+    # summarize results
+    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    means = grid_result.cv_results_['mean_test_score']
+    stds = grid_result.cv_results_['std_test_score']
+    params = grid_result.cv_results_['params']
+    for mean, stdev, param in zip(means, stds, params):
+        print("%f (%f) with: %r" % (mean, stdev, param))
