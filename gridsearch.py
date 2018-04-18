@@ -14,8 +14,11 @@ from keras.models import Model, Sequential
 from keras import losses, optimizers, backend, regularizers, initializers
 from scipy.special import logsumexp
 from keras import backend as K
+from tensorflow import multiply
+import math
 import numpy as np
 import types
+import pandas as pd
 import tempfile
 import keras.models
 import pickle
@@ -142,13 +145,17 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
-    model = NeuralRegressor(build_fn=create_model, epochs = 10, batch_size=128, verbose=0)
-    gs = GridSearchCV(model, parameters, verbose=2)
-    grid_result = gs.fit(X, y)
-    # summarize results
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-    means = grid_result.cv_results_['mean_test_score']
-    stds = grid_result.cv_results_['std_test_score']
-    params = grid_result.cv_results_['params']
+    model = NeuralRegressor(build_fn=create_model, epochs = 1000, batch_size=128, verbose=0)
+    gs = GridSearchCV(model, parameters, verbose=2, return_train_score=True)
+    gs.fit(X, y)
+    grid_result = gs.cv_results_
+    df = pd.DataFrame.from_dict(grid_result)
+    filestring = "gridsearch/"+well+(sep if case==1 else "")+".csv"
+    with open(filestring, 'w') as f:
+        df.to_csv(f, sep=';', index=False)
+    print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
+    means = grid_result['mean_test_score']
+    stds = grid_result['std_test_score']
+    params = grid_result['params']
     for mean, stdev, param in zip(means, stds, params):
         print("%f (%f) with: %r" % (mean, stdev, param))
