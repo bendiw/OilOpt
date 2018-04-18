@@ -55,8 +55,11 @@ def log_likelihood(tau, N):
     return ll
 
 
+def sced_loss(y_true, y_pred):
+    return K.mean(0.5*y_pred[1] + 0.5*multiply(K.exp(-y_pred[1]),K.square(y_pred[0]-y_true[0])), axis=0) # 
+
 def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll", 
-                 mode="relu", neurons = 25, learn_rate = 0.1, N=1000):
+                 mode="relu", neurons = 25, learn_rate = 0.1, N=1000, variance="homosced"):
     #regularization parameter is calc based on hyperparameters
     regu = length_scale**2 * (1 - dropout) / (2. * N * tau)
     model_1 = None
@@ -65,7 +68,18 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 #    print("tau:", tau, "\tlength_scale:", length_scale, "\tdropout:", dropout)
     if mode=="relu":
         model_1= Sequential()
-        model_1.add(Dense(neurons, input_shape=(dim,), kernel_regularizer=regularizers.l2(regu)))
+        model_1.add(Dense(neurons, input_shape=(dim,),
+                      kernel_initializer=initializers.VarianceScaling(),
+                      kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dropout(dropout))
+        model_1.add(Dense(neurons,
+                      kernel_initializer=initializers.VarianceScaling(),
+                      kernel_regularizer=regularizers.l2(regu), 
+                      bias_initializer=initializers.Constant(value=0.1),
+                      bias_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
         model_1.add(Dropout(dropout))
         model_1.add(Dense(1, kernel_regularizer=regularizers.l2(regu)))
@@ -87,7 +101,11 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
         raise ValueError('mode/architecture not supported!')
     #compile model
     loglik = log_likelihood(tau, N)
-    model_1.compile(optimizer=optimizers.adam(lr=learn_rate), loss = "mean_squared_error", metrics=[loglik])
+    if(variance=="homosced"):
+        loss="mse"
+    else:
+        loss=sced_loss
+    model_1.compile(optimizer=optimizers.adam(lr=learn_rate), loss = loss, metrics=[loglik])
     return model_1
 
 
