@@ -154,11 +154,12 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
-    means = grid_result['mean_test_score']
-    stds = grid_result['std_test_score']
-    params = grid_result['params']
-    for mean, stdev, param in zip(means, stds, params):
-        print("%f (%f) with: %r" % (mean, stdev, param))
+    if(verbose=0):
+        means = grid_result['mean_test_score']
+        stds = grid_result['std_test_score']
+        params = grid_result['params']
+        for mean, stdev, param in zip(means, stds, params):
+            print("%f (%f) with: %r" % (mean, stdev, param))
 
 def search_all(case=2):
     if(case==2):
