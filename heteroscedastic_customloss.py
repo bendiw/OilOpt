@@ -71,7 +71,7 @@ def mse_loss(y_true, y_pred):
 # =============================================================================
 # load data, create a model and train it
 # =============================================================================
-def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
+def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.05, n_iter=50):
     if(well):
@@ -131,7 +131,7 @@ def run(well=None, separator="HP", x_grid=30, y_grid=30, case=1, runs=10,
         #TEST
 
         #train model
-        model.fit(X, y, batch_size, epochs, verbose=0)
+        model.fit(X, y, batch_size, epochs, verbose=1)
 #        if r==0:
 #            model.fit(X, y, batch_size, epochs, verbose=0)
 #        else:
