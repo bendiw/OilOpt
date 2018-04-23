@@ -43,7 +43,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
 # =============================================================================
     if case==1:
         df = load("welltests_new.csv")
-        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
+        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=hp) #,intervals=100
         data = tens.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
@@ -52,6 +52,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
         X = df.as_matrix(columns=[well+'_CHK_mea'])
         y = df.as_matrix(columns=[well+'_Q'+goal+'_wsp_mea'])
         data = np.array([[X[i], y[i]] for i in range(len(X))])
+
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
