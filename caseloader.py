@@ -33,7 +33,7 @@ def gen_test_case(cases=30):
     return data
 
 
-def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
+def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0.3):
     if separator == "HP":
         hp=1
     else:
@@ -43,7 +43,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
 # =============================================================================
     if case==1:
         df = load("welltests_new.csv")
-        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=hp) #,intervals=100
+        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = nan_ratio, hp=hp) #,intervals=100
         data = tens.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
@@ -75,7 +75,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
         glift = rs.fit_transform(glift_orig.reshape(-1,1))
         choke = rs.transform(choke_orig.reshape(-1,1))
         y = rs.transform(y_orig.reshape(-2, 1))
-        X =np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
+        X = np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
     else:
         X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
         y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)

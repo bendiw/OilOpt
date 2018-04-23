@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
 
-wellnames = [ "B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"
+wellnames = [ "B1","B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"
              ] #"A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2","B3", 
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep = {"A2" : ["HP"], "A3": ["HP"], "A5": ["HP"], "A6": ["HP"], "A7": ["HP"], "A8": ["HP"], 

@@ -124,9 +124,9 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
-def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2):
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0):
     if(well):
-        X, y = cl.BO_load(well, separator, case=case)
+        X, y = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio)
         if(x_grid is not None):
             print("Datapoints before merge:",len(X))
         X=np.array(X)

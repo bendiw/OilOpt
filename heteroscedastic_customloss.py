@@ -14,7 +14,7 @@ import caseloader as cl
 from tensorflow import multiply
 import numpy as np
 from matplotlib import pyplot
-import tools
+import tools, plotter
 
 
 # =============================================================================
@@ -75,14 +75,12 @@ def mse_loss(y_true, y_pred):
 # =============================================================================
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
-        batch_size=50, lr=0.05, n_iter=50):
+        batch_size=50, lr=0.05, n_iter=50, scaler='rs'):
     if(well):
-        X, y = cl.BO_load(well, separator, case=case)
-        if(x_grid is not None):
+        X, y = cl.BO_load(well, separator, case=case, scaler=scaler)
+        if(x_grid is not None and case==2):
             print("Datapoints before merge:",len(X))
-        X=np.array(X)
-        y=np.array(y)
-        if(x_grid is not None):
+        if(x_grid is not None and case==2):
             X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
             print("Datapoints after merge:",len(X))
     else:
@@ -92,30 +90,31 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         y = [[math.sin(x), 0] for x in X]
         X = np.append(X, [1.,1.,1.,1.,1.])
         y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
-
-    step = (np.max(X)-np.min(X))/n_iter
-    X_test = np.array([[i] for i in np.arange(np.min(X)-0.8*np.max(X), 1.8*np.max(X)+step, step)])
+        
+    if (len(X[0]) >= 2):
+        dim=2
+    X_test = gen_x_test(X, dim, n_iter)
     y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr)
 
-
     #setup plots
-    fig = pyplot.figure()
-    ax = fig.add_subplot(111)
-    pyplot.xlim(np.min(X)-0.8*np.max(X), np.max(X)+0.8*np.max(X))
-    pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
-
-    pyplot.autoscale(False)
-    pyplot.xlabel('choke')
-    pyplot.ylabel("oil")
-    pyplot.show()
+    if(dim==1):
+        fig = pyplot.figure()
+        ax = fig.add_subplot(111)
+        pyplot.xlim(np.min(X)-0.8*np.max(X), np.max(X)+0.8*np.max(X))
+        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
+    
+        pyplot.autoscale(False)
+        pyplot.xlabel('choke')
+        pyplot.ylabel("oil")
+        pyplot.show()
     
     #forward pass function, needed for dropout eval
     f = K.function([model.layers[0].input, K.learning_phase()],
                           [model.layers[-1].output])
     for r in range(runs):
         #train model
-        model.fit(X, y, batch_size, epochs, verbose=1)
+        model.fit(X, y, batch_size, epochs, verbose=0)
 #        if r==0:
 #            model.fit(X, y, batch_size, epochs, verbose=0)
 #        else:
@@ -163,22 +162,38 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         prediction = [x[0] for x in model.predict(X_test)]
         
         #plot results from current run
-        if r==0:
-            line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
-            line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
-            for i in range(2):
-                (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-            line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+        if dim==1:
+            if r==0:
+                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
+                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
+                for i in range(2):
+                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+            else:
+                line2[0].set_ydata(prediction)
+                line3[0].set_ydata(pred_mean)
+                pyplot.draw()
+                ax.collections.clear()
+                for i in range(2):
+                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+            pyplot.pause(0.001)
         else:
-            line2[0].set_ydata(prediction)
-            line3[0].set_ydata(pred_mean)
-            pyplot.draw()
-            ax.collections.clear()
-            for i in range(2):
-                (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-        pyplot.pause(0.001)
-        
-        
+            if r==0:
+                triang, ax = plotter.first_plot_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y],[x[0] for x in X_test], [x[1] for x in X_test], pred_mean, well)
+            else:
+                plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
+
+def gen_x_test(X, dim, n_iter):
+    if (dim==1):
+        step = (np.max(X)-np.min(X))/n_iter
+        X_test = np.array([[i] for i in np.arange(np.min(X)-0.8*np.max(X), 1.8*np.max(X)+step, step)])
+    else:
+        step_1 = (np.max(X[:,0])-np.min(X[:,0]))/n_iter
+        step_2 = (np.max(X[:,1])-np.min(X[:,1]))/n_iter
+        X_test = np.array([[i,j] for i in np.arange(np.min(X[:,0])-0.5*(np.max(X[:,0])-np.min(X[:,0])), np.max(X[:,0])+0.5*(np.max(X[:,0])-np.min(X[:,0]))+step_1, step_1)
+        for j in np.arange(np.min(X[:,1])-0.5*(np.max(X[:,1])-np.min(X[:,1])), np.max(X[:,1])+0.5*(np.max(X[:,1])-np.min(X[:,1]))+step_2, step_2)])
+    return X_test
+            
         
         
 # =============================================================================
