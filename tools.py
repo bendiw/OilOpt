@@ -4,8 +4,7 @@ import pandas as pd
 
 wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", 
              "B3", "B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"]
-
-
+wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep = {"A2" : ["HP"], "A3": ["HP"], "A5": ["HP"], "A6": ["HP"], "A7": ["HP"], "A8": ["HP"], 
                "B1" : ["HP", "LP"], "B2" : ["HP", "LP"], "B3" : ["HP", "LP"], "B4" : ["HP", "LP"], "B5" : ["HP", "LP"], "B6" : ["HP", "LP"], "B7" : ["HP", "LP"], 
                "C1" : ["LP"], "C2" : ["LP"], "C3" : ["LP"], "C4" : ["LP"]}
