@@ -132,7 +132,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
         X=np.array(X)
         y=np.array(y)
         if(x_grid is not None):
-            X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
+            X,y = t.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
             print("Datapoints after merge:",len(X))
     else:
         #generate simple test data
@@ -145,12 +145,15 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
-    model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=100, verbose=0)
+
+    model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
+
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
-    filestring = "gridsearch/"+well+("_"+sep if case==1 else "")+".csv"
+    filestring = "gridsearch/"+well+"Oil"+("_"+separator if case==1 else "")+".csv"
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
@@ -169,6 +172,8 @@ def search_all(case=2):
     else:
         for w in t.wellnames:
             for sep in t.well_to_sep[w]:
-                print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-                search(w, sep, verbose=0)
+                if (sep=="LP"):
+                    print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                    search(w, separator=sep, verbose=0)
     
+
