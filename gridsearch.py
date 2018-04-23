@@ -145,9 +145,23 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
+<<<<<<< HEAD
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
 
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+=======
+    model = NeuralRegressor(build_fn=create_model, epochs = 1000, batch_size=128, verbose=0)
+<<<<<<< HEAD
+    gs = GridSearchCV(model, parameters, verbose=2)
+    grid_result = gs.fit(X, y)
+    # summarize results
+    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    means = grid_result.cv_results_['mean_test_score']
+    stds = grid_result.cv_results_['std_test_score']
+    params = grid_result.cv_results_['params']
+=======
+    gs = GridSearchCV(model, parameters, verbose=2, return_train_score=True)
+>>>>>>> 62ab409f9b31118187c908d74dd41fb5a444d668
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
@@ -155,6 +169,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
+<<<<<<< HEAD
     if(verbose==0):
         means = grid_result['mean_test_score']
         stds = grid_result['std_test_score']
@@ -174,3 +189,11 @@ def search_all(case=2):
                     print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     search(w, separator=sep, verbose=0)
     
+=======
+    means = grid_result['mean_test_score']
+    stds = grid_result['std_test_score']
+    params = grid_result['params']
+>>>>>>> master
+    for mean, stdev, param in zip(means, stds, params):
+        print("%f (%f) with: %r" % (mean, stdev, param))
+>>>>>>> 62ab409f9b31118187c908d74dd41fb5a444d668
