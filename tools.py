@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
 
-wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", 
-             "B3", "B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"]
+wellnames = [  "B1", "B2","B3", "B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"
+             ] #"A2", "A3", "A5", "A6", "A7", "A8"
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep = {"A2" : ["HP"], "A3": ["HP"], "A5": ["HP"], "A6": ["HP"], "A7": ["HP"], "A8": ["HP"], 
                "B1" : ["HP", "LP"], "B2" : ["HP", "LP"], "B3" : ["HP", "LP"], "B4" : ["HP", "LP"], "B5" : ["HP", "LP"], "B6" : ["HP", "LP"], "B7" : ["HP", "LP"], 
@@ -14,15 +14,11 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
-<<<<<<< HEAD
-param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)],
-                         'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3,
-                                 5e-3, 1e-2, 5e-2, 1e-1]}
 
-=======
-param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
+param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)],
+                         'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
->>>>>>> master
+
 #param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
 
 
