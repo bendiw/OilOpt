@@ -146,15 +146,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     dim = len(X[0])
     N = float(len(X))
     model = NeuralRegressor(build_fn=create_model, epochs = 1000, batch_size=128, verbose=0)
-<<<<<<< HEAD
-    gs = GridSearchCV(model, parameters, verbose=2)
-    grid_result = gs.fit(X, y)
-    # summarize results
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-    means = grid_result.cv_results_['mean_test_score']
-    stds = grid_result.cv_results_['std_test_score']
-    params = grid_result.cv_results_['params']
-=======
+
     gs = GridSearchCV(model, parameters, verbose=2, return_train_score=True)
     gs.fit(X, y)
     grid_result = gs.cv_results_
@@ -166,6 +158,6 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     means = grid_result['mean_test_score']
     stds = grid_result['std_test_score']
     params = grid_result['params']
->>>>>>> master
+    
     for mean, stdev, param in zip(means, stds, params):
         print("%f (%f) with: %r" % (mean, stdev, param))
