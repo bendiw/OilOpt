@@ -14,22 +14,11 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
->>>>>>> 62ab409f9b31118187c908d74dd41fb5a444d668
-param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)],
-                         'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
-#param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
 
-<<<<<<< HEAD
-=======
-=======
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
->>>>>>> master
->>>>>>> 62ab409f9b31118187c908d74dd41fb5a444d668
+
 #param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
 
 
