@@ -67,6 +67,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         print("Standard scaling of data")
     else:
         scaler=None
+        rs=None
 
     if is_3d:
         glift_orig = np.array([x[0][0] for x in data])
@@ -77,13 +78,13 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         y = rs.transform(y_orig.reshape(-2, 1))
         X = np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
     else:
-        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
-        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        X = np.array([x[0][0] for x in data]).reshape(-1,1)
+        y = np.array([x[1][0] for x in data]).reshape(-1,1)
 #        scaler = StandardScaler().fit(X, y)
         if(scaler):
-            X = rs.fit_transform(X_orig.reshape(-1,1))
-            y = rs.transform(y_orig.reshape(-1, 1))
-    return X, y
+            X = rs.fit_transform(X.reshape(-1,1))
+            y = rs.transform(y.reshape(-1, 1))
+    return X, y, rs
 
 ##############
 ##              Generates targets from a dataframe                      ##
