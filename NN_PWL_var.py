@@ -46,7 +46,6 @@ def build_model(neurons, dim, regu, lr):
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
 
-
 # =============================================================================
 # main function
 # =============================================================================
