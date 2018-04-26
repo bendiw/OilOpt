@@ -171,7 +171,11 @@ def search_all(case=2, goal="gas"):
             print(w, goal, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             search(w, case=case, verbose=0, goal=goal)
     else:
+<<<<<<< HEAD
         for w in t.p_dict["C"][2:]:
+=======
+        for w in t.wellnames[10:]:
+>>>>>>> master
             for sep in t.well_to_sep[w]:
                 print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 search(w, separator=sep, verbose=0, goal='gas')
