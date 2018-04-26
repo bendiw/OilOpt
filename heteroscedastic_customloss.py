@@ -15,6 +15,7 @@ from tensorflow import multiply
 import numpy as np
 from matplotlib import pyplot
 import tools, plotter
+import pandas as pd
 
 
 # =============================================================================
@@ -75,9 +76,10 @@ def mse_loss(y_true, y_pred):
 # =============================================================================
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
-        batch_size=50, lr=0.05, n_iter=50, sampling_density=50, scaler='rs'):
+        batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
+        goal="oil", save_variance = False):
     if(well):
-        X, y = cl.BO_load(well, separator, case=case, scaler=scaler)
+        X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
             print("Datapoints before merge:",len(X))
         if(x_grid is not None and case==2):
@@ -108,10 +110,12 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pyplot.xlabel('choke')
         pyplot.ylabel("oil")
         pyplot.show()
+        
+    f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
     
     #forward pass function, needed for dropout eval
-    f = K.function([model.layers[0].input, K.learning_phase()],
-                          [model.layers[-1].output])
+#    f = K.function([model.layers[0].input, K.learning_phase()],
+#                          [model.layers[-1].output])
     for r in range(runs):
         #train model
         model.fit(X, y, batch_size, epochs, verbose=0)
@@ -139,46 +143,47 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 
 
 
-        #gather results from forward pass
-        results = np.column_stack(f((X_test,1.))[0])
-        if (np.isnan(results[0][0])):
-            print("NAN")
-            return
-
-        res_mean = [results[0]]
-        res_var = [np.exp(results[1])]
-        for i in range(1,n_iter):
-            a = np.column_stack(f((X_test,1.))[0])
-            res_mean.append(a[0])
-            res_var.append(np.exp(a[1]))
+#        #gather results from forward pass
+#        results = np.column_stack(f((X_test,1.))[0])
+#        if (np.isnan(results[0][0])):
+#            print("NAN")
+#            return
+#
+#        res_mean = [results[0]]
+#        res_var = [np.exp(results[1])]
+#        for i in range(1,n_iter):
+#            a = np.column_stack(f((X_test,1.))[0])
+#            res_mean.append(a[0])
+#            res_var.append(np.exp(a[1]))
         
         #calculate uncertainty
-        pred_mean = np.mean(res_mean, axis=0)
-        pred_sq_mean = np.mean(np.square(res_mean), axis=0)
-        var_mean = np.mean(res_var, axis=0)
-        std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
-        
-        var1 = pred_sq_mean-np.square(pred_mean)
+#        pred_mean = np.mean(res_mean, axis=0)
+#        pred_sq_mean = np.mean(np.square(res_mean), axis=0)
+#        var_mean = np.mean(res_var, axis=0)
+#        std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
+#        
+#        var1 = pred_sq_mean-np.square(pred_mean)
         
         #this is the current network's prediction with dropout switched off
         prediction = [x[0] for x in model.predict(X_test)]
+        pred_mean, std = sample_mean_std(model, X_test, n_iter, f)
         
         #plot results from current run
         if dim==1:
             if r==0:
                 line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=10)
-#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
-#                for i in range(2):
-#                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-#                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+                for i in range(2):
+                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
                 line2[0].set_ydata(prediction)
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
-#                for i in range(2):
-#                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+                for i in range(2):
+                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+var1*(i+1), pred_mean-var1*(i+1), alpha=0.5, facecolor='#0F0F0F', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+(var1+var_mean)*(i+1), pred_mean-(var1+var_mean)*(i+1), alpha=0.5, facecolor='#089FFF', linewidth=2))
             pyplot.pause(0.001)
@@ -187,11 +192,60 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 triang, ax = plotter.first_plot_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y],[x[0] for x in X_test], [x[1] for x in X_test], pred_mean, well)
             else:
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
+    if(save_variance):
+        model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
+        X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)
+        X_sample = np.array([[i] for i in range(101)])
+        X_save = np.array([i for i in range(101)])
+        f = K.function([model_2.layers[0].input, K.learning_phase()], [model_2.layers[-1].output])
+        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
+        
+        prediction = [x[0] for x in model_2.predict(X_sample)]
+        plot_once(X_sample, prediction, pred_mean, std, y_points, X_points)
+        save_variance_func(X_save, std, case, well, goal)
+        
+def plot_once(X, prediction, pred_mean, std, y_points, X_points):
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111)
+    pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
+    pyplot.ylim(np.min([i[0] for i in y_points])-0.4*np.max([i[0] for i in y_points]), np.max(y_points)+0.4*np.max([i[0] for i in y_points]))
+
+    pyplot.autoscale(False)
+    pyplot.xlabel('choke')
+    pyplot.ylabel("LOLOLOL")
+    pyplot.show()
+    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
+    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
+    for i in range(2):
+        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1)
+
+        
+def sample_mean_std(model, X, n_iter, f):
+    #gather results from forward pass
+    results = np.column_stack(f((X,1.))[0])
+    if (np.isnan(results[0][0])):
+        print("NAN")
+        return
+
+    res_mean = [results[0]]
+    res_var = [np.exp(results[1])]
+    for i in range(1,n_iter):
+        a = np.column_stack(f((X,1.))[0])
+        res_mean.append(a[0])
+        res_var.append(np.exp(a[1]))
+        
+    pred_mean = np.mean(res_mean, axis=0)
+    pred_sq_mean = np.mean(np.square(res_mean), axis=0)
+    var_mean = np.mean(res_var, axis=0)
+    std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
+    return pred_mean, std
 
 def gen_x_test(X, dim, n_iter):
     if (dim==1):
         step = (np.max(X)-np.min(X))/n_iter
-        X_test = np.array([[i] for i in np.arange(np.min(X)-0.8*np.max(X), 1.8*np.max(X)+step, step)])
+        X_test = np.array([[i] for i in np.arange(np.min(X)-0.5*np.max(X), 1.5*np.max(X)+step, step)])
+#        X_test = np.array([[i] for i in np.arange(0,101)])
     else:
         step_1 = (np.max(X[:,0])-np.min(X[:,0]))/n_iter
         step_2 = (np.max(X[:,1])-np.min(X[:,1]))/n_iter
@@ -236,3 +290,32 @@ def test_gradients(model, X, y):
     #print whatever you're interested in here
     print ("gradients:",grads[-2:])
     return
+
+def save_variance_func(X, var, case, well, phase):
+    filename = "variance_case_" + str(case) + ".csv"
+    d = {well+'_'+phase+"_std":var, well+"_"+phase+"_X":X}
+    try:
+        with open(filename, 'w') as f:
+            df = pd.read_csv(f, sep=';', index_col=0)
+            df.add(d)
+    except:
+        df = pd.DataFrame(data=d)
+    df.to_csv(filename,sep=";")
+    
+def inverse_scale(model_1, dim, neurons, dropout, rs, lr):
+    model_2= Sequential()
+    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons),
+                      rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dropout(dropout))
+    model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                      rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dropout(dropout))
+    model_2.add(Dense(2,  weights = [model_1.layers[-2].get_weights()[0],rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(2,)]))
+    model_2.add(Activation("linear"))
+    model_2.compile(optimizer=optimizers.adam(lr=lr), loss = sced_loss)
+    return model_2
+        
+
+        
