@@ -193,7 +193,10 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
             else:
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
     if(save_variance):
-        model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
+        if not scaler:
+            model_2 = model
+        else:
+            model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
         X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)
         X_sample = np.array([[i] for i in range(101)])
         X_save = np.array([i for i in range(101)])
@@ -295,12 +298,16 @@ def save_variance_func(X, var, case, well, phase):
     filename = "variance_case_" + str(case) + ".csv"
     d = {well+'_'+phase+"_std":var, well+"_"+phase+"_X":X}
     try:
-        with open(filename, 'w') as f:
-            df = pd.read_csv(f, sep=';', index_col=0)
-            df.add(d)
-    except:
+        df = pd.read_csv(filename, sep=';', index_col=0)
+        for k, v in d.items():
+            df[k] = v
+        print(df.columns)
+    except Exception as e:
+        print(e)
         df = pd.DataFrame(data=d)
-    df.to_csv(filename,sep=";")
+        print(df.columns)
+    with open(filename, 'w') as f:
+        df.to_csv(f,sep=";")
     
 def inverse_scale(model_1, dim, neurons, dropout, rs, lr):
     model_2= Sequential()
