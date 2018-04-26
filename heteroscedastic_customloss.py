@@ -75,7 +75,7 @@ def mse_loss(y_true, y_pred):
 # =============================================================================
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
-        batch_size=50, lr=0.05, n_iter=50, scaler='rs'):
+        batch_size=50, lr=0.05, n_iter=50, sampling_density=50, scaler='rs'):
     if(well):
         X, y = cl.BO_load(well, separator, case=case, scaler=scaler)
         if(x_grid is not None and case==2):
@@ -93,7 +93,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         
     if (len(X[0]) >= 2):
         dim=2
-    X_test = gen_x_test(X, dim, n_iter)
+    X_test = gen_x_test(X, dim, sampling_density)
     y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr)
 
@@ -158,24 +158,29 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         var_mean = np.mean(res_var, axis=0)
         std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
         
+        var1 = pred_sq_mean-np.square(pred_mean)
+        
         #this is the current network's prediction with dropout switched off
         prediction = [x[0] for x in model.predict(X_test)]
         
         #plot results from current run
         if dim==1:
             if r==0:
-                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=15)
-                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=2)
-                for i in range(2):
-                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=10)
+#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+#                for i in range(2):
+#                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+#                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
                 line2[0].set_ydata(prediction)
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
-                for i in range(2):
-                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                for i in range(2):
+#                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                    (ax.fill_between([x[0] for x in X_test], pred_mean+var1*(i+1), pred_mean-var1*(i+1), alpha=0.5, facecolor='#0F0F0F', linewidth=2))
+#                    (ax.fill_between([x[0] for x in X_test], pred_mean+(var1+var_mean)*(i+1), pred_mean-(var1+var_mean)*(i+1), alpha=0.5, facecolor='#089FFF', linewidth=2))
             pyplot.pause(0.001)
         else:
             if r==0:
