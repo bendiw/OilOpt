@@ -124,9 +124,10 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
-def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, goal="oil"):
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0, goal='oil'):
     if(well):
-        X, y = cl.BO_load(well, separator, case=case, goal=goal)
+        X, y = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
+
         if(x_grid is not None):
             print("Datapoints before merge:",len(X))
         X=np.array(X)
@@ -153,7 +154,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
-    filestring = "gridsearch/"+well+"Oil"+("_"+separator if case==1 else "")+".csv"
+    filestring = "gridsearch/"+well+goal+("_"+separator if case==1 else "")+".csv"
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
@@ -170,10 +171,9 @@ def search_all(case=2, goal="gas"):
             print(w, goal, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             search(w, case=case, verbose=0, goal=goal)
     else:
-        for w in t.wellnames:
+        for w in t.wellnames[9:]:
             for sep in t.well_to_sep[w]:
-                if (sep=="LP"):
-                    print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-                    search(w, separator=sep, verbose=0)
+                print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                search(w, separator=sep, verbose=0, goal='gas')
     
 
