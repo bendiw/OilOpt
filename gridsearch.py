@@ -147,6 +147,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     N = float(len(X))
 
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
+
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
 
     gs.fit(X, y)
@@ -165,7 +166,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
 
 def search_all(case=2):
     if(case==2):
-        for w in t.wellnames_2:
+        for w in t.wellnames_2[4:]:
             print(w, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             search(w, case=case, verbose=0)
     else:
