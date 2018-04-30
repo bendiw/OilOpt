@@ -119,7 +119,7 @@ def load(well, phase, separator, old=True, case=1):
 def load_2(well, phase, separator="HP", case=1, mode = "mean"):
     if(case==2):
         separator=mode
-    filename = "" + well + "-" + separator + "-" + phase + ".txt"
+    filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
@@ -158,7 +158,7 @@ def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
         sep = "HP"
     else:
         sep = "LP"
-    filename = "" + datafile + "-" + sep + "-" + goal
+    filename = "weights/" + datafile + "-" + sep + "-" + goal
 #    print("Filename:", filename)
     file = open(filename + ".txt", "w")
     line = ""
