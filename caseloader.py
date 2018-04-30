@@ -82,8 +82,10 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         y = np.array([x[1][0] for x in data]).reshape(-1,1)
 #        scaler = StandardScaler().fit(X, y)
         if(scaler):
-            X = rs.fit_transform(X.reshape(-1,1))
-            y = rs.transform(y.reshape(-1, 1))
+            y = rs.fit_transform(y.reshape(-1,1))
+            X = rs.transform(X.reshape(-1,1))
+#            X = rs.fit_transform(X.reshape(-1,1))
+#            y = rs.transform(y.reshape(-1, 1))
     return X, y, rs
 
 ##############
