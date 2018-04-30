@@ -95,8 +95,6 @@ def load(well, phase, separator, old=True, case=1):
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-    print (content)
-    return
     dim = int(content[0])
     w = []
     b = []
@@ -132,7 +130,7 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean"):
 # =============================================================================
     counter = 1
     w = []
-    for i in range(len(dims)):
+    for i in range(len(dims)-1):
         w_add = []
         for k in range(int(dims[i])):
             w_add.append([float(x) for x in content[counter].split()])
@@ -143,7 +141,7 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean"):
 #     Loads bias
 # =============================================================================
     b = []
-    for i in range(-len(dims),0):
+    for i in range(-len(dims)+1,0):
         b.append([float(x) for x in content[i].split()])
     
     return dims, w, b
@@ -153,6 +151,7 @@ def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
     dims = []
     for i in range(0,len(neural),2):
         dims.append(len(neural[i]))
+    dims.append(len(neural[-1]))
     if (case == 2):
         sep = mode
     elif(hp==1):
@@ -166,14 +165,14 @@ def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
     for dim in dims:
         line += str(dim) + " "
     file.write(line + "\n")
-    for i in range(0, 1+2*(len(dims)-1), 2):
+    for i in range(0, 1+2*(len(dims)-2), 2):
         w = neural[i]
         for x in w:
             line = ""
             for y in x:
                 line += str(y) + " "
             file.write(line+"\n")
-    for i in range(1, 2+2*(len(dims)-1), 2):
+    for i in range(1, 2+2*(len(dims)-2), 2):
         line = ""
         b = neural[i]
         for x in b:
