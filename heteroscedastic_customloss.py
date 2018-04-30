@@ -194,7 +194,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
             model_2 = model
         else:
             model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
-        X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)
+        if not (scaler == None):
+            X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)
         X_sample = np.array([[i] for i in range(101)])
         X_save = np.array([i for i in range(101)])
         f = K.function([model_2.layers[0].input, K.learning_phase()], [model_2.layers[-1].output])
@@ -202,7 +203,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
         plot_once(X_sample, prediction, pred_mean, std, y_points, X_points)
-        save_variance_func(X_save, std, case, well, goal)
+#        save_variance_func(X_save, std, case, well, goal)
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points):
     fig = pyplot.figure()
