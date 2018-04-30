@@ -2,20 +2,26 @@ import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
 
-wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", "B3","B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"
-             ] #
-wellnames_2= ["W"+str(x) for x in range(1,8)]
+# =============================================================================
+# Case 1
+# =============================================================================
+wellnames = ["A2", "A3", "A5", "A6", "A7", "A8", "B1", "B2", "B3","B4", "B5", "B6", "B7", "C1", "C2", "C3", "C4"] #
 well_to_sep = {"A2" : ["HP"], "A3": ["HP"], "A5": ["HP"], "A6": ["HP"], "A7": ["HP"], "A8": ["HP"], 
                "B1" : ["HP", "LP"], "B2" : ["HP", "LP"], "B3" : ["HP", "LP"], "B4" : ["HP", "LP"], "B5" : ["HP", "LP"], "B6" : ["HP", "LP"], "B7" : ["HP", "LP"], 
                "C1" : ["LP"], "C2" : ["LP"], "C3" : ["LP"], "C4" : ["LP"]}
-phasenames = ["oil", "gas"]
 platforms = ["A", "B", "C"]
 p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2", 
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
+# =============================================================================
+# Case 2
+# =============================================================================
+wellnames_2= ["W"+str(x) for x in range(1,8)]
+well_to_sep_2 = {w:["H"] for w in wellnames_2}
 
 
+phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
 
@@ -40,23 +46,34 @@ def convert_from_dict_to_tflists(dict_data):
     return data
 
 
-def get_limits(target, wellnames, well_to_sep):
-    df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
-    lower = {well:{} for well in wellnames}
-    upper = {well:{} for well in wellnames}
-    for well in wellnames:
-        for sep in well_to_sep[well]:
-            dfw = df.loc[df["well"]==well]
-            if(dfw["prs_dns"].isnull().sum()/dfw.shape[0] >= 0.7):
-                lower[well][sep] = dfw[target].min()
-                upper[well][sep] = dfw[target].max()
-            elif(sep=="HP"):
-                lower[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].min()
-                upper[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].max()
-            else:
-                lower[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].min()
-                upper[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].max()
-    return lower, upper
+def get_limits(target, wellnames, well_to_sep, case):
+    if(case==1):
+        df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
+        lower = {well:{} for well in wellnames}
+        upper = {well:{} for well in wellnames}
+        for well in wellnames:
+            for sep in well_to_sep[well]:
+                dfw = df.loc[df["well"]==well]
+                if(dfw["prs_dns"].isnull().sum()/dfw.shape[0] >= 0.7):
+                    lower[well][sep] = dfw[target].min()
+                    upper[well][sep] = dfw[target].max()
+                elif(sep=="HP"):
+                    lower[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].min()
+                    upper[well][sep] = dfw.loc[dfw["prs_dns"]>= 18.5][target].max()
+                else:
+                    lower[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].min()
+                    upper[well][sep] = dfw.loc[dfw["prs_dns"]< 18.5][target].max()
+        return lower, upper
+    else:
+        df = pd.read_csv("dataset_case2\\case2-oil-dataset.csv", delimiter=",", header=0)
+        lower = {well:{} for well in wellnames_2}
+        upper = {well:{} for well in wellnames_2}
+        for well in wellnames:
+            for sep in well_to_sep_2[well]:
+                dfw = df[well+"_CHK_mea"]
+                lower[well][sep] = dfw.min()
+                upper[well][sep] = dfw.max()
+        return lower, upper
 
 def normalize(data):
     X = np.array([d for d in data[0][0]])
@@ -71,7 +88,7 @@ def normalize(data):
     return X,y
 
 def load(well, phase, separator ):
-    filename = "" + well + "-" + separator + "-" + phase + ".txt"
+    filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
