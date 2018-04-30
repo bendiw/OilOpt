@@ -43,7 +43,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
 # =============================================================================
     if case==1:
         df = load("welltests_new.csv")
-        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=1) #,intervals=100
+        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=hp) #,intervals=100
         data = tens.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
@@ -102,13 +102,13 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 #                df = df2
 #    print(df['prs_dns'])
     if(df['prs_dns'].isnull().sum()/df.shape[0] >= 0.7):
-#        print("hei")
         df = df
     elif(hp==1):
         df = df.loc[df['prs_dns']>=18.5]
 #        print("zzz")
     else:
         df = df.loc[df['prs_dns']<18.5 ]
+#        print("HJHJ")
 
     ret = {}
     add_Z = False

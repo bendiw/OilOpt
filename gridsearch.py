@@ -145,13 +145,9 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
-    model = NeuralRegressor(build_fn=create_model, epochs = 1000, batch_size=128, verbose=0)
-<<<<<<< HEAD
+    model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
 
-    gs = GridSearchCV(model, parameters, verbose=2, return_train_score=True)
-=======
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
->>>>>>> master
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
@@ -159,14 +155,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
-<<<<<<< HEAD
-    means = grid_result['mean_test_score']
-    stds = grid_result['std_test_score']
-    params = grid_result['params']
-    
-    for mean, stdev, param in zip(means, stds, params):
-        print("%f (%f) with: %r" % (mean, stdev, param))
-=======
+
     if(verbose==0):
         means = grid_result['mean_test_score']
         stds = grid_result['std_test_score']
@@ -185,4 +174,3 @@ def search_all(case=2):
                 print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 search(w, sep, verbose=0)
     
->>>>>>> master
