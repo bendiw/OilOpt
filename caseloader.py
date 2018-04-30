@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
-import tens
+import tools as t
 from sklearn.preprocessing import normalize, RobustScaler, StandardScaler
 
 
@@ -44,7 +44,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
     if case==1:
         df = load("welltests_new.csv")
         dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = nan_ratio, hp=hp) #,intervals=100
-        data = tens.convert_from_dict_to_tflists(dict_data)
+        data = t.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
         print("goal:", goal)
