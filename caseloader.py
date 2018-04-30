@@ -43,11 +43,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
 # =============================================================================
     if case==1:
         df = load("welltests_new.csv")
-<<<<<<< HEAD
-        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=hp) #,intervals=100
-=======
         dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = nan_ratio, hp=hp) #,intervals=100
->>>>>>> 6d5869ba0a289771ce43e1a28ee23bedfcec5694
         data = tens.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
