@@ -104,13 +104,13 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
 #                df = df2
 #    print(df['prs_dns'])
     if(df['prs_dns'].isnull().sum()/df.shape[0] >= 0.7):
-#        print("hei")
         df = df
     elif(hp==1):
         df = df.loc[df['prs_dns']>=18.5]
 #        print("zzz")
     else:
         df = df.loc[df['prs_dns']<18.5 ]
+#        print("HJHJ")
 
     ret = {}
     add_Z = False

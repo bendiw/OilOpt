@@ -14,9 +14,8 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
-
-
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
+ 
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
 
 #param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
@@ -70,12 +69,15 @@ def normalize(data):
     y = [(y-y_mean)/y_std for y in y]
     return X,y
 
-def load(well, phase, separator ):
+def load(well, phase, separator, old=True, case=1):
+    if(case==2):
+        separator=""
     filename = "" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-#    print (content)
+    print (content)
+    return
     dim = int(content[0])
     w = []
     b = []
@@ -97,27 +99,62 @@ def load(well, phase, separator ):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def save_variables(datafile, hp, goal, is_3d, neural):
-    if(hp==1):
+def load_2(well, phase, separator="HP", old=True, case=1, mode = "mean"):
+    if(case==2):
+        separator=mode
+    filename = "" + well + "-" + separator + "-" + phase + ".txt"
+    with open(filename) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    dims = [int(x) for x in content[0].split()]
+    
+# =============================================================================
+#     Loads weights
+# =============================================================================
+    counter = 1
+    w = []
+    for i in range(len(dims)):
+        w_add = []
+        for k in range(int(dims[i])):
+            w_add.append([float(x) for x in content[counter].split()])
+            counter += 1
+        w.append(w_add)
+    
+# =============================================================================
+#     Loads bias
+# =============================================================================
+    b = []
+    for i in range(-len(dims),0):
+        b.append([float(x) for x in content[i].split()])
+    
+    return dims, w, b
+
+def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
+                   case=1, mode="mean"):
+    dims = []
+    for i in range(0,len(neural),2):
+        dims.append(len(neural[i]))
+    if (case == 2):
+        sep = mode
+    elif(hp==1):
         sep = "HP"
     else:
         sep = "LP"
     filename = "" + datafile + "-" + sep + "-" + goal
 #    print("Filename:", filename)
     file = open(filename + ".txt", "w")
-    if (is_3d):
-        print("HER")
-        file.write("2\n")
-    else:
-        file.write("1\n")
-    for i in range(0,3,2):
-        line = ""
+    line = ""
+    for dim in dims:
+        line += str(dim) + " "
+    file.write(line + "\n")
+    for i in range(0, 1+2*(len(dims)-1), 2):
         w = neural[i]
         for x in w:
+            line = ""
             for y in x:
                 line += str(y) + " "
-        file.write(line+"\n")
-    for i in range(1,4,2):
+            file.write(line+"\n")
+    for i in range(1, 2+2*(len(dims)-1), 2):
         line = ""
         b = neural[i]
         for x in b:

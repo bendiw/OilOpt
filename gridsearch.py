@@ -148,7 +148,6 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     N = float(len(X))
 
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
-
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
 
     gs.fit(X, y)
@@ -158,6 +157,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
+
     if(verbose==0):
         means = grid_result['mean_test_score']
         stds = grid_result['std_test_score']
@@ -176,5 +176,3 @@ def search_all(case=2, goal="gas"):
                 for goal in ["oil","gas"]:
                     print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     search(w, separator=sep, verbose=0, goal=goal)
-    
-
