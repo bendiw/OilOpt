@@ -33,7 +33,7 @@ def gen_test_case(cases=30):
     return data
 
 
-def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
+def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0.3):
     if separator == "HP":
         hp=1
     else:
@@ -43,7 +43,11 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
 # =============================================================================
     if case==1:
         df = load("welltests_new.csv")
+<<<<<<< HEAD
         dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = 0.3, hp=hp) #,intervals=100
+=======
+        dict_data,_,_ = gen_targets(df, well+"", goal=goal, normalize=False, intervals = 20, factor = 1.5, nan_ratio = nan_ratio, hp=hp) #,intervals=100
+>>>>>>> 6d5869ba0a289771ce43e1a28ee23bedfcec5694
         data = tens.convert_from_dict_to_tflists(dict_data)
     else:
         goal = goal.upper()
@@ -52,6 +56,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
         X = df.as_matrix(columns=[well+'_CHK_mea'])
         y = df.as_matrix(columns=[well+'_Q'+goal+'_wsp_mea'])
         data = np.array([[X[i], y[i]] for i in range(len(X))])
+
     if (len(data[0][0]) >= 2):
         is_3d = True
         dim = 2
@@ -66,6 +71,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
         print("Standard scaling of data")
     else:
         scaler=None
+        rs=None
 
     if is_3d:
         glift_orig = np.array([x[0][0] for x in data])
@@ -74,15 +80,15 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs"):
         glift = rs.fit_transform(glift_orig.reshape(-1,1))
         choke = rs.transform(choke_orig.reshape(-1,1))
         y = rs.transform(y_orig.reshape(-2, 1))
-        X =np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
+        X = np.array([[glift[i][0], choke[i][0]] for i in range(len(glift))])
     else:
-        X_orig = np.array([x[0][0] for x in data]).reshape(-1,1)
-        y_orig = np.array([x[1][0] for x in data]).reshape(-1,1)
+        X = np.array([x[0][0] for x in data]).reshape(-1,1)
+        y = np.array([x[1][0] for x in data]).reshape(-1,1)
 #        scaler = StandardScaler().fit(X, y)
         if(scaler):
-            X = rs.fit_transform(X_orig.reshape(-1,1))
-            y = rs.transform(y_orig.reshape(-1, 1))
-    return X, y
+            X = rs.fit_transform(X.reshape(-1,1))
+            y = rs.transform(y.reshape(-1, 1))
+    return X, y, rs
 
 ##############
 ##              Generates targets from a dataframe                      ##

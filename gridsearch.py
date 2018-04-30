@@ -124,15 +124,16 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
-def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2):
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0, goal='oil'):
     if(well):
-        X, y = cl.BO_load(well, separator, case=case)
+        X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
+
         if(x_grid is not None):
             print("Datapoints before merge:",len(X))
         X=np.array(X)
         y=np.array(y)
         if(x_grid is not None):
-            X,y = tools.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
+            X,y = t.simple_node_merge(np.array(X),np.array(y),x_grid,y_grid)
             print("Datapoints after merge:",len(X))
     else:
         #generate simple test data
@@ -145,17 +146,28 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     global N
     dim = len(X[0])
     N = float(len(X))
+<<<<<<< HEAD
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
 
     gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+=======
+
+    model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
+
+    gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+
+>>>>>>> 6d5869ba0a289771ce43e1a28ee23bedfcec5694
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
-    filestring = "gridsearch/"+well+("_"+sep if case==1 else "")+".csv"
+    filestring = "gridsearch/"+well+goal+("_"+separator if case==1 else "")+".csv"
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6d5869ba0a289771ce43e1a28ee23bedfcec5694
     if(verbose==0):
         means = grid_result['mean_test_score']
         stds = grid_result['std_test_score']
@@ -163,14 +175,19 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
         for mean, stdev, param in zip(means, stds, params):
             print("%f (%f) with: %r" % (mean, stdev, param))
 
-def search_all(case=2):
+def search_all(case=2, goal="gas"):
     if(case==2):
-        for w in t.wellnames_2:
-            print(w, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            search(w, case=case, verbose=0)
+        for w in t.wellnames_2[5:]:
+            print(w, goal, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            search(w, case=case, verbose=0, goal=goal)
     else:
-        for w in t.wellnames:
+        for w in t.wellnames[-2:]:
             for sep in t.well_to_sep[w]:
-                print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-                search(w, sep, verbose=0)
+                for goal in ["oil","gas"]:
+                    print(w, sep, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                    search(w, separator=sep, verbose=0, goal=goal)
     
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6d5869ba0a289771ce43e1a28ee23bedfcec5694
