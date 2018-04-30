@@ -25,7 +25,7 @@ import pandas as pd
 def build_model(neurons, dim, regu, dropout, lr):
     model_1= Sequential()
 
-    model_1.add(Dense(neurons, input_shape=(dim,),
+    model_1.add(Dense(3, input_shape=(dim,),
                       kernel_initializer=initializers.VarianceScaling(),
                       kernel_regularizer=regularizers.l2(regu), 
                       bias_initializer=initializers.Constant(value=0.1),
@@ -35,7 +35,7 @@ def build_model(neurons, dim, regu, dropout, lr):
     model_1.add(Dropout(dropout))
 #    
 
-    model_1.add(Dense(neurons, 
+    model_1.add(Dense(4, 
                       kernel_initializer=initializers.VarianceScaling(),
                       kernel_regularizer=regularizers.l2(regu), 
                       bias_initializer=initializers.Constant(value=0.1),
