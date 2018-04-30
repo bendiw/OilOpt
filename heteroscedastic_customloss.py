@@ -34,13 +34,6 @@ def build_model(neurons, dim, regu, dropout, lr):
 #    model_1.add(LeakyReLU(alpha=0.3))
     model_1.add(Dropout(dropout))
 #    
-#    model_1.add(Dense(neurons, input_shape=(dim,),
-#                      kernel_initializer=initializers.VarianceScaling(),
-#                      kernel_regularizer=regularizers.l2(regu), 
-#                      bias_initializer=initializers.Constant(value=-0.1),
-#                      bias_regularizer=regularizers.l2(regu)))
-#    model_1.add(Activation("relu"))
-#    model_1.add(Dropout(dropout))
 
     model_1.add(Dense(neurons, 
                       kernel_initializer=initializers.VarianceScaling(),
@@ -77,7 +70,7 @@ def mse_loss(y_true, y_pred):
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
-        goal="oil", save_variance = False):
+        goal="oil", save_variance = False, save_weights = False):
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
@@ -192,6 +185,10 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 triang, ax = plotter.first_plot_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y],[x[0] for x in X_test], [x[1] for x in X_test], pred_mean, well)
             else:
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
+    
+    if (save_weights):
+        save_variables(well,goal,model,case)
+    
     if(save_variance):
         if not scaler:
             model_2 = model
@@ -323,6 +320,10 @@ def inverse_scale(model_1, dim, neurons, dropout, rs, lr):
     model_2.add(Activation("linear"))
     model_2.compile(optimizer=optimizers.adam(lr=lr), loss = sced_loss)
     return model_2
-        
+
+def save_variables(well, goal, model, case, hp = 1, is_3d = False, mode="mean"):
+    weights = model.get_weights()
+    tools.save_variables(well, hp=hp, goal=goal, is_3d = is_3d,
+                         neural = weights, case = case, mode = mode)
 
         
