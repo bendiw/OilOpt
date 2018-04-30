@@ -14,17 +14,14 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
-<<<<<<< HEAD
 # =============================================================================
 # Case 2
 # =============================================================================
 wellnames_2= ["W"+str(x) for x in range(1,8)]
-well_to_sep_2 = {w:["H"] for w in wellnames_2}
+well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 
 
 phasenames = ["oil", "gas"]
-=======
->>>>>>> master
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
  
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
@@ -91,15 +88,10 @@ def normalize(data):
     y = [(y-y_mean)/y_std for y in y]
     return X,y
 
-<<<<<<< HEAD
-def load(well, phase, separator ):
-    filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
-=======
 def load(well, phase, separator, old=True, case=1):
     if(case==2):
         separator=""
     filename = "" + well + "-" + separator + "-" + phase + ".txt"
->>>>>>> master
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
@@ -126,7 +118,7 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def load_2(well, phase, separator="HP", old=True, case=1, mode = "mean"):
+def load_2(well, phase, separator="HP", case=1, mode = "mean"):
     if(case==2):
         separator=mode
     filename = "" + well + "-" + separator + "-" + phase + ".txt"
