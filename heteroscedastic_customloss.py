@@ -186,26 +186,37 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
             else:
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
     
-    if (save_weights):
-        save_variables(well,goal,model,case)
-    
-    if(save_variance):
+    if (save_weights or save_variance):
         if not scaler:
             model_2 = model
         else:
             model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
+    
+    if (save_weights):
+        save_variables(well,goal,model_2,case)
+    
+    if(save_variance):
         if not (scaler == None):
-            X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)
+            X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)        
         X_sample = np.array([[i] for i in range(101)])
         X_save = np.array([i for i in range(101)])
-        f = K.function([model_2.layers[0].input, K.learning_phase()], [model_2.layers[-1].output])
-        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
+        
+        f_scaled = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
+#        f = K.function([model_2.layers[0].input, K.learning_phase()], [model_2.layers[-1].output])
+        X_sample_scaled = rs.transform(X_sample)
+        
+#        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
+        pred_mean_scaled, std_scaled = sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
+        std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
+#        pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
-        plot_once(X_sample, prediction, pred_mean, std, y_points, X_points)
-#        save_variance_func(X_save, std, case, well, goal)
+#        plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
         
-def plot_once(X, prediction, pred_mean, std, y_points, X_points):
+        save_variance_func(X_save, std_unscaled, case, well, goal)
+        
+        
+def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
     pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
@@ -217,9 +228,14 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points):
     pyplot.show()
     line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
     line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
-    for i in range(2):
-        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#    for i in range(2):
+#        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
     line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1)
+    if (extra_points is not None):
+        for i in range(2):
+            (ax.fill_between([x[0] for x in X], pred_mean+extra_points*(i+1), pred_mean-extra_points*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#        line4=ax.plot(X, pred_mean + extra_points,color='green',linestyle="None",marker=".",markersize=5)
+
 
         
 def sample_mean_std(model, X, n_iter, f):
