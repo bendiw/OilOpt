@@ -94,23 +94,7 @@ def generate_cross_sets(data, cross_validation):
         sets.append(new_set)
     return sets
 
-# =============================================================================
-# Converts dictionaries to the correctly dimensioned lists used for TF training
-# =============================================================================
-def convert_from_dict_to_tflists(dict_data):
-    data = []
-    for value in dict_data["gaslift"]:
-        data.append([[value]])
-    if ("choke" in dict_data.keys()):
-        i = 0
-        for value in dict_data["choke"]:
-            data[i][0].append(value)
-            i += 1
-    i = 0
-    for value in dict_data["output"]:
-        data[i].append([value])
-        i += 1
-    return data
+
 
 # =============================================================================
 # Returns the domain space values for the breakpoints (grid lines crossings)

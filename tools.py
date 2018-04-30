@@ -20,6 +20,24 @@ param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-
 
 #param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
 
+# =============================================================================
+# Converts dictionaries to the correctly dimensioned lists used for TF training
+# =============================================================================
+def convert_from_dict_to_tflists(dict_data):
+    data = []
+    for value in dict_data["gaslift"]:
+        data.append([[value]])
+    if ("choke" in dict_data.keys()):
+        i = 0
+        for value in dict_data["choke"]:
+            data[i][0].append(value)
+            i += 1
+    i = 0
+    for value in dict_data["output"]:
+        data[i].append([value])
+        i += 1
+    return data
+
 
 def get_limits(target, wellnames, well_to_sep):
     df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
