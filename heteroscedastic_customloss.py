@@ -100,7 +100,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
     
         pyplot.autoscale(False)
-        pyplot.xlabel('choke')
+        pyplot.xlabel('choke')  
         pyplot.ylabel("oil")
         pyplot.show()
         
