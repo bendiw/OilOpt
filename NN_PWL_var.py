@@ -50,7 +50,8 @@ def build_model(neurons, dim, lr):
 # =============================================================================
 # main function
 # =============================================================================
-def run(well, goal='oil', neurons=40, dim=1, case=2, lr=0.01, batch_size=128, epochs=1000, save=False, plot=True):
+def run(well, goal='oil', neurons=40, dim=1, case=2, lr=0.01, batch_size=128,
+        epochs=1000, save=False, plot=True):
      model = build_model(neurons=neurons, dim=dim, lr=lr)
      filename = "variance_case_"+str(case)+".csv"
      data = pd.read_csv(filename, sep=';', index_col=0)
