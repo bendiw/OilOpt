@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
+import scipy.stats as ss
 
 # =============================================================================
 # Case 1
@@ -247,3 +248,15 @@ def delaunay(x, y, z):
 #    tri = Delaunay(data)
 #    return(data[tri.simplices])
     return data[triang.triangles]
+
+def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4):
+    if (case == 1):
+        return
+    scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+#    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
+    df = pd.DataFrame(columns=wellnames_2)
+    for i in range(num_scen):
+        df.loc[i] = scen[i]
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+".csv"
+    with open(filename, 'w') as f:
+        df.to_csv(f,sep=";", index=False)
