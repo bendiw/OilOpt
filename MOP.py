@@ -177,8 +177,8 @@ class NN:
         #new variables to control routing decision and input/output
         outputs = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
         if(case==1):
+            #used to subtract gas lift from gas exports
             input_dummies = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype = GRB.CONTINUOUS, name="input_dummies")
-
 
 
         #variance networks
@@ -298,7 +298,7 @@ class NN:
         # =============================================================================
         # alpha constraint for MOP
         # =============================================================================
-        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
+#        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
