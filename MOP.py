@@ -94,6 +94,7 @@ class NN:
         self.oil_optimal = res_df["tot_oil"].max()
         self.phasenames = t.phasenames
         print("MOP optimization. alpha =", self.alpha)
+        print("oil_optimal:", self.oil_optimal)
         self.run(load_M=load_M, case=case)
             
     def run(self, load_M, case=2, save=True):
