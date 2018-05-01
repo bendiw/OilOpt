@@ -72,6 +72,11 @@ class NN:
         return layers, multidims, weights, biases
     
     
+    
+    df = pd.DataFrame(columns=wellnames_2)
+    for i in range(num_scen):
+        df.loc[i] = scipy.truncnorm(a,b, len(wellnames_2))
+    
     # =============================================================================
     # Function to run with all wells in the problem.
     # Specify alpha to control which part of the pareto front to generate.
@@ -87,7 +92,9 @@ class NN:
             self.platforms= t.platforms
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
-            
+        
+        self.s_draw = t.something?
+        self.scenarios = len(self.s_draw)
         self.results_file = "results/mop/res.csv"
         self.alpha=alpha
         res_df = pd.read_csv(self.results_file, delimiter=';')
@@ -177,7 +184,10 @@ class NN:
 #        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype=GRB.BINARY, name="changes")
 
         #new variables to control routing decision and input/output
-        outputs = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
+        outputs_gas = self.m.addVars([(scenario, well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]] for scenario in range(self.scenarios), vtype = GRB.CONTINUOUS, name="outputs")
+        outputs_oil = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
+
+        
         if(case==1):
             #used to subtract gas lift from gas exports
             input_dummies = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype = GRB.CONTINUOUS, name="input_dummies")
@@ -187,7 +197,7 @@ class NN:
         lambdas_var = self.m.addVars([(well,phase,sep, layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.BINARY, name="lambda_var")
         mus_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="mu_var")
         rhos_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho_var")
-        outputs_var = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
+#        outputs_var = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
 
 
 
@@ -234,17 +244,22 @@ class NN:
         # big-M constraints on output/routing        
         # since we model output neurons as ReLU, these are simple. may change later so that output are purely linear
         # =============================================================================
-        #mean
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs[well, phase, sep] == mus[well, phase, sep, self.layers[well][phase][sep]-1, neuron])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims[well][phase][sep][-1]))
-        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
+        #gas output
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_gas[scenario, well, "gas", sep] == mus[well, "gas", sep, self.layers[well]["gas"][sep]-1, neuron] + self.s_draw.loc[scenario][well]*mus_var[well, "gas", sep, self.layers_var[well]["gas"][sep]-1, neuron])  for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims[well]["gas"][sep][-1]) for scenario in range(self.scenarios))
+        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_gas[scenario, well, "gas", sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
     
+        #oil output
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, "oil", sep] == mus[well, "oil", sep, self.layers[well]["oil"][sep]-1, neuron])  for well in self.wellnames for "oil" in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well]["oil"][sep][-1]))
+        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, "oil", sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
+        
+        
         #use these if model as linear
 #        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs[well, phase, sep] == quicksum(mus[well, phase, sep, self.layers[well][phase][sep]-1, neuron]*self.weights[well][phase][sep][self.layers[well][phase][sep]-1][neuron] for neuron in range(self.multidims[well][phase][sep][self.layers[well][phase][sep]-1])) + self.biases[well][phase][sep][self.layers[well][phase][sep]-1][0])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well])
 #        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
     
         #var
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_var[well, phase, sep] == mus_var[well, phase, sep, self.layers_var[well][phase][sep]-1, neuron])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][-1]))
-        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_var[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
+#        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_var[well, phase, sep] == mus_var[well, phase, sep, self.layers_var[well][phase][sep]-1, neuron])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][-1]))
+#        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_var[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
     
         #use these if model as linear
 #        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_var[well, phase, sep] == quicksum(mus_var[well, phase, sep, self.layers_var[well][phase][sep]-1, neuron]*self.weights_var[well][phase][sep][self.layers_var[well][phase][sep]-1][neuron] for neuron in range(self.multidims_var[well][phase][sep][self.layers_var[well][phase][sep]-1])) + self.biases_var[well][phase][sep][self.layers_var[well][phase][sep]-1][0])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well])
@@ -272,7 +287,7 @@ class NN:
             hp_constr = self.m.addConstr(quicksum(outputs[well, "gas", "HP"] for p in sep_p_route["HP"] for well in p_dict[p]) <= sep_cap["HP"])
         else:
             #single gas constraint per well in case2
-            gas_constr = self.m.addConstrs(outputs[well, "gas", "HP"] <= well_cap for well in self.wellnames)
+            gas_constr = self.m.addConstrs(outputs[scenario, well, "gas", "HP"] <= well_cap for well in self.wellnames)
             
         # =============================================================================
         # gas lift constraints, valid for case 1
@@ -283,13 +298,13 @@ class NN:
 
     
         # =============================================================================
-        # total gas export
+        # total gas export, robust constraints
         # =============================================================================
         if(case==1):
             exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(input_dummies[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
 #        exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
         else:
-            exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= tot_exp_cap)
+            exp_constr = self.m.addConstrs(quicksum(outputs[scenario, well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= tot_exp_cap for scenario in range(self.scenarios))
         
         # =============================================================================
         # routing
@@ -297,10 +312,6 @@ class NN:
         self.m.addConstrs(quicksum(routes[well, sep] for sep in self.well_to_sep[well]) <= 1 for well in self.wellnames)
 
     
-        # =============================================================================
-        # alpha constraint for MOP
-        # =============================================================================
-        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
@@ -325,11 +336,9 @@ class NN:
 #        self.m.setParam(GRB.Param.LogFile, "log.txt")
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
-        #maximization of mean oil
-#        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
+        #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
+        self.m.setObjective( quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         
-        #minimization of var gas
-        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
 
         self.m.optimize()
