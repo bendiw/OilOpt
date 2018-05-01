@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
+import scipy.stats as ss
 
 # =============================================================================
 # Case 1
@@ -20,7 +21,11 @@ p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
+<<<<<<< HEAD
 
+=======
+robust_res_columns = ["tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+>>>>>>> master
 
 phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
@@ -248,3 +253,28 @@ def delaunay(x, y, z):
 #    tri = Delaunay(data)
 #    return(data[tri.simplices])
     return data[triang.triangles]
+
+def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4):
+    if (case == 1):
+        return
+    scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+#    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
+    df = pd.DataFrame(columns=wellnames_2)
+    for i in range(num_scen):
+        df.loc[i] = scen[i]
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+".csv"
+    with open(filename, 'w') as f:
+        df.to_csv(f,sep=";", index=False)
+        
+def load_scenario(case, num_scen, lower, upper, phase, sep):
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+".csv"
+    df = pd.read_csv(filename, sep=';')
+    return df
+
+def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP"):
+    try:
+        return load_scenario(case, num_scen, lower, upper, phase, sep)
+    except Exception as e:
+        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper)
+        return load_scenario(case, num_scen, lower, upper, phase, sep)
+    

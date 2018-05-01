@@ -24,6 +24,7 @@ import numpy as np
 import math
 import pandas as pd
 import tools as t
+import os.path
 class NN:
     well_to_sep = {}
     wellnames = []
@@ -72,17 +73,15 @@ class NN:
         return layers, multidims, weights, biases
     
     
-    
-    df = pd.DataFrame(columns=wellnames_2)
-    for i in range(num_scen):
-        df.loc[i] = scipy.truncnorm(a,b, len(wellnames_2))
+
     
     # =============================================================================
     # Function to run with all wells in the problem.
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0,
+                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP"):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -93,12 +92,13 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
         
-        self.s_draw = t.something?
+        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
+                                     phase=phase, sep=sep)
         self.scenarios = len(self.s_draw)
-        self.results_file = "results/mop/res.csv"
+        self.results_file = "results/robust/res.csv"
         self.alpha=alpha
-        res_df = pd.read_csv(self.results_file, delimiter=';')
-        self.oil_optimal = res_df["tot_oil"].max()
+#        res_df = pd.read_csv(self.results_file, delimiter=';')
+#        self.oil_optimal = res_df["tot_oil"].max()
         self.phasenames = t.phasenames
         print("MOP optimization. alpha =", self.alpha)
         self.run(load_M=load_M, case=case)
@@ -184,7 +184,7 @@ class NN:
 #        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype=GRB.BINARY, name="changes")
 
         #new variables to control routing decision and input/output
-        outputs_gas = self.m.addVars([(scenario, well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]] for scenario in range(self.scenarios), vtype = GRB.CONTINUOUS, name="outputs")
+        outputs_gas = self.m.addVars([(scenario, well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for scenario in range(self.scenarios)], vtype = GRB.CONTINUOUS, name="outputs")
         outputs_oil = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
 
         
@@ -229,8 +229,8 @@ class NN:
 
         #indicator constraints
         if(load_M):
-            self.m.addConstrs(mus[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][0])*(1-lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
-            self.m.addConstrs(rhos[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][1])*(lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(len(self.biases[well][phase][sep][0])))
+            self.m.addConstrs(mus[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][0])*(1-lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(len(self.biases[well][phase][sep][0])))
+            self.m.addConstrs(rhos[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][1])*(lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(len(self.biases[well][phase][sep][0])))
         else:
             #mean
             self.m.addConstrs( (lambdas[well, phase, sep, layer, neuron] == 1) >> (mus[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(self.multidims[well][phase][sep][layer]))
@@ -249,7 +249,8 @@ class NN:
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_gas[scenario, well, "gas", sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
     
         #oil output
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, "oil", sep] == mus[well, "oil", sep, self.layers[well]["oil"][sep]-1, neuron])  for well in self.wellnames for "oil" in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well]["oil"][sep][-1]))
+#        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, "oil", sep] == mus[well, "oil", sep, self.layers[well]["oil"][sep]-1, neuron])  for well in self.wellnames for "oil" in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well]["oil"][sep][-1]))
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, "oil", sep] == mus[well, "oil", sep, self.layers[well]["oil"][sep]-1, neuron])  for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well]["oil"][sep][-1]))
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, "oil", sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
         
         
@@ -287,7 +288,7 @@ class NN:
             hp_constr = self.m.addConstr(quicksum(outputs[well, "gas", "HP"] for p in sep_p_route["HP"] for well in p_dict[p]) <= sep_cap["HP"])
         else:
             #single gas constraint per well in case2
-            gas_constr = self.m.addConstrs(outputs[scenario, well, "gas", "HP"] <= well_cap for well in self.wellnames)
+            gas_constr = self.m.addConstrs(outputs_gas[scenario, well, "gas", "HP"] <= well_cap for well in self.wellnames for scenario in range(self.scenarios))
             
         # =============================================================================
         # gas lift constraints, valid for case 1
@@ -304,7 +305,7 @@ class NN:
             exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(input_dummies[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
 #        exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
         else:
-            exp_constr = self.m.addConstrs(quicksum(outputs[scenario, well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= tot_exp_cap for scenario in range(self.scenarios))
+            exp_constr = self.m.addConstrs(quicksum(outputs_gas[scenario, well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= tot_exp_cap for scenario in range(self.scenarios))
         
         # =============================================================================
         # routing
@@ -337,7 +338,7 @@ class NN:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
-        self.m.setObjective( quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
+        self.m.setObjective( quicksum(outputs_oil[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         
         
 
@@ -349,24 +350,35 @@ class NN:
 #                df = pd.read_csv(self.results_file, index_col=None)
 #            except:
 #                load failed, need to create new df
-            df = pd.DataFrame(columns=t.MOP_res_columns)
+            df = pd.DataFrame(columns=t.robust_res_columns)
             chokes = [inputs[well, "HP", 0].x for well in self.wellnames]
-            gas_mean = [outputs[well, "gas", "HP"].x for well in self.wellnames]
-            oil_mean = [outputs[well, "oil", "HP"].x for well in self.wellnames]
-            gas_var = [outputs_var[well, "gas", "HP"].x for well in self.wellnames]
-            oil_var = [outputs_var[well, "oil", "HP"].x for well in self.wellnames]
+            gas_mean = np.zeros(len(self.wellnames))
+            w = 0
+            for well in self.wellnames:
+                for scenario in range(self.scenarios):
+                    gas_mean[w] += outputs_gas[scenario, well, "gas", "HP"].x
+                w += 1
+            gas_mean = (gas_mean/float(self.scenarios)).tolist()
+#            gas_mean = [outputs_gas[scenario, well, "gas", "HP"].x for scenario in range(self.scenarios) for well in self.wellnames]
+            oil_mean = [outputs_oil[well, "oil", "HP"].x for well in self.wellnames]
+#            gas_var = [outputs_var[well, "gas", "HP"].x for well in self.wellnames]
+#            oil_var = [outputs_var[well, "oil", "HP"].x for well in self.wellnames]
 #            tot_oil = self.m.ObjVal
             tot_oil = sum(oil_mean)
             tot_gas = sum(gas_mean)
-            rowlist = [self.alpha, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+oil_var+gas_var
+            rowlist = [tot_oil, tot_gas]+chokes+gas_mean+oil_mean
+
+#            +oil_var+gas_var
 #            df = df.append(rowlist, ignore_index=True, axis=0)
 #            df = pd.concat([df, pd.Series(rowlist)], axis=0)
             df.loc[df.shape[0]] = rowlist
 #            print(rowlist)
 #            newrow = pd.DataFrame(rowlist, columns=t.MOP_res_columns)
 #            df.append(newrow)
+            head = not os.path.isfile(self.results_file)
             with open(self.results_file, 'a') as f:
-                df.to_csv(f, sep=';', index=False, header=False)
+                df.to_csv(f, sep=';', index=False, header=head)
+
         
 #        for p in self.platforms:
 #            print("Platform", p)
