@@ -132,8 +132,8 @@ class NN:
             #dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
 #            w_initial_vars = {well : [0,0] for well in self.wellnames}
             
-            tot_exp_cap = 6000000
-            well_cap = 1300000
+            tot_exp_cap = 275000
+            well_cap = 100000
 
             
         # =============================================================================
@@ -332,7 +332,10 @@ class NN:
 #        self.m.setParam(GRB.Param.NumericFocus, 2)
 #        self.m.setParam(GRB.Param.LogToConsole, 0)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
-#        self.m.setParam(GRB.Param.Presolve, 0)
+#        self.m.setParam(GRB.Param.Presolve, 2)
+#        self.m.setParam(GRB.Param.MIPFocus, 1)
+#        self.m.setParam(GRB.Param.VarBranch,0)
+#        self.m.setParam(GRB.Param.DegenMoves,0)
 #        self.m.Params.timeLimit = 360.0
 #        self.m.setParam(GRB.Param.LogFile, "log.txt")
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
