@@ -184,10 +184,9 @@ class NN:
 #        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype=GRB.BINARY, name="changes")
 
 
-#        inputs.start = 0
         #new variables to control routing decision and input/output
         outputs_gas = self.m.addVars([(scenario, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios)], vtype = GRB.CONTINUOUS, name="outputs_gas")
-        outputs_oil = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
+        outputs_oil = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_oil")
 
         #net outputs, linear
         outs = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_lin")
@@ -200,18 +199,18 @@ class NN:
 
 
         #variance networks
-        lambdas_var = self.m.addVars([(well,phase,sep, layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.BINARY, name="lambda_var")
-        mus_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="mu_var")
-        rhos_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho_var")
-#        outputs_var = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
+        lambdas_var = self.m.addVars([(well,phase,sep, layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.BINARY, name="lambda_var")
+        mus_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="mu_var")
+        rhos_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho_var")
 
 
 
         # =============================================================================
-        # NN MILP constraints creation. Mean and variance networks
+        # NN MILP constraints creation. Mean and variance networks.
         # Variables mu and rho are indexed from 1 and up since the input layer
         # is layer 0 in multidims. 
         # =============================================================================
+
         # mean
         self.m.addConstrs(mus[well, phase, sep, 1, neuron] - rhos[well, phase, sep, 1, neuron] - quicksum(self.weights[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims[well][phase][sep][0])) == self.biases[well][phase][sep][0][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims[well][phase][sep][1]) )
         self.m.addConstrs(mus[well, phase, sep, layer, neuron] - rhos[well, phase, sep, layer, neuron] - quicksum((self.weights[well][phase][sep][layer-1][dim][neuron]*mus[well, phase, sep, layer-1, dim]) for dim in range(self.multidims[well][phase][sep][layer-1])) == self.biases[well][phase][sep][layer-1][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer]) )
@@ -219,22 +218,12 @@ class NN:
         # var
         self.m.addConstrs(mus_var[well, phase, sep, 1, neuron] - rhos_var[well, phase, sep, 1, neuron] - quicksum(self.weights_var[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims_var[well][phase][sep][0])) == self.biases_var[well][phase][sep][0][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][1]) )
         self.m.addConstrs(mus_var[well, phase, sep, layer, neuron] - rhos_var[well, phase, sep, layer, neuron] - quicksum((self.weights_var[well][phase][sep][layer-1][dim][neuron]*mus_var[well, phase, sep, layer-1, dim]) for dim in range(self.multidims_var[well][phase][sep][layer-1])) == self.biases_var[well][phase][sep][layer-1][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]) )
+
+#        self.m.addConstrs(mus_var[well, phase, sep, 1, neuron] - rhos_var[well, phase, sep, 1, neuron] - quicksum(self.weights_var[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims_var[well][phase][sep][0])) == self.biases_var[well][phase][sep][0][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][1]) )
+#        self.m.addConstrs(mus_var[well, phase, sep, layer, neuron] - rhos_var[well, phase, sep, layer, neuron] - quicksum((self.weights_var[well][phase][sep][layer-1][dim][neuron]*mus_var[well, phase, sep, layer-1, dim]) for dim in range(self.multidims_var[well][phase][sep][layer-1])) == self.biases_var[well][phase][sep][layer-1][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]) )
         
-        #in case above do not work, manual for loops
-#        for well in self.wellnames:
-#            for phase in self.phasenames:
-#                for sep in self.well_to_sep[well]:
-#                    #mean
-#                    for layer in range(2, self.layers[well][phase][sep]):
-#                        self.m.addConstrs(mus[well, phase, sep, layer, neuron] - rhos[well, phase, sep, layer, neuron] - quicksum((self.weights[well][phase][sep][0][dim][neuron]*mus[well, sep, layer-1]) for dim in range(self.multidims[well][phase][sep])) == self.biases[well][phase][sep][layer][neuron] for neuron in range(len(self.biases[well][phase][sep][0])) )
-#                    #var
-#                    for layer in range(2, self.layers_var[well][phase][sep]):
-#                        self.m.addConstrs(mus_var[well, phase, sep, layer, neuron] - rhos_var[well, phase, sep, layer, neuron] - quicksum((self.weights_var[well][phase][sep][0][dim][neuron]*mus[well, sep, layer-1]) for dim in range(self.multidims_var[well][phase][sep])) == self.biases_var[well][phase][sep][layer][neuron] for neuron in range(len(self.biases_var[well][phase][sep][0])) )
 
         
-        print(self.multidims["W1"]["gas"]["HP"])
-        print(len(self.weights["W1"]["gas"]["HP"]))
-        print(self.layers["W1"]["gas"]["HP"])
         #indicator constraints
         if(load_M):
             self.m.addConstrs(mus[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][0])*(1-lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(len(self.biases[well][phase][sep][0])))
@@ -247,6 +236,10 @@ class NN:
             #variance
             self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 1) >> (mus_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]))
             self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 0) >> (rhos_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]))
+
+#            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 1) >> (mus_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]))
+#            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 0) >> (rhos_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]))
+
 
         # =============================================================================
         # big-M constraints on output/routing        
@@ -261,25 +254,21 @@ class NN:
 #        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, "oil", sep] == mus[well, "oil", sep, self.layers[well]["oil"][sep]-1, neuron])  for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well]["oil"][sep][-1]))
 #        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, "oil", sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
         
-        #use these if model as linear
-        self.m.addConstrs(outs[well, phase, sep] == quicksum(self.weights[well][phase][sep][self.layers[well][phase][sep]-2][neuron][0]* mus[well, phase, sep, self.layers[well][phase][sep]-2, neuron] for neuron in range(self.multidims[well][phase][sep][self.layers[well][phase][sep]-2]) ) + self.biases[well][phase][sep][self.layers[well][phase][sep]-2][0] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well])
-        self.m.addConstrs(outs_var[well, phase, sep] == quicksum( (mus_var[well, phase, sep, self.layers_var[well][phase][sep]-2, neuron] * self.weights_var[well][phase][sep][self.layers_var[well][phase][sep]-2][neuron][0]) for neuron in range(self.multidims_var[well][phase][sep][self.layers_var[well][phase][sep]-2])) + self.biases_var[well][phase][sep][self.layers_var[well][phase][sep]-2][0] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well])
-
         
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_gas[scenario, well, sep] == outs[well, "gas", sep] + self.s_draw.loc[scenario][well] * outs_var[well, "gas", sep])  for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
+        #use these to model last layer as linear instead of ReLU
+        #gas
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_gas[scenario, well, sep] ==  quicksum(self.weights[well]["gas"][sep][self.layers[well]["gas"][sep]-2][neuron][0] * mus[well, "gas", sep, self.layers[well]["gas"][sep]-2, neuron] for neuron in range(self.multidims[well]["gas"][sep][self.layers[well]["gas"][sep]-2]) ) + self.biases[well]["gas"][sep][self.layers[well]["gas"][sep]-2][0]  + 
+                          self.s_draw.loc[scenario][well] *(quicksum(self.weights_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2][neuron][0] * (mus_var[well, "gas", sep, self.layers_var[well]["gas"][sep]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2])) + self.biases_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2][0]) )  for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_gas[scenario, well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
     
-        
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == outs[well, "oil", sep]) for well in self.wellnames for sep in self.well_to_sep[well])
+        #oil
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == quicksum(self.weights[well]["oil"][sep][self.layers[well]["oil"][sep]-2][neuron][0] * mus[well, "oil", sep, self.layers[well]["oil"][sep]-2, neuron] for neuron in range(self.multidims[well]["oil"][sep][self.layers[well]["oil"][sep]-2]) ) + self.biases[well]["oil"][sep][self.layers[well]["oil"][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
-    
-        #var
-#        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_var[well, phase, sep] == mus_var[well, phase, sep, self.layers_var[well][phase][sep]-1, neuron])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][-1]))
-#        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_var[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
-    
-        #use these if model as linear
-#        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_var[well, phase, sep] == quicksum(mus_var[well, phase, sep, self.layers_var[well][phase][sep]-1, neuron]*self.weights_var[well][phase][sep][self.layers_var[well][phase][sep]-1][neuron] for neuron in range(self.multidims_var[well][phase][sep][self.layers_var[well][phase][sep]-1])) + self.biases_var[well][phase][sep][self.layers_var[well][phase][sep]-1][0])  for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well])
-#        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_var[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
+        
+        
+        
+        
+        
 
     
         # =============================================================================
@@ -358,7 +347,7 @@ class NN:
         
 
         self.m.optimize()
-        
+        print(exp_constr[0].slack)
         if(save and case==2):
             #note, only works for case 2 as of now
 #            try:
@@ -371,7 +360,10 @@ class NN:
             w = 0
             for well in self.wellnames:
                 for scenario in range(self.scenarios):
+#                    print("outgas", outs[well, "gas", "HP"].x, "\toutvar", outs_var[well, "gas", "HP"].x, "\ttotout", outputs_gas[scenario, well, "HP"].x, "\trecalc", outs[well, "gas", "HP"].x+self.s_draw.loc[scenario][well]*outs_var[well, "gas", "HP"].x, "\troute?", routes[well, "HP"].x)
+#                    print("gas_constr slack", gas_constr[well, scenario].slack)
                     gas_mean[w] += outputs_gas[scenario, well, "HP"].x
+
                 w += 1
             gas_mean = (gas_mean/float(self.scenarios)).tolist()
 #            gas_mean = [outputs_gas[scenario, well, "gas", "HP"].x for scenario in range(self.scenarios) for well in self.wellnames]
