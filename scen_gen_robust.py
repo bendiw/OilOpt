@@ -330,6 +330,14 @@ class NN:
 #    #        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
 #            self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])) <= max_changes)
     
+#        chks = {"W1":56., "W2":33., "W3":40., "W4":39., "W5":42., "W6":48.,"W7":39.}
+#        chks = {"W1":10., "W2":10.	, "W3":10., "W4":10., "W5":10., "W6":10.,"W7":10.}
+
+#        self.m.addConstrs(inputs[well, "HP", 0] == chks[well] for well in self.wellnames)
+    
+    
+    
+    
         # =============================================================================
         # Solver parameters
         # =============================================================================
