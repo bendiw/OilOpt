@@ -131,12 +131,64 @@ class Evaluator:
     # infeasibility.
     # =============================================================================
     def calc_results_recourse(self, s):
-        pass
+#        print("\n\n", s)
+        gas_mean = [0 for i in range(len(self.wellnames))]
+        oil_mean = [0 for i in range(len(self.wellnames))]
+        gas_var = [0 for i in range(len(self.wellnames))]
+        oil_var = [0 for i in range(len(self.wellnames))]
+        tot_gas = 0
+        tot_oil = 0
+        wo = t.well_order
+        for w in range(len(wo)):
+#            print(wo[w])
+            well_mean_gas = self.nets_mean[wo[w]]["gas"]["HP"].predict(self.solution[wo[w]])[0][0]
+            well_var_gas = self.nets_var[wo[w]]["gas"]["HP"].predict(self.solution[wo[w]])[0][0]*s[wo[w]]
+            well_gas = well_mean_gas + well_var_gas
+            inf_indiv = well_gas >= self.indiv_cap
+            inf_tot = tot_gas + well_gas >= self.tot_cap
+            if(inf_tot or inf_indiv):
+#                print(inf_tot, inf_indiv, tot_gas)
+                print("totgas pre add:", tot_gas)
+                #we reached infeasibility
+                #eval gas, oil for 100 choke settings below solution level and pick closest to limit
+                choke_range = np.arange(self.w_min_choke[wo[w]]["HP"], self.solution[wo[w]]+1,  (self.solution[wo[w]]+1-self.w_min_choke[wo[w]]["HP"])/100)
+                o_mean = self.nets_mean[wo[w]]["oil"]["HP"].predict(choke_range)
+                o_var = s[wo[w]]*self.nets_var[wo[w]]["oil"]["HP"].predict(choke_range)
+                g_mean = self.nets_mean[wo[w]]["gas"]["HP"].predict(choke_range)
+                g_var = s[wo[w]]*self.nets_var[wo[w]]["gas"]["HP"].predict(choke_range)
+                print(choke_range)
+                for i in range(len(choke_range)):
+                    if(tot_gas+g_mean[i][0]+g_var[i][0] > self.tot_cap or g_mean[i][0]+g_var[i][0] >= self.indiv_cap):
+#                        tot_gas += g_mean[i-1] + g_var[i-1]
+                        print(i, choke_range[i])
+                        if(i==0):
+                            break
+                        gas_mean[w] = g_mean[i-1][0]
+                        gas_var[w] = g_var[i-1][0]
+                        oil_mean[w] = o_mean[i-1][0]
+                        oil_var[w] = o_var[i-1][0]
+                        tot_gas+= g_mean[i-1][0] + g_var[i-1][0]
+                        break
+                if(inf_tot):
+                    #total cap was reached, we are done
+                    print("totgas:", tot_gas)
+                    break
+            else:
+                #solution still feasible
+                gas_mean[w] = (well_mean_gas)
+                gas_var[w] = (well_var_gas)
+                oil_mean[w] = (self.nets_mean[wo[w]]["oil"]["HP"].predict(self.solution[wo[w]])[0][0])
+                oil_var[w] = (self.nets_var[wo[w]]["oil"]["HP"].predict(self.solution[wo[w]])[0][0]*s[wo[w]])
+                tot_gas += well_gas
+        tot_oil = sum(oil_mean)
+        r = [1 if inf_tot else 0, 1 if inf_indiv else 0] + [tot_oil] +[tot_gas]+ gas_mean + oil_mean + oil_var  + gas_var
+#        print(r)
+        return r
     
     # =============================================================================
     # main function    
     # =============================================================================
-    def evaluate(self, problem, case=2, sol_scen=100, eval_scen=10000):
+    def evaluate(self, problem, case=2, sol_scen=100, eval_scen=10000, recourse=False):
         self.results_file = "results/robust/res_eval"
         if case==2:
             self.wellnames = t.wellnames_2
@@ -145,10 +197,15 @@ class Evaluator:
         else:
             pass
         print("loading scenarios...")
+        self.w_min_choke, self.w_max_choke = t.get_limits("choke", self.wellnames, self.well_to_sep, case=2)
+
         self.scenarios = t.get_scenario(case=case, num_scen=eval_scen)
         self.solution, self.indiv_cap, self.tot_cap = t.get_robust_solution(sol_scen)
+        print(self.solution)
         multidims, weights = self.getNeuralNetsData(case=case)
         multidims_var, weights_var = self.getNeuralNetsData(case=case, net_type="var")
+        
+
         print("building models...")
         self.nets_mean = self.buildNeuralNets(multidims, weights)
         print("mean networks done.")
@@ -157,29 +214,37 @@ class Evaluator:
         df = pd.DataFrame(columns=t.robust_eval_columns)
         print("evaluating scenarios...")
         
-        self.GOR_means()
         
-#        for s in range(eval_scen):
-#            r = self.calc_results(self.scenarios.loc[s])
-#            df.loc[s] = r
-##            print("\n\n\n",df.loc[s])
-#        #TODO: add case specific info to filename
-#        with open(self.results_file+problem+".csv", "w") as f:
-#            df.to_csv(f, sep=';', index=False)
+        for s in range(eval_scen):
+            if(recourse):
+                r = self.calc_results_recourse(self.scenarios.loc[s])
+            else:
+                r = self.calc_results(self.scenarios.loc[s])
+            df.loc[s] = r
+#            print("\n\n\n",df.loc[s])
+        #TODO: add case specific info to filename
+        with open(self.results_file+problem+("_recourse" if recourse else "")+".csv", "w") as f:
+            df.to_csv(f, sep=';', index=False)
             
     # =============================================================================
     # helper function to determine GOR for each well. use this to select order of
     # wells to switch on in recourse evaluation    
     # =============================================================================
     def GOR_means(self):
-        w_min_choke, w_max_choke = t.get_limits("choke", self.wellnames, self.well_to_sep, case)
-        ranges = {w : np.arange(w_min_choke[w], w_max_choke[well], 100) for w in self.wellnames}
+        w_min_choke, w_max_choke = t.get_limits("choke", self.wellnames, self.well_to_sep, case=2)
+        ranges = {w : np.arange(w_min_choke[w]["HP"], w_max_choke[w]["HP"], (w_max_choke[w]["HP"]-w_min_choke[w]["HP"])/100) for w in self.wellnames}
         oil = {w:[] for w in self.wellnames}
         gas = {w:[] for w in self.wellnames}
         ratios = {w:[] for w in self.wellnames}
         for w in self.wellnames:
-            oil[w] = self.nets_mean[w]["oil"]["HP"].predict(ranges[w])
-            gas[w] = self.nets_mean[w]["gas"]["HP"].predict(ranges[w])
-            ratios[w] = np.mean(oil[w] / gas[w])
+            if(w == "W2"):
+                #behaves strangely around lowest choke settings, evaluate for upper range
+                oil[w] = self.nets_mean[w]["oil"]["HP"].predict(ranges[w][62:])
+                gas[w] = self.nets_mean[w]["gas"]["HP"].predict(ranges[w][62:])
+            else:
+                oil[w] = self.nets_mean[w]["oil"]["HP"].predict(ranges[w][25:])
+                gas[w] = self.nets_mean[w]["gas"]["HP"].predict(ranges[w][25:])
+            ratios[w] = np.mean(gas[w] / oil[w])
         print(ratios)
+        
             
