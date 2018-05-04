@@ -18,6 +18,9 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
+well_GORs = {'W1': 1578.6439, 'W2': 5886.233, 'W3': 2085.9548, 'W4': 1682.6052, 'W5': 1676.8193, 'W6': 2630.8806, 'W7': 5608.433}
+well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
+
 # =============================================================================
 # Case 2
 # =============================================================================
@@ -78,7 +81,7 @@ def get_limits(target, wellnames, well_to_sep, case):
         for well in wellnames:
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
-                lower[well][sep] = dfw.min()
+                lower[well][sep] = max(0.0, dfw.min()) #do not allow negative choke values
                 upper[well][sep] = dfw.max()
         return lower, upper
 
@@ -280,6 +283,15 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP"):
     df = df.loc[df["scenarios"]==num_scen]
     indiv_cap = df["indiv_cap"].values[0]
     tot_cap = df["tot_cap"].values[0]
+<<<<<<< HEAD
+    for w in wellnames_2:
+        if df[w+"_oil_mean"].values[0] == 0:
+            df[w+"_choke"] = 0
+            
+    df_ret = df[c]
+    df_ret.columns = wellnames_2
+    return df_ret, indiv_cap, tot_cap
+=======
     df = df[c]
     df.columns = wellnames_2
     return df, indiv_cap, tot_cap
@@ -312,3 +324,4 @@ def build_and_plot_well(well, goal="oil", case=2):
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
+>>>>>>> master

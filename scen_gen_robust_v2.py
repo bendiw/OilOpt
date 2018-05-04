@@ -77,10 +77,8 @@ class NN:
     
     # =============================================================================
     # Function to run with all wells in the problem.
-    # Specify alpha to control which part of the pareto front to generate.
-    # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0,
+    def run_all(self, case=2, load_M = False,
                 num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP"):
         if(case==2):
             self.wellnames = t.wellnames_2
@@ -96,11 +94,9 @@ class NN:
                                      phase=phase, sep=sep)
         self.scenarios = len(self.s_draw)
         self.results_file = "results/robust/res.csv"
-        self.alpha=alpha
 #        res_df = pd.read_csv(self.results_file, delimiter=';')
 #        self.oil_optimal = res_df["tot_oil"].max()
         self.phasenames = t.phasenames
-        print("MOP optimization. alpha =", self.alpha)
         self.run(load_M=load_M, case=case)
             
     def run(self, load_M, case=2, save=True):
