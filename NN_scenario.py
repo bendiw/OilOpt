@@ -34,12 +34,12 @@ def build_model(neurons, dim, lr, regu=0.0):
                       kernel_regularizer=regularizers.l2(regu),
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("relu"))
-#    model_1.add(Dense(neurons,
-#                      kernel_initializer=initializers.VarianceScaling(),
-#                      bias_initializer=initializers.Constant(value=0.1),
-#                      kernel_regularizer=regularizers.l2(regu),
-#                      bias_regularizer=regularizers.l2(regu)))
-#    model_1.add(Activation("relu"))
+    model_1.add(Dense(neurons,
+                      kernel_initializer=initializers.VarianceScaling(),
+                      bias_initializer=initializers.Constant(value=0.1),
+                      kernel_regularizer=regularizers.l2(regu),
+                      bias_regularizer=regularizers.l2(regu)))
+    model_1.add(Activation("relu"))
 #    model_1.add(Dense(neurons*2,
 #                      kernel_initializer=initializers.VarianceScaling(),
 #                      bias_initializer=initializers.Constant(value=0.1),
