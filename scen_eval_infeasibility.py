@@ -89,7 +89,7 @@ class Evaluator:
     
     
     # =============================================================================
-    # evaluate solution in a single scenario    
+    # evaluate solution in a single scenario, no recourse allowed
     # =============================================================================
     def calc_results(self, s):
         gas_mean = []
@@ -124,6 +124,14 @@ class Evaluator:
         return r
 #robust_eval_columns = ["tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
+
+    # =============================================================================
+    # Calculate results for single scenario where recourse is allowed. That is, 
+    # if a constraint is reached, we stop increasing choke values to avoid
+    # infeasibility.
+    # =============================================================================
+    def calc_results_recourse(self, s):
+        pass
     
     # =============================================================================
     # main function    
@@ -148,10 +156,30 @@ class Evaluator:
         print("var networks done.")
         df = pd.DataFrame(columns=t.robust_eval_columns)
         print("evaluating scenarios...")
-        for s in range(eval_scen):
-            r = self.calc_results(self.scenarios.loc[s])
-            df.loc[s] = r
-#            print("\n\n\n",df.loc[s])
-        #TODO: add case specific info to filename
-        with open(self.results_file+problem+".csv", "w") as f:
-            df.to_csv(f, sep=';', index=False)
+        
+        self.GOR_means()
+        
+#        for s in range(eval_scen):
+#            r = self.calc_results(self.scenarios.loc[s])
+#            df.loc[s] = r
+##            print("\n\n\n",df.loc[s])
+#        #TODO: add case specific info to filename
+#        with open(self.results_file+problem+".csv", "w") as f:
+#            df.to_csv(f, sep=';', index=False)
+            
+    # =============================================================================
+    # helper function to determine GOR for each well. use this to select order of
+    # wells to switch on in recourse evaluation    
+    # =============================================================================
+    def GOR_means(self):
+        w_min_choke, w_max_choke = t.get_limits("choke", self.wellnames, self.well_to_sep, case)
+        ranges = {w : np.arange(w_min_choke[w], w_max_choke[well], 100) for w in self.wellnames}
+        oil = {w:[] for w in self.wellnames}
+        gas = {w:[] for w in self.wellnames}
+        ratios = {w:[] for w in self.wellnames}
+        for w in self.wellnames:
+            oil[w] = self.nets_mean[w]["oil"]["HP"].predict(ranges[w])
+            gas[w] = self.nets_mean[w]["gas"]["HP"].predict(ranges[w])
+            ratios[w] = np.mean(oil[w] / gas[w])
+        print(ratios)
+            
