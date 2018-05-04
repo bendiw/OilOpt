@@ -373,7 +373,7 @@ class NN:
 #            tot_oil = self.m.ObjVal
             tot_oil = sum(oil_mean)
             tot_gas = sum(gas_mean)
-            rowlist = [tot_oil, tot_gas]+chokes+gas_mean+oil_mean
+            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean
 
 #            +oil_var+gas_var
 #            df = df.append(rowlist, ignore_index=True, axis=0)
