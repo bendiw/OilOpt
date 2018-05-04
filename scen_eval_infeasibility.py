@@ -148,7 +148,6 @@ class Evaluator:
             inf_tot = tot_gas + well_gas >= self.tot_cap
             if(inf_tot or inf_indiv):
 #                print(inf_tot, inf_indiv, tot_gas)
-                print("totgas pre add:", tot_gas)
                 #we reached infeasibility
                 #eval gas, oil for 100 choke settings below solution level and pick closest to limit
                 choke_range = np.arange(self.w_min_choke[wo[w]]["HP"], self.solution[wo[w]]+1,  (self.solution[wo[w]]+1-self.w_min_choke[wo[w]]["HP"])/100)
@@ -156,11 +155,9 @@ class Evaluator:
                 o_var = s[wo[w]]*self.nets_var[wo[w]]["oil"]["HP"].predict(choke_range)
                 g_mean = self.nets_mean[wo[w]]["gas"]["HP"].predict(choke_range)
                 g_var = s[wo[w]]*self.nets_var[wo[w]]["gas"]["HP"].predict(choke_range)
-                print(choke_range)
                 for i in range(len(choke_range)):
                     if(tot_gas+g_mean[i][0]+g_var[i][0] > self.tot_cap or g_mean[i][0]+g_var[i][0] >= self.indiv_cap):
 #                        tot_gas += g_mean[i-1] + g_var[i-1]
-                        print(i, choke_range[i])
                         if(i==0):
                             break
                         gas_mean[w] = g_mean[i-1][0]
@@ -171,7 +168,6 @@ class Evaluator:
                         break
                 if(inf_tot):
                     #total cap was reached, we are done
-                    print("totgas:", tot_gas)
                     break
             else:
                 #solution still feasible

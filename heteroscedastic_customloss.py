@@ -92,6 +92,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr)
 
+
     #setup plots
     if(dim==1):
         fig = pyplot.figure()
@@ -190,9 +191,15 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         if not scaler:
             model_2 = model
         else:
+#            print("Weights before inverse:")
+#            for i in range(0,7,3):
+#                print(model.layers[i].get_weights())
             model_2 = inverse_scale(model, dim, neurons, dropout, rs, lr)
     
     if (save_weights):
+#        print("Weights after inverse:")
+#        for i in range(0,7,3):
+#            print(model_2.layers[i].get_weights())
         save_variables(well,goal,model_2,case)
     
     if(save_variance):
@@ -209,34 +216,64 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pred_mean_scaled, std_scaled = sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
         std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
         pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
+#        print(std_unscaled)
+#        print(pred_mean_unscaled)
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
         plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
         
-#        save_variance_func(X_save, std_unscaled, case, well, goal)
+#        save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
-    pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
-    pyplot.ylim(np.min([i[0] for i in y_points])-0.4*np.max([i[0] for i in y_points]), np.max(y_points)+0.4*np.max([i[0] for i in y_points]))
+#    pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
+#    pyplot.ylim(np.min([i[0] for i in y_points])-0.4*np.max([i[0] for i in y_points]), np.max(y_points)+0.4*np.max([i[0] for i in y_points]))
 
-    pyplot.autoscale(False)
+#    pyplot.autoscale(False)
     pyplot.xlabel('choke')
     pyplot.ylabel("LOLOLOL")
     pyplot.show()
-    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
-    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
-#    for i in range(2):
-#        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
+#    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
+    for i in range(2):
+        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
     line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1)
-    if (extra_points is not None):
-        for i in range(2):
-            (ax.fill_between([x[0] for x in X], pred_mean+extra_points*(i+1), pred_mean-extra_points*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#    if (extra_points is not None):
+#        for i in range(2):
+#            (ax.fill_between([x[0] for x in X], pred_mean+extra_points*(i+1), pred_mean-extra_points*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #        line4=ax.plot(X, pred_mean + extra_points,color='green',linestyle="None",marker=".",markersize=5)
 
+def mean_var_to_csv(well, phase="gas", mode="mean", n_iter=200, case=2):
+    dims, w, b = tools.load_2(well, phase=phase, case=2, mode=mode)
+#    print(w)
+#    print(b)
+    model = retrieve_model(dims,w,b)
+#    for i in range(0,7,3):
+#        print(model.layers[i].get_weights())
+    X_test = np.array([[x] for x in range(101)])
+    prediction = model.predict(X_test)
+    pred_mean = prediction[:,0]
+#    pred_mean, std = sample_mean_std(model, X_test, n_iter,
+#                                     K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output]))
+#    plot_once(X_test, 2, pred_mean, std, 1, 1)
+    save_variance_func([x for x in range(101)], None, pred_mean, case, well, phase)
 
+    
+def retrieve_model(dims, w, b, lr=0.001):
+    model_1= Sequential()
+    for i in range(1,len(dims)):
+        new_w = [np.array(w[i-1]), np.array(b[i-1])]
+        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
+                          weights = new_w))
+        if (i == len(dims)-1):
+            model_1.add(Activation("linear"))
+        else:
+            model_1.add(Activation("relu"))
+            model_1.add(Dropout(0.05))
+    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
+    return model_1
         
 def sample_mean_std(model, X, n_iter, f):
     #gather results from forward pass
@@ -308,14 +345,15 @@ def test_gradients(model, X, y):
     print ("gradients:",grads[-2:])
     return
 
-def save_variance_func(X, var, case, well, phase):
-    filename = "variance_case_" + str(case) + ".csv"
-    d = {well+'_'+phase+"_std":var, well+"_"+phase+"_X":X}
+def save_variance_func(X, var, mean, case, well, phase):
+    filename = "variance_case" + str(case) +"_"+phase+".csv"
+#    well+'_'+phase+"_std":var, 
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
+#        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
+        d = {well+"_"+phase+"_mean": mean, well+"_"+phase+"_var": df[well+"_"+phase+"_std"],well+"_"+phase+"_X":X}
         for k, v in d.items():
             df[k] = v
-        print(df.columns)
     except Exception as e:
         print(e)
         df = pd.DataFrame(data=d)
