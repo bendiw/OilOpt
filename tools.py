@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
 import scipy.stats as ss
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+from keras import optimizers
 
 # =============================================================================
 # Case 1
@@ -162,7 +165,7 @@ def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
     else:
         sep = "LP"
     filename = folder + datafile + "-" + sep + "-" + goal + num
-#    print("Filename:", filename)
+    print("Filename:", filename)
     file = open(filename + ".txt", "w")
     line = ""
     for dim in dims:
@@ -280,3 +283,32 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP"):
     df = df[c]
     df.columns = wellnames_2
     return df, indiv_cap, tot_cap
+
+# =============================================================================
+# build a ReLU NN from dims, weights and bias
+# =============================================================================
+def retrieve_model(well, goal="oil", lr=0.001, case=2):
+    dims, w, b = load_2(well,goal,case=case)
+    model_1= Sequential()
+    for i in range(1,len(dims)):
+        new_w = [np.array(w[i-1]), np.array(b[i-1])]
+        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
+                          weights = new_w))
+        if (i == len(dims)-1):
+            model_1.add(Activation("linear"))
+        else:
+            model_1.add(Activation("relu"))
+    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
+    return model_1
+
+def build_and_plot_well(well, goal="oil", case=2):
+    model = retrieve_model(well,goal=goal,lr=0.001,case=case)
+    X = np.array([[i] for i in range(101)])
+    pred = [x[0] for x in model.predict(X)]
+    print(pred)
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111)
+    line2 = ax.plot(X, pred, color='green',linestyle='dashed', linewidth=1)
+    pyplot.xlabel('choke')
+    pyplot.ylabel("oil")
+    pyplot.show()

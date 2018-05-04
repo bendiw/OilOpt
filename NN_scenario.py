@@ -2,21 +2,15 @@
 """
 Created on Wed May  2 16:24:34 2018
 
-@author: Bruker
+@author: arntgm
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 26 10:50:19 2018
-
-@author: bendiw
-"""
 import pandas as pd
 from keras.layers import Input, Dense, Activation, LeakyReLU, PReLU, ELU, MaxoutDense, merge, Subtract, Dropout
 from keras.models import Model, Sequential
 from keras import losses, optimizers, backend, regularizers, initializers
 import numpy as np
-import tools as t
+import tools
 from matplotlib import pyplot
 import scipy.stats as ss
 # =============================================================================
@@ -24,23 +18,7 @@ import scipy.stats as ss
 # fully trained heteroscedastic NN. Since we do not care about
 # generalization properties, no regularization techniques are applied.
 # =============================================================================
-
-
-# =============================================================================
-# build a ReLU NN
-# =============================================================================
-def retrieve_model(dims, w, b, lr=0.001):
-    model_1= Sequential()
-    for i in range(1,len(dims)):
-        new_w = [np.array(w[i-1]), np.array(b[i-1])]
-        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
-                          weights = new_w))
-        if (i == len(dims)-1):
-            model_1.add(Activation("linear"))
-        else:
-            model_1.add(Activation("relu"))
-    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
-    return model_1
+    
 
 def build_model(neurons, dim, lr, regu=0.0):
     model_1= Sequential()
@@ -56,18 +34,18 @@ def build_model(neurons, dim, lr, regu=0.0):
                       kernel_regularizer=regularizers.l2(regu),
                       bias_regularizer=regularizers.l2(regu)))
     model_1.add(Activation("relu"))
-    model_1.add(Dense(neurons,
-                      kernel_initializer=initializers.VarianceScaling(),
-                      bias_initializer=initializers.Constant(value=0.1),
-                      kernel_regularizer=regularizers.l2(regu),
-                      bias_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
-    model_1.add(Dense(neurons*2,
-                      kernel_initializer=initializers.VarianceScaling(),
-                      bias_initializer=initializers.Constant(value=0.1),
-                      kernel_regularizer=regularizers.l2(regu),
-                      bias_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
+#    model_1.add(Dense(neurons,
+#                      kernel_initializer=initializers.VarianceScaling(),
+#                      bias_initializer=initializers.Constant(value=0.1),
+#                      kernel_regularizer=regularizers.l2(regu),
+#                      bias_regularizer=regularizers.l2(regu)))
+#    model_1.add(Activation("relu"))
+#    model_1.add(Dense(neurons*2,
+#                      kernel_initializer=initializers.VarianceScaling(),
+#                      bias_initializer=initializers.Constant(value=0.1),
+#                      kernel_regularizer=regularizers.l2(regu),
+#                      bias_regularizer=regularizers.l2(regu)))
+#    model_1.add(Activation("relu"))
 
     model_1.add(Dense(1,
                       kernel_initializer=initializers.VarianceScaling(),
@@ -80,7 +58,7 @@ def build_model(neurons, dim, lr, regu=0.0):
 # main function
 # =============================================================================
 def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=True, num_std=4, regu=0.0):
+        epochs=1000, save=False, plot=False, num_std=4, regu=0.0):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     for w in well:
@@ -100,9 +78,10 @@ def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size
             line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
             pyplot.xlabel('choke')
             pyplot.ylabel(goal)
-            filepath = "scenarios\\nn\\"+str(w)+"_"+goal+".png"
             if save:
+                filepath = "scenarios\\nn\\"+str(w)+"_"+goal+"_(2-"+str(neurons)+","+str(epochs)+","+str(lr)+")"+".png"
                 pyplot.savefig(filepath, bbox_inches="tight")
+                tools.save_variables(w+"_(2-"+str(neurons)+","+str(epochs)+","+str(lr)+")", goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\")
             if plot:
                 pyplot.show()
 
