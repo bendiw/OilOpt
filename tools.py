@@ -149,7 +149,7 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean"):
     return dims, w, b
 
 def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
-                   case=1, mode="mean"):
+                   case=1, mode="mean", folder = "weights\\", num=""):
     dims = []
     for i in range(0,len(neural),2):
         dims.append(len(neural[i]))
@@ -160,7 +160,7 @@ def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
         sep = "HP"
     else:
         sep = "LP"
-    filename = "weights/" + datafile + "-" + sep + "-" + goal
+    filename = folder + datafile + "-" + sep + "-" + goal + num
 #    print("Filename:", filename)
     file = open(filename + ".txt", "w")
     line = ""
@@ -250,7 +250,7 @@ def delaunay(x, y, z):
 #    return(data[tri.simplices])
     return data[triang.triangles]
 
-def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4):
+def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder=""):
     if (case == 1):
         return
     scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
@@ -262,10 +262,6 @@ def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
-def load_scenario(case, num_scen, lower, upper, phase, sep):
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+".csv"
-    df = pd.read_csv(filename, sep=';')
-    return df
 
 def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP"):
     try:
