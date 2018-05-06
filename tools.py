@@ -345,7 +345,7 @@ def save_variance_func(X, var, mean, case, well, phase):
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
 #        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
-        d = {well+"_"+phase+"_mean": mean, well+"_"+phase+"_var": df[well+"_"+phase+"_std"],well+"_"+phase+"_X":X}
+        d = {well+"_"+phase+"_mean": mean, well+"_"+phase+"_var": var, well+"_"+phase+"_X":X}
         for k, v in d.items():
             df[k] = v
     except Exception as e:
