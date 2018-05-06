@@ -3,8 +3,9 @@ import matplotlib.tri as mtri
 import pandas as pd
 import scipy.stats as ss
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers import Dense, Activation, Dropout
 from keras import optimizers
+from keras import backend as K
 
 # =============================================================================
 # Case 1
@@ -302,6 +303,7 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     c = [w+"_choke" for w in wellnames_2]
     indiv_cap = df["indiv_cap"].values[0]
     tot_cap = df["tot_cap"].values[0]
+<<<<<<< HEAD
     for w in wellnames_2:
         if df[w+"_oil_mean"].values[0] == 0:
             df[w+"_choke"] = 0
@@ -309,6 +311,18 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret = df[c]
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
+=======
+#    for w in wellnames_2:
+#        if df[w+"_oil_mean"].values[0] == 0:
+#            df[w+"_choke"] = 0
+#            
+#    df_ret = df[c]
+#    df_ret.columns = wellnames_2
+#    return df_ret, indiv_cap, tot_cap
+    df = df[c]
+    df.columns = wellnames_2
+    return df, indiv_cap, tot_cap
+>>>>>>> master
 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
@@ -338,3 +352,114 @@ def build_and_plot_well(well, goal="oil", case=2):
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
+<<<<<<< HEAD
+=======
+
+#def save_variance_func_2(X, var, mean, case, well, phase):
+#    filename = "variance_case" + str(case) +"_"+phase+".csv"
+#    old = pd.read_csv(filename,sep=";",index_col=0)
+#    d = {well+"_"+phase+"_mean": old[well+"_"+phase+"_mean"], well+"_"+phase+"_var": var ,well+"_"+phase+"_X":X}
+#    try:
+#        df = pd.read_csv(filename+"_", sep=';', index_col=0)
+#        for k, v in d.items():
+#            df[k] = v
+#    except Exception as e:
+#        print(e)
+#        df = pd.DataFrame(data=d)
+#        print(df.columns)
+#    with open(filename+"_", 'w') as f:
+#        df.to_csv(f,sep=";")
+
+def save_variance_func(X, var, mean, case, well, phase):
+    filename = "variance_case" + str(case) +"_"+phase+".csv"
+#    well+'_'+phase+"_std":var, 
+    try:
+        df = pd.read_csv(filename, sep=';', index_col=0)
+#        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
+        d = {well+"_"+phase+"_mean": mean, well+"_"+phase+"_var": df[well+"_"+phase+"_std"],well+"_"+phase+"_X":X}
+        for k, v in d.items():
+            df[k] = v
+    except Exception as e:
+        print(e)
+        df = pd.DataFrame(data=d)
+        print(df.columns)
+    with open(filename, 'w') as f:
+        df.to_csv(f,sep=";")
+        
+def retrieve_model(dims, w, b, lr=0.001):
+    model_1= Sequential()
+    for i in range(1,len(dims)):
+        new_w = [np.array(w[i-1]), np.array(b[i-1])]
+        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
+                          weights = new_w))
+        if (i == len(dims)-1):
+            model_1.add(Activation("linear"))
+        else:
+            model_1.add(Activation("relu"))
+            model_1.add(Dropout(0.05))
+    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
+    return model_1
+        
+def sample_mean_std(model, X, n_iter, f):
+    #gather results from forward pass
+    results = np.column_stack(f((X,1.))[0])
+    if (np.isnan(results[0][0])):
+        print("NAN")
+        return
+
+    res_mean = [results[0]]
+    res_var = [np.exp(results[1])]
+    for i in range(1,n_iter):
+        a = np.column_stack(f((X,1.))[0])
+        res_mean.append(a[0])
+        res_var.append(np.exp(a[1]))
+        
+    pred_mean = np.mean(res_mean, axis=0)
+    pred_sq_mean = np.mean(np.square(res_mean), axis=0)
+    var_mean = np.mean(res_var, axis=0)
+    std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
+    return pred_mean, std
+
+def mean_var_to_csv(well, phase="gas", mode="mean", n_iter=200, case=2):
+    dims, w, b = load_2(well, phase=phase, case=2, mode=mode)
+#    print(w)
+#    print(b)
+    model = retrieve_model(dims,w,b)
+#    for i in range(0,7,3):
+#        print(model.layers[i].get_weights())
+    X_test = np.array([[x] for x in range(101)])
+    f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
+    mean, std = sample_mean_std(model, X, n_iter, f)
+    var = std**2
+#    pred_mean, std = sample_mean_std(model, X_test, n_iter,
+#                                     K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output]))
+#    plot_once(X_test, 2, pred_mean, std, 1, 1)
+    save_variance_func([x for x in range(101)], None, pred_mean, case, well, phase)
+    
+def inverse_scale(model_1, dim, neurons, dropout, rs, lr, loss):
+    model_2= Sequential()
+    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons),
+                      rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dropout(dropout))
+    model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                      rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dropout(dropout))
+    model_2.add(Dense(2,  weights = [model_1.layers[-2].get_weights()[0],rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(2,)]))
+    model_2.add(Activation("linear"))
+    model_2.compile(optimizer=optimizers.adam(lr=lr), loss = loss)
+    return model_2
+
+def add_layer(model_1, neurons, loss):
+    model_2= Sequential()
+    model_2.add(Dense(neurons, input_shape=(1,), weights = [model_1.layers[0].get_weights()[0].reshape(1,neurons),
+                      model_1.layers[0].get_weights()[1].reshape(-1,1).reshape(neurons,)]))
+    model_2.add(Activation("relu"))
+    model_2.add(Dense(1, weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1),
+                      model_1.layers[2].get_weights()[1].reshape(-1,1).reshape(1,)]))
+    model_2.add(Activation("linear"))
+    model_2.add(Dense(1, weights = [np.array([[1000000.0]]), np.array([0.0])]))
+    model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
+    return model_2
+>>>>>>> master
