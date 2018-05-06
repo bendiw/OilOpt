@@ -303,7 +303,6 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     c = [w+"_choke" for w in wellnames_2]
     indiv_cap = df["indiv_cap"].values[0]
     tot_cap = df["tot_cap"].values[0]
-<<<<<<< HEAD
     for w in wellnames_2:
         if df[w+"_oil_mean"].values[0] == 0:
             df[w+"_choke"] = 0
@@ -311,18 +310,6 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret = df[c]
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
-=======
-#    for w in wellnames_2:
-#        if df[w+"_oil_mean"].values[0] == 0:
-#            df[w+"_choke"] = 0
-#            
-#    df_ret = df[c]
-#    df_ret.columns = wellnames_2
-#    return df_ret, indiv_cap, tot_cap
-    df = df[c]
-    df.columns = wellnames_2
-    return df, indiv_cap, tot_cap
->>>>>>> master
 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
@@ -352,8 +339,6 @@ def build_and_plot_well(well, goal="oil", case=2):
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
-<<<<<<< HEAD
-=======
 
 #def save_variance_func_2(X, var, mean, case, well, phase):
 #    filename = "variance_case" + str(case) +"_"+phase+".csv"
@@ -462,4 +447,3 @@ def add_layer(model_1, neurons, loss):
     model_2.add(Dense(1, weights = [np.array([[1000000.0]]), np.array([0.0])]))
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
->>>>>>> master
