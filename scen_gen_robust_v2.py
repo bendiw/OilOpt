@@ -72,7 +72,7 @@ class NN:
     # Function to run with all wells in the problem.
     # =============================================================================
     def init(self, case=2, load_M = False,
-                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, max_changes=15, w_relative_change=None, stability_iter=None):
+                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm"):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -84,7 +84,7 @@ class NN:
             self.p_sep_names = t.p_sep_names
         
         self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
-                                     phase=phase, sep=sep, iteration=stability_iter)
+                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
         self.scenarios = len(self.s_draw)
         self.results_file = "results/robust/res.csv"
         

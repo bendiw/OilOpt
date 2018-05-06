@@ -257,32 +257,38 @@ def delaunay(x, y, z):
 #    return(data[tri.simplices])
     return data[triang.triangles]
 
-def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None):
+def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None, distr="truncnorm"):
     if (case == 1):
         return
-    scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+    if(distr=="truncnorm"):
+        scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+    elif(distr=="triang"):
+        scen = np.random.triangular(lower, 0, upper, size=(num_scen,len(wellnames_2)))
+    else:
+        raise ValueError("Unknown distribution specified.")
 #    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
     df = pd.DataFrame(columns=wellnames_2)
     for i in range(num_scen):
         df.loc[i] = scen[i]
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+".csv"
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
         
-def load_scenario(case, num_scen, lower, upper, phase, sep, iteration=None):
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+".csv"
+def load_scenario(case, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
+    print(filename)
     df = pd.read_csv(filename, sep=';')
     return df
 
-def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None):
+def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None, distr="truncnorm"):
     #iteration flag determines if we wish to create a new version of the specified scenario number
     #use the flag for calc during in-sample/out-of-sample stability testing
     try:
-        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration)
+        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     except Exception as e:
-        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration)
-        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration)
+        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration, distr=distr)
+        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     
 def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", init_name=None):
     if(init_name):
