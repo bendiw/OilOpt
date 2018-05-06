@@ -77,7 +77,7 @@ class NN:
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -95,39 +95,26 @@ class NN:
         self.phasenames = t.phasenames
         print("MOP optimization. alpha =", self.alpha)
         print("oil_optimal:", self.oil_optimal)
-        self.run(load_M=load_M, case=case)
-            
-    def run(self, load_M, case=2, save=True):
         
         #Case relevant numerics
-        if case==1:
-            sep_p_route = {"LP": ["B", "C"], "HP":["A", "B"]}
-            p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2", 
-                 "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
-        
-            #probably not needed for MOP
-#            max_changes = 15 
-#            w_relative_change = {well : [1.0, 1.0] for well in self.wellnames}
-            #dict with binary var describing whether or not wells are producing in initial setting
-#            w_initial_prod = {well : 0 for well in self.wellnames}
-            #dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
-#            w_initial_vars = {well : [0,0] for well in self.wellnames}
-            
-            glift_caps = [675000.0]
-            tot_exp_cap = 1200000
-            sep_cap = {"LP": 740000, "HP":math.inf}
-            glift_groups = ["A", "B"]
+        if case==2:
+            if(not w_relative_change):
+                w_relative_change = {well : [1., 0.1] for well in self.wellnames}
+#            dict with binary var describing whether or not wells are producing in initial setting
+            if not init_name:
+                w_initial_prod = {well : 0 for well in self.wellnames}
+                w_initial_vars = {well : [0] for well in self.wellnames}
+            else:
+                w_initial_df,_,_ = t.get_robust_solution(init_name=init_name)
+                w_initial_vars = {w:[w_initial_df[w].values[0]] for w in self.wellnames}
+                print(w_initial_vars)
+                w_initial_prod = {well : 1 if w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
+                print(w_initial_prod)
+            #constraints for case 2
+            tot_exp_cap = 250000
+            well_cap = 54166
         else:
-            
-            #probably not needed for MOP
-#            w_relative_change = {well : [1.0, 1.0] for well in self.wellnames}
-            #dict with binary var describing whether or not wells are producing in initial setting
-#            w_initial_prod = {well : 0 for well in self.wellnames}
-            #dict with initial values for choke, gas lift per well, {well: [gas lift, choke]}
-#            w_initial_vars = {well : [0,0] for well in self.wellnames}
-            
-            tot_exp_cap = 6000000
-            well_cap = 1300000
+            raise ValueError("Case 1 not implemented yet.")
 
             
         # =============================================================================
@@ -176,6 +163,7 @@ class NN:
         rhos = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(self.multidims[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho")
         routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
 #        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])], vtype=GRB.BINARY, name="changes")
+        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])], vtype=GRB.BINARY, name="changes")
 
         #new variables to control routing decision and input/output
         outputs = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs")
@@ -307,14 +295,10 @@ class NN:
         # change tracking and total changes
         # Probably do not care about these when generating pareto front for now
         # =============================================================================
-#        if(case==1):
-#            self.m.addConstrs(w_initial_vars[well][dim] - input_dummies[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-##            self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-#            #troublesome constraint
-#            self.m.addConstrs(input_dummies[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-#    #        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-#            self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep])) <= max_changes)
-    
+        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
+
         # =============================================================================
         # Solver parameters
         # =============================================================================
