@@ -258,42 +258,58 @@ def delaunay(x, y, z):
 #    return(data[tri.simplices])
     return data[triang.triangles]
 
-def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder=""):
+def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None, distr="truncnorm"):
     if (case == 1):
         return
-    scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+    if(distr=="truncnorm"):
+        scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
+    elif(distr=="triang"):
+        scen = np.random.triangular(lower, 0, upper, size=(num_scen,len(wellnames_2)))
+    else:
+        raise ValueError("Unknown distribution specified.")
 #    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
     df = pd.DataFrame(columns=wellnames_2)
     for i in range(num_scen):
         df.loc[i] = scen[i]
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+".csv"
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
+        
+def load_scenario(case, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
+    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
+    print(filename)
+    df = pd.read_csv(filename, sep=';')
+    return df
 
-def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP"):
+def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None, distr="truncnorm"):
+    #iteration flag determines if we wish to create a new version of the specified scenario number
+    #use the flag for calc during in-sample/out-of-sample stability testing
     try:
-        return load_scenario(case, num_scen, lower, upper, phase, sep)
+        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     except Exception as e:
-        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper)
-        return load_scenario(case, num_scen, lower, upper, phase, sep)
+        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration, distr=distr)
+        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     
-def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP"):
-    df = pd.read_csv("results/robust/res.csv", sep=";")
+def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", init_name=None):
+    if(init_name):
+        df = pd.read_csv("results/initial/res_initial.csv", sep=";")
+        df = df.loc[df["name"]==init_name]
+    else:
+        df = pd.read_csv("results/robust/res.csv", sep=";")
+        df = df.loc[df["scenarios"]==num_scen]
+    if(df.shape[0] ==0 ):
+        raise ValueError("Specified scenario number or initial name not in file!")
     c = [w+"_choke" for w in wellnames_2]
-    df = df.loc[df["scenarios"]==num_scen]
     indiv_cap = df["indiv_cap"].values[0]
     tot_cap = df["tot_cap"].values[0]
-#    for w in wellnames_2:
-#        if df[w+"_oil_mean"].values[0] == 0:
-#            df[w+"_choke"] = 0
-#            
-#    df_ret = df[c]
-#    df_ret.columns = wellnames_2
-#    return df_ret, indiv_cap, tot_cap
-    df = df[c]
-    df.columns = wellnames_2
-    return df, indiv_cap, tot_cap
+    for w in wellnames_2:
+        if df[w+"_oil_mean"].values[0] == 0:
+            df[w+"_choke"] = 0
+            
+    df_ret = df[c]
+    df_ret.columns = wellnames_2
+    return df_ret, indiv_cap, tot_cap
 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
