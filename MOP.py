@@ -77,7 +77,7 @@ class NN:
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15, save=False):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
