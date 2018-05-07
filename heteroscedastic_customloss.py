@@ -102,7 +102,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     
         pyplot.autoscale(False)
         pyplot.xlabel('choke')  
-        pyplot.ylabel("oil")
+        pyplot.ylabel(goal)
         pyplot.show()
         
     f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
@@ -220,9 +220,9 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #        print(pred_mean_unscaled)
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
-        plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
+#        plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
         
-#        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
+        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):

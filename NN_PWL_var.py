@@ -83,12 +83,13 @@ def run(well, goal='oil', neurons=40, dim=1, case=2, lr=0.001, batch_size=50,
          pyplot.xlabel('choke')
          pyplot.ylabel(goal)
          pyplot.show()
-         fig = pyplot.figure()
-         ax = fig.add_subplot(111)
-         line1 = ax.plot(X, y_*1000000.0, linestyle='None', marker = '.',markersize=10)
-         line2 = ax.plot(X, prediction_2, color='green',linestyle='dashed', linewidth=1)
-         pyplot.xlabel('choke2')
-         pyplot.ylabel(goal)
-         pyplot.show()
+         if goal == "gas":
+             fig = pyplot.figure()
+             ax = fig.add_subplot(111)
+             line1 = ax.plot(X, y_*1000000.0, linestyle='None', marker = '.',markersize=10)
+             line2 = ax.plot(X, prediction_2, color='green',linestyle='dashed', linewidth=1)
+             pyplot.xlabel('choke2')
+             pyplot.ylabel(goal)
+             pyplot.show()
   
 
