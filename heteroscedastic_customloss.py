@@ -187,6 +187,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
             else:
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
     
+    print("Training complete")
     if (save_weights or save_variance):
         if not scaler:
             model_2 = model
