@@ -5,7 +5,7 @@ Created on Mon Apr 30 15:08:13 2018
 @author: bendi
 """
 
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*f-
 
 # =============================================================================
 # Nomenclature:
@@ -116,7 +116,7 @@ class NN:
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
-        self.m = Model("Ekofisk")
+        self.m = Model("Model")
         
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")

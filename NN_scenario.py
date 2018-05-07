@@ -14,9 +14,8 @@ import tools
 from matplotlib import pyplot
 import scipy.stats as ss
 # =============================================================================
-# This class grossly overfits a PWL NN to variance data from a
-# fully trained heteroscedastic NN. Since we do not care about
-# generalization properties, no regularization techniques are applied.
+# This class grossly overfits a PWL NN to data points sampled from a
+# distribution with mean and variation from a network trained on well data
 # =============================================================================
     
 
