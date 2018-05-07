@@ -77,7 +77,7 @@ class NN:
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -90,8 +90,11 @@ class NN:
             
         self.results_file = "results/mop/res.csv"
         self.alpha=alpha
-        res_df = pd.read_csv(self.results_file, delimiter=';')
-        self.oil_optimal = res_df["tot_oil"].max()
+        try:
+            res_df = pd.read_csv(self.results_file, delimiter=';')
+            self.oil_optimal = res_df["tot_oil"].max()
+        except Exception as e:
+            self.oil_optimal = prod_optimal
         self.phasenames = t.phasenames
         print("MOP optimization. alpha =", self.alpha)
         print("oil_optimal:", self.oil_optimal)
@@ -289,7 +292,7 @@ class NN:
         # =============================================================================
         # alpha constraint for MOP
         # =============================================================================
-        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
+#        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
@@ -311,10 +314,10 @@ class NN:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
         #maximization of mean oil
-#        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
+        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         
         #minimization of var gas
-        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
+#        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
 
         self.m.optimize()
