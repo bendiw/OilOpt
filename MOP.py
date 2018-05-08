@@ -292,7 +292,7 @@ class NN:
         # =============================================================================
         # alpha constraint for MOP
         # =============================================================================
-#        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
+        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
@@ -314,10 +314,10 @@ class NN:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
         #maximization of mean oil
-        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
+#        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         
         #minimization of var gas
-#        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
+        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
 
         self.m.optimize()
