@@ -65,14 +65,106 @@ class NN:
                         layers[well][phase][separator], multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = t.train(well, phase, separator, case)
         return layers, multidims, weights, biases
     
+        
+    # =============================================================================
+    # Wrapper to evaluate EEV versus scenario based optimization    
+    # =============================================================================
+    def evaluate_recourse(self, iterations=201, num_scen=100, init_name="zero", max_changes=3, verbose=0):
+        scen_draws = t.get_scenario(case=2, num_scen=iterations, distr="truncnorm")
+        results = np.zeros((iterations,2))
+#        print(scen_draws)
+        for i in range(iterations):
+            print("iteration:", i)
+#            print(results)
+#            print(scen_draws.loc[i])
+            results[i] = self.recourse_opt(init_name=init_name, max_changes=max_changes, num_scen=num_scen, pregen_scen=scen_draws.loc[i].to_dict(), verbose=verbose)
+        res_df = pd.DataFrame(results, columns=["infeasible_count", "total_oil"])
+        print(res_df)
+        res_df.to_csv("results/robust_recourse_iterative/results_"+init_name+str(num_scen)+"_scen_"+str(iterations)+"_iter.csv", sep=';', header=True)
     
+    # =============================================================================
+    # Iteratively optimize with recourse options. A solution is implemented by
+    # following the first step of an optimization result possibly involving
+    # several wells. The scenario is drawn and locked for the implemented well.
+    # We then re-optimize.
+    # =============================================================================
+    def recourse_opt(self, init_name, max_changes, num_scen, pregen_scen=None, verbose=1):
+#        results = pd.DataFrame(columns=t.robust_res_columns) 
+        scen_draws = t.get_scenario(case=2, num_scen=10000, distr="truncnorm")
+        scen_const = {}
+        lock_wells = []
+        #get starting point
+        results= t.get_robust_solution(init_name=init_name)
+        current_contrib_gas = {w:results[w+"_gas_mean"].values[0]+pregen_scen[w]*results[w+"_gas_var"].values[0] for w in t.wellnames_2}
+        current_contrib_oil = {w:results[w+"_oil_mean"].values[0] for w in t.wellnames_2}
+        implemented = t.get_robust_solution(init_name=init_name)
+        results.columns = t.robust_res_columns_recourse
+        implemented.columns = t.robust_res_columns_recourse
+#        print("oil contrib:", current_contrib_oil)
+#        print("gas contrib:", current_contrib_gas)
 
+        #run first optimization
+        change_well = None
+        chokenames = [w+"_choke" for w in t.wellnames_2]
+        init_choke = results.loc[0][chokenames].to_dict()
+        infeasible_count= 0
+        infeasible = False
+        for i in range(max_changes, 0, -1):
+            iter_num = max_changes+1-i
+            if(change_well and not infeasible):
+                init_choke[change_well+"_choke"] = results.loc[iter_num-1][change_well+"_choke"]
+
+            res = self.init(num_scen=num_scen, save=False, init_name=init_choke, max_changes=i, recourse_iter=True, 
+                            scen_const=scen_const, verbose=0)
+            results.loc[iter_num] = res
+            z = np.zeros((1,implemented.shape[1]))
+            implemented.loc[iter_num] = z[0]
+            for w in t.well_order:
+                if(results.loc[iter_num][w+"_changed"]>0 and results.loc[iter_num][w+"_choke"]-init_choke[w+"_choke"]>0.01): # and results.loc[iter_num]
+                    if(w not in lock_wells):
+                        lock_wells.append(w)
+                        if not pregen_scen:
+                            s = np.random.randint(0, 10000)
+                            scen_const[w] = scen_draws.loc[s][w]
+                        else:
+                            scen_const[w] = pregen_scen[w]
+                    change_well = w
+                    break
+            new_indiv_gas = results.loc[iter_num][change_well+"_gas_mean"]+scen_const[change_well]*results.loc[iter_num][change_well+"_gas_var"]
+            new_indiv_oil = results.loc[iter_num][change_well+"_oil_mean"]
+            new_tot_gas = implemented.loc[iter_num-1]["tot_gas"]+new_indiv_gas - current_contrib_gas[change_well]
+            infeasible = (round(new_indiv_gas, 2) > results.loc[0]["indiv_cap"] or new_tot_gas>results.loc[0]["tot_cap"])
+
+            if(infeasible):
+                #revert solution
+                implemented.loc[iter_num] = implemented.loc[iter_num-1]
+                infeasible_count+=1
+            else:
+                current_contrib_gas[change_well] = new_indiv_gas
+
+                implemented.loc[iter_num]["tot_gas"] = new_tot_gas
+                current_contrib_oil[change_well] = new_indiv_oil
+                implemented.loc[iter_num]["tot_oil"] = sum(current_contrib_oil.values())
+                implemented.loc[iter_num][change_well+"_choke"] = results.loc[iter_num][change_well+"_choke"]
+                implemented.loc[iter_num][change_well+"_gas_mean"] = new_indiv_gas
+            if(verbose>0):
+                print("\n\niteration", iter_num)
+                print("initial choke settings:", init_choke)
+                print("scenario draws:", scen_const)
+                print("well to change:", change_well)
+                print("indiv gas:", new_indiv_gas, "\ntot_gas", new_tot_gas, "\ninfeasible?", infeasible)
+        if(verbose>0):
+            for c in results.columns:
+                print(results[c])
+            print("\n\nImplemented:\n", implemented[implemented.columns[2:11]])
+        return [infeasible_count, implemented.loc[implemented.shape[0]-1]["tot_oil"]]
     
     # =============================================================================
     # Function to run with all wells in the problem.
     # =============================================================================
     def init(self, case=2, load_M = False,
-                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm"):
+                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
+                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -96,18 +188,42 @@ class NN:
         #Case relevant numerics
         if case==2:
             if(not w_relative_change):
-                w_relative_change = {well : [1., 0.1] for well in self.wellnames}
-#            dict with binary var describing whether or not wells are producing in initial setting
+                w_relative_change = {well : [0.4] for well in self.wellnames}
+            
+            if(lock_wells):
+                #wells which are not allowed to change
+                assert(isinstance(lock_wells, (list)))
+                for w in lock_wells:
+                    w_relative_change[w] = [0, 0]
+                    
+            if(scen_const):
+                #provide "locked" scenario constant for certain wells
+                assert(isinstance(scen_const, (dict)))
+                for well, val in scen_const.items():
+                    self.s_draw[well] = val
+            
             if not init_name:
                 w_initial_prod = {well : 0 for well in self.wellnames}
                 w_initial_vars = {well : [0] for well in self.wellnames}
-            else:
-                w_initial_df,_,_ = t.get_robust_solution(init_name=init_name)
-                w_initial_vars = {w:[w_initial_df[w].values[0]] for w in self.wellnames}
+            elif not isinstance(init_name, (dict)):
+                #load init from file
+                w_initial_df = t.get_robust_solution(init_name=init_name)
+                w_initial_vars = {w:[w_initial_df[w+"_choke"].values[0]] for w in self.wellnames}
                 print(w_initial_vars)
-                w_initial_prod = {well : 1 if w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
+                
+                w_initial_prod = {well : 1. if w_initial_vars[well][0]>0 else 0. for well in self.wellnames}
                 print(w_initial_prod)
             #constraints for case 2
+            else:
+                #we were given a dict of initial values
+#                w_initial_vars=init_name
+                w_initial_vars={}
+                for w in self.wellnames:
+                    w_initial_vars[w] = [init_name[w+"_choke"]]
+#                    del w_initial_vars[w+"_choke"]
+                
+#                print("optimization initial chokes:", w_initial_vars)
+                w_initial_prod = {well : 1 if w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
             tot_exp_cap = 250000
             well_cap = 54166
         else:
@@ -153,7 +269,7 @@ class NN:
         # =============================================================================
         # variable creation                    
         # =============================================================================
-        inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.CONTINUOUS) #SEMICONT
+        inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.SEMICONT) #SEMICONT
         lambdas = self.m.addVars([(well,phase,sep, layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer])], vtype = GRB.BINARY, name="lambda")
         mus = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="mu")
         rhos = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho")
@@ -164,10 +280,6 @@ class NN:
         #new variables to control routing decision and input/output
         outputs_gas = self.m.addVars([(scenario, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios)], vtype = GRB.CONTINUOUS, name="outputs_gas")
         outputs_oil = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_oil")
-
-        #net outputs, linear
-        outs = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_lin")
-        outs_var = self.m.addVars([(well, phase, sep) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_lin_var")
 
         
         if(case==1):
@@ -299,14 +411,15 @@ class NN:
 #         change tracking and total changes
 #         =============================================================================
         self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
-        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
+                          (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
 
         # =============================================================================
         # Solver parameters
         # =============================================================================
 #        self.m.setParam(GRB.Param.NumericFocus, 2)
-#        self.m.setParam(GRB.Param.LogToConsole, 0)
+        self.m.setParam(GRB.Param.LogToConsole, verbose)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
 #        self.m.setParam(GRB.Param.Presolve, 0)
 #        self.m.Params.timeLimit = 360.0
@@ -317,30 +430,36 @@ class NN:
         # temporary constraints to generate initial scenarios        
         # =============================================================================
 #        self.m.addConstr(quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= 90.0)
-#        self.m.addConstr(outputs_oil["W3", "HP"] ==0)
-        
+        self.m.addConstr(outputs_oil["W3", "HP"] ==0)
+        self.m.addConstr(outputs_oil["W1", "HP"] ==0)
+
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.setObjective( quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         
         
 
         self.m.optimize()
-        print(exp_constr[0].slack)
-        if(save and case==2):
-            df = pd.DataFrame(columns=t.robust_res_columns) 
-            chokes = [inputs[well, "HP", 0].x if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        df = pd.DataFrame(columns=t.robust_res_columns) 
+        chokes = [inputs[well, "HP", 0].x if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        if(case==2 and save):
             gas_mean = np.zeros(len(self.wellnames))
+            gas_var=[]
             w = 0
             for well in self.wellnames:
                 for scenario in range(self.scenarios):
                     gas_mean[w] += outputs_gas[scenario, well, "HP"].x
+                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0])
+
                 w += 1
             gas_mean = (gas_mean/float(self.scenarios)).tolist()
             oil_mean = [outputs_oil[well, "HP"].x for well in self.wellnames]
+#            oil_var = [outputs_]
             tot_oil = sum(oil_mean)
             tot_gas = sum(gas_mean)
-            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean
-
+            change = [abs(changes[w, "HP", 0].x) for w in self.wellnames]
+#            print(df.columns)
+            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+gas_var+change
+#            print(len(rowlist))
             if(store_init):
                 df.rename(columns={"scenarios": "name"}, inplace=True)
                 rowlist[0] = init_name
@@ -354,6 +473,18 @@ class NN:
                 head = not os.path.isfile(self.results_file)
                 with open(self.results_file, 'a') as f:
                     df.to_csv(f, sep=';', index=False, header=head)
+        elif recourse_iter:
+            oil_mean = [outputs_oil[well, "HP"].x for well in self.wellnames]
+            gas_mean = []
+            gas_var = []
+            for well in self.wellnames:
+                gas_mean.append(sum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron].x for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0] if outputs_gas[0, well, "HP"].x>0 else 0)
+                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0] if outputs_gas[0, well, "HP"].x>0 else 0)
+            tot_oil = sum(oil_mean)
+            tot_gas = sum(gas_mean)+sum([gas_var[w]*self.s_draw.loc[s][self.wellnames[w]] for w in range(len(self.wellnames)) for s in range(self.scenarios)])/self.scenarios
+            change = [abs(changes[w, "HP", 0].x) for w in self.wellnames]
+            rowlist = [tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+gas_var+change
+        return rowlist
 
         
         
