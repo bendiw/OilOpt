@@ -28,7 +28,9 @@ well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
-robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
 phasenames = ["oil", "gas"]
@@ -278,7 +280,6 @@ def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=
         
 def load_scenario(case, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
     filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
-    print(filename)
     df = pd.read_csv(filename, sep=';')
     return df
 
@@ -295,6 +296,11 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     if(init_name):
         df = pd.read_csv("results/initial/res_initial.csv", sep=";")
         df = df.loc[df["name"]==init_name]
+        df.drop(["name"], axis=1, inplace=True)
+        df = pd.DataFrame(np.concatenate((df.values,np.zeros((1,7))), axis=1), columns=robust_res_columns_recourse)
+#        df2 = pd.DataFrame(np.zeros((1,14)), columns=[w+"_gas_var" for w in wellnames_2]+[w+"_changed" for w in wellnames_2])
+#        df = pd.concat([df, df2], axis=1)
+        return df
     else:
         df = pd.read_csv("results/robust/res.csv", sep=";")
         df = df.loc[df["scenarios"]==num_scen]
