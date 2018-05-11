@@ -57,7 +57,7 @@ def build_model(neurons, dim, lr, regu=0.0):
 # main function
 # =============================================================================
 def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=False, num_std=4, regu=0.0):
+        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     for w in well:
@@ -66,21 +66,36 @@ def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size
         std = df[str(w)+"_"+goal+"_var"]
         X = np.array([[i] for i in range(len(mean))])
         y = np.zeros(len(mean))
-        for i in range(len(mean)):
-            y[i] = np.max([ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0])
+        m = np.zeros(len(mean))
+        if x_ is not None:
+            for i in range(len(X)):
+                m[i] = mean[i]
+            y[x_] = y_
+            for i in range(x_+1,len(X)):
+                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+            for i in range(x_-1,-1,-1):
+                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+        else:
+            for i in range(len(mean)):
+                y[i] = np.max([ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0])
         model.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
         if plot or save:
             prediction = [x[0] for x in model.predict(X)]
             fig = pyplot.figure()
             ax = fig.add_subplot(111)
-            line1 = ax.plot(X, y, linestyle='None', marker = '.',markersize=5)
+            line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=5)
+            line3 = ax.plot(X, m, color="black", linewidth=.5)
             line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
             pyplot.xlabel('choke')
             pyplot.ylabel(goal)
+            pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
+                               alpha=0.2, facecolor='#089FFF', linewidth=1)
+            pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
+                               alpha=0.2, facecolor='#089FFF', linewidth=1)     
             if save:
-                filepath = "scenarios\\nn\\"+str(w)+"_"+goal+"_(2-"+str(neurons)+","+str(epochs)+","+str(lr)+")"+".png"
+                filepath = "scenarios\\nn\\startpoint\\"+w+"_"+str(iteration)+".png"
                 pyplot.savefig(filepath, bbox_inches="tight")
-                tools.save_variables(w+"_(2-"+str(neurons)+","+str(epochs)+","+str(lr)+")", goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\")
+                tools.save_variables(w+"_"+str(iteration), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\startpoint\\")
             if plot:
                 pyplot.show()
 
