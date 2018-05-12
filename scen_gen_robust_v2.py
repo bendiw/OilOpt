@@ -103,7 +103,6 @@ class NN:
 #        print("oil contrib:", current_contrib_oil)
 #        print("gas contrib:", current_contrib_gas)
 
-        #run first optimization
         change_well = None
         chokenames = [w+"_choke" for w in t.wellnames_2]
         init_choke = results.loc[0][chokenames].to_dict()
@@ -112,13 +111,17 @@ class NN:
         for i in range(max_changes, 0, -1):
             iter_num = max_changes+1-i
             if(change_well and not infeasible):
+                #keep track of choke settings
                 init_choke[change_well+"_choke"] = results.loc[iter_num-1][change_well+"_choke"]
 
+            #optimize
             res = self.init(num_scen=num_scen, save=False, init_name=init_choke, max_changes=i, recourse_iter=True, 
                             scen_const=scen_const, verbose=0)
             results.loc[iter_num] = res
             z = np.zeros((1,implemented.shape[1]))
             implemented.loc[iter_num] = z[0]
+            
+            #greedily implement 1 change from solution
             for w in t.well_order:
                 if(results.loc[iter_num][w+"_changed"]>0 and results.loc[iter_num][w+"_choke"]-init_choke[w+"_choke"]>0.01): # and results.loc[iter_num]
                     if(w not in lock_wells):
@@ -430,8 +433,8 @@ class NN:
         # temporary constraints to generate initial scenarios        
         # =============================================================================
 #        self.m.addConstr(quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= 90.0)
-        self.m.addConstr(outputs_oil["W3", "HP"] ==0)
-        self.m.addConstr(outputs_oil["W1", "HP"] ==0)
+#        self.m.addConstr(outputs_oil["W3", "HP"] ==0)
+#        self.m.addConstr(outputs_oil["W1", "HP"] ==0)
 
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.setObjective( quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
@@ -441,6 +444,7 @@ class NN:
         self.m.optimize()
         df = pd.DataFrame(columns=t.robust_res_columns) 
         chokes = [inputs[well, "HP", 0].x if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        rowlist=[]
         if(case==2 and save):
             gas_mean = np.zeros(len(self.wellnames))
             gas_var=[]
