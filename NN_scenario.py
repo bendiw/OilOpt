@@ -88,6 +88,9 @@ def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size
             fig = pyplot.figure()
             ax = fig.add_subplot(111)
             line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=5)
+            if(x_ is not None):
+                line1 = ax.plot([x_], [y_],color="red",linestyle="None", marker=".", markersize=7)
+
             line3 = ax.plot(X, m, color="black", linewidth=.5)
             if(train):
                 line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
