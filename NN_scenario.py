@@ -57,35 +57,53 @@ def build_model(neurons, dim, lr, regu=0.0):
 # main function
 # =============================================================================
 def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0):
+        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0, train=False, points=None):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
+    assert(100%points == 0)
     for w in well:
-        model = build_model(neurons, dim, lr, regu=regu)
         mean = df[str(w)+"_"+goal+"_mean"]
         std = df[str(w)+"_"+goal+"_var"]
-        X = np.array([[i] for i in range(len(mean))])
+        if(points):
+            factor = 100/points
+            mean = np.array([mean[i*factor] for i in range(points+1)])
+            std = np.array([std[i*factor] for i in range(points+1)])
+        else:
+            factor = 1
+        X = np.array([[i*factor] for i in range(len(mean))])
         y = np.zeros(len(mean))
         m = np.zeros(len(mean))
-        if x_ is not None:
-            for i in range(len(X)):
-                m[i] = mean[i]
-            y[x_] = y_
-            for i in range(x_+1,len(X)):
-                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-            for i in range(x_-1,-1,-1):
-                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+        if x_ is None:
+            x_ = 0
+            y[0] = max(0, ss.truncnorm.rvs(-num_std, num_std, scale=std[x_], loc=mean[x_], size=(1)))
         else:
-            for i in range(len(mean)):
-                y[i] = np.max([ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0])
-        model.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
-        if plot or save:
+            if points:
+                assert(x_%factor==0)
+                x_ = int(x_/factor)
+            y[x_] = y_
+        for i in range(len(X)):
+            m[i] = mean[i]
+        for i in range(x_+1,len(X)):
+#                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+            y[i] = max(0, (mean[i]+((y[i-1]-mean[i-1])/std[i-1])*std[i])*(1-weight) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+
+        for i in range(x_-1,-1,-1):
+#                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+            y[i] = max(0, (mean[i]+((y[i+1]-mean[i+1])/std[i+1])*std[i])*(1-weight) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+
+        if train:                
+            model = build_model(neurons, dim, lr, regu=regu)
+            model.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
             prediction = [x[0] for x in model.predict(X)]
+        if plot or save:
             fig = pyplot.figure()
             ax = fig.add_subplot(111)
-            line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=5)
+#            line1 = ax.plot(X, y,color="green", linestyle='dashed')
+            line1 = ax.plot(X, y,color="green", linestyle='None', markersize=5, marker=".")
+
             line3 = ax.plot(X, m, color="black", linewidth=.5)
-            line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
+            if train:
+                line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
             pyplot.xlabel('choke')
             pyplot.ylabel(goal)
             pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
