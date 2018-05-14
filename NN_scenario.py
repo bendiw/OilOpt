@@ -56,13 +56,18 @@ def build_model(neurons, dim, lr, regu=0.0):
 # =============================================================================
 # main function
 # =============================================================================
-def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0, train=False):
+def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
+        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0, points=None, train=False):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
         std = df[str(w)+"_"+goal+"_var"]
+        if(points):
+            assert(100%points==0)
+            factor = int(100/points)
+            mean = np.array([mean[i*factor] for i in range(points)])
+            std = np.array([std[i*factor] for i in range(points)])
         X = np.array([[i] for i in range(len(mean))])
         y = np.zeros(len(mean))
         m = np.zeros(len(mean))
@@ -87,13 +92,14 @@ def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size
         if plot or save:
             fig = pyplot.figure()
             ax = fig.add_subplot(111)
-            line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=5)
+            line1 = ax.plot(X, y,color="green",linestyle="dashed", linewidth=1)
             if(x_ is not None):
                 line1 = ax.plot([x_], [y_],color="red",linestyle="None", marker=".", markersize=7)
 
-            line3 = ax.plot(X, m, color="black", linewidth=.5)
+            line3 = ax.plot(X, m, color="black", linewidth=0.7)
             if(train):
-                line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
+                line2 = ax.plot(X, prediction, color='red',linestyle='dashed', linewidth=1)
+            pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
             pyplot.xlabel('choke')
             pyplot.ylabel(goal)
             pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
