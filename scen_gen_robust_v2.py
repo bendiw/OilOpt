@@ -293,10 +293,10 @@ class NN:
                 #load init from file
                 w_initial_df = t.get_robust_solution(init_name=init_name)
                 w_initial_vars = {w:[w_initial_df[w+"_choke"].values[0]] for w in self.wellnames}
-                print(w_initial_vars)
+#                print(w_initial_vars)
                 
                 w_initial_prod = {well : 1. if w_initial_vars[well][0]>0 else 0. for well in self.wellnames}
-                print(w_initial_prod)
+#                print(w_initial_prod)
             #constraints for case 2
             else:
                 #we were given a dict of initial values
@@ -496,7 +496,8 @@ class NN:
         # =============================================================================
 #         change tracking and total changes
 #         =============================================================================
-        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] + 
+                          (w_initial_vars[well][dim]*(1-quicksum(routes[well, separ] for separ in self.well_to_sep[well]))*(1-w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         
         self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
                           (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))

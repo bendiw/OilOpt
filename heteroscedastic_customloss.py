@@ -22,27 +22,18 @@ import pandas as pd
 # builds a neural net
 # will probably want to expand to let call determine architecture
 # =============================================================================
-def build_model(neurons, dim, regu, dropout, lr):
+def build_model(neurons, dim, regu, dropout, lr, layers):
     model_1= Sequential()
-
-    model_1.add(Dense(neurons, input_shape=(dim,),
-                      kernel_initializer=initializers.VarianceScaling(),
-                      kernel_regularizer=regularizers.l2(regu), 
-                      bias_initializer=initializers.Constant(value=0.1),
-                      bias_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
-#    model_1.add(LeakyReLU(alpha=0.3))
-    model_1.add(Dropout(dropout))
-#    
-
-    model_1.add(Dense(neurons, 
-                      kernel_initializer=initializers.VarianceScaling(),
-                      kernel_regularizer=regularizers.l2(regu), 
-                      bias_initializer=initializers.Constant(value=0.1),
-                      bias_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
-#    model_1.add(LeakyReLU(alpha=0.3))
-    model_1.add(Dropout(dropout))
+    
+    for l in range(layers):
+        model_1.add(Dense(neurons, input_shape=(dim,),
+                          kernel_initializer=initializers.VarianceScaling(),
+                          kernel_regularizer=regularizers.l2(regu), 
+                          bias_initializer=initializers.Constant(value=0.1),
+                          bias_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+    #    model_1.add(LeakyReLU(alpha=0.3))
+        model_1.add(Dropout(dropout))
 
     model_1.add(Dense(2,
                       kernel_initializer=initializers.VarianceScaling(),
@@ -70,7 +61,7 @@ def mse_loss(y_true, y_pred):
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
-        goal="oil", save_variance = False, save_weights = False):
+        goal="oil", save_variance = False, save_weights = False, layers=2):
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
@@ -90,7 +81,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         dim=2
     X_test = gen_x_test(X, dim, sampling_density)
     y = np.array([[i[0], 0] for i in y])
-    model = build_model(neurons, dim, regu, dropout, lr)
+    model = build_model(neurons, dim, regu, dropout, lr, layers)
 
 
     #setup plots
