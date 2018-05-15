@@ -222,10 +222,10 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
         
-        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
-                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
-        self.scenarios = len(self.s_draw)
-        self.results_file = "results/robust/res.csv"
+#        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
+#                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
+        self.scenarios = num_scen
+        self.results_file = "results/robust/res_sos2.csv"
         
         #alternative results file for storing init solutions
         self.results_file_init = "results/initial/res_initial.csv"
@@ -284,6 +284,8 @@ class NN:
         #load SOS2 breakpoints
         self.oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
         self.gas_vals = t.get_sos2_scenarios("gas", self.scenarios)
+        if(self.scenarios=="eev"):
+            self.scenarios=1
         self.choke_vals = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
 #        print(self.oil_vals)
         #workaround to multidims
@@ -387,9 +389,10 @@ class NN:
         # =============================================================================
 #         change tracking and total changes
 #         =============================================================================
-        self.m.addConstrs(w_initial_vars[well][dim] - quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] + 
+                          (w_initial_vars[well][dim]*(1-quicksum(routes[well, separ] for separ in self.well_to_sep[well]))*(1-w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
-        self.m.addConstrs(quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
+        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
                           (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)) <= max_changes)
