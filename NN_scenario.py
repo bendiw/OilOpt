@@ -19,142 +19,160 @@ import scipy.stats as ss
 # =============================================================================
     
 
-def build_model(neurons, dim, lr, regu=0.0):
-    model_1= Sequential()
-    model_1.add(Dense(neurons, input_shape=(dim,),
-                      kernel_initializer=initializers.VarianceScaling(),
-                      bias_initializer=initializers.Constant(value=0.1),
-                      kernel_regularizer=regularizers.l2(regu),
-                      bias_regularizer=regularizers.l2(regu)))
-    model_1.add(Activation("relu"))
-#    model_1.add(Dense(neurons,
-#                      kernel_initializer=initializers.VarianceScaling(),
-#                      bias_initializer=initializers.Constant(value=0.1),
-#                      kernel_regularizer=regularizers.l2(regu),
-#                      bias_regularizer=regularizers.l2(regu)))
-#    model_1.add(Activation("relu"))
-#    model_1.add(Dense(neurons,
-#                      kernel_initializer=initializers.VarianceScaling(),
-#                      bias_initializer=initializers.Constant(value=0.1),
-#                      kernel_regularizer=regularizers.l2(regu),
-#                      bias_regularizer=regularizers.l2(regu)))
-#    model_1.add(Activation("relu"))
-#    model_1.add(Dense(neurons*2,
-#                      kernel_initializer=initializers.VarianceScaling(),
-#                      bias_initializer=initializers.Constant(value=0.1),
-#                      kernel_regularizer=regularizers.l2(regu),
-#                      bias_regularizer=regularizers.l2(regu)))
-#    model_1.add(Activation("relu"))
+def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
+    if maxout:
+        a = Input((dim,))
+        b = Dense(int(neurons/2))(a)
+        c = Dense(int(neurons/2))(a)
+        d = MaxoutDense(output_dim=1)(b)
+        e = MaxoutDense(output_dim=1)(c)
+        f = Subtract()([d,e])
+        model_1 = Model(a, f)
 
-    model_1.add(Dense(1,
-                      kernel_initializer=initializers.VarianceScaling(),
-                      bias_initializer=initializers.Constant(value=0.1)))
-    model_1.add(Activation("linear"))
+    else:        
+        #compile model
+        model_1= Sequential()
+        model_1.add(Dense(neurons, input_shape=(dim,),
+                          kernel_initializer=initializers.VarianceScaling(),
+                          bias_initializer=initializers.Constant(value=0.1),
+                          kernel_regularizer=regularizers.l2(regu),
+                          bias_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+        model_1.add(Dense(neurons,
+                          kernel_initializer=initializers.VarianceScaling(),
+                          bias_initializer=initializers.Constant(value=0.1),
+                          kernel_regularizer=regularizers.l2(regu),
+                          bias_regularizer=regularizers.l2(regu)))
+        model_1.add(Activation("relu"))
+    #    model_1.add(Dense(neurons,
+    #                      kernel_initializer=initializers.VarianceScaling(),
+    #                      bias_initializer=initializers.Constant(value=0.1),
+    #                      kernel_regularizer=regularizers.l2(regu),
+    #                      bias_regularizer=regularizers.l2(regu)))
+    #    model_1.add(Activation("relu"))
+    #    model_1.add(Dense(neurons*2,
+    #                      kernel_initializer=initializers.VarianceScaling(),
+    #                      bias_initializer=initializers.Constant(value=0.1),
+    #                      kernel_regularizer=regularizers.l2(regu),
+    #                      bias_regularizer=regularizers.l2(regu)))
+    #    model_1.add(Activation("relu"))
+    
+        model_1.add(Dense(1,
+                          kernel_initializer=initializers.VarianceScaling(),
+                          bias_initializer=initializers.Constant(value=0.1)))
+        model_1.add(Activation("linear"))
+
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
 
 # =============================================================================
 # main function
 # =============================================================================
-<<<<<<< HEAD
-def train_scen(well, goal='oil', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0, train=False, points=None):
-=======
-def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005, batch_size=50,
-        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None, weight=0.1, iteration=0, points=None, train=False):
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
+def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
+        epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None,
+        weight=0.4, iteration=0, points=None, train=False, maxout=False,
+        gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
-    assert(100%points == 0)
+    batch_size=50
+    ax=None
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
         std = df[str(w)+"_"+goal+"_var"]
         if(points):
-<<<<<<< HEAD
-            factor = 100/points
-            mean = np.array([mean[i*factor] for i in range(points+1)])
-            std = np.array([std[i*factor] for i in range(points+1)])
-        else:
-            factor = 1
-        X = np.array([[i*factor] for i in range(len(mean))])
-        y = np.zeros(len(mean))
-        m = np.zeros(len(mean))
-        if x_ is None:
-            x_ = 0
-            y[0] = max(0, ss.truncnorm.rvs(-num_std, num_std, scale=std[x_], loc=mean[x_], size=(1)))
-        else:
-            if points:
-                assert(x_%factor==0)
-                x_ = int(x_/factor)
-=======
             assert(100%points==0)
             factor = int(100/points)
-            mean = np.array([mean[i*factor] for i in range(points)])
-            std = np.array([std[i*factor] for i in range(points)])
-        X = np.array([[i] for i in range(len(mean))])
-        y = np.zeros(len(mean))
-        m = np.zeros(len(mean))
-        if(x_ is None):
-            x_= 0
-            y[0] = ss.truncnorm.rvs(-num_std, num_std, scale=std[0], loc=mean[0], size=(1))
-        else:
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
-            y[x_] = y_
-        for i in range(len(X)):
-            m[i] = mean[i]
-        for i in range(x_+1,len(X)):
-#                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-<<<<<<< HEAD
-            y[i] = max(0, (mean[i]+((y[i-1]-mean[i-1])/std[i-1])*std[i])*(1-weight) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+            mean = np.array([mean[i*factor] for i in range(points+1)])
+            std = np.array([std[i*factor] for i in range(points+1)])
+            X = np.array([[i*factor] for i in range(points+1)])
+            y = np.zeros(len(X))
+            m = np.zeros(len(X))
 
-        for i in range(x_-1,-1,-1):
-#                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-            y[i] = max(0, (mean[i]+((y[i+1]-mean[i+1])/std[i+1])*std[i])*(1-weight) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-
-        if train:                
-=======
-            y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-        for i in range(x_-1,-1,-1):
-#                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-            y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-
-        if(train):
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
-            model = build_model(neurons, dim, lr, regu=regu)
-            model.fit(X,y,batch_size=batch_size,epochs=epochs,verbose=0)
-            prediction = [x[0] for x in model.predict(X)]
-        if plot or save:
-            fig = pyplot.figure()
-            ax = fig.add_subplot(111)
-<<<<<<< HEAD
-#            line1 = ax.plot(X, y,color="green", linestyle='dashed')
-            line1 = ax.plot(X, y,color="green", linestyle='None', markersize=5, marker=".")
-
-            line3 = ax.plot(X, m, color="black", linewidth=.5)
-            if train:
-                line2 = ax.plot(X, prediction, color='green',linestyle='dashed', linewidth=1)
-=======
-            line1 = ax.plot(X, y,color="green",linestyle="dashed", linewidth=1)
-            if(x_ is not None):
-                line1 = ax.plot([x_], [y_],color="red",linestyle="None", marker=".", markersize=7)
-
-            line3 = ax.plot(X, m, color="black", linewidth=0.7)
+        for scen in range(scen_start, scen_start+num_scen):
+            if (goal=="gas" and train):
+                mean=mean/gas_factor
+                std=std/gas_factor
+            if(x_ is None or x_==0):
+                x_= 0
+                print(scen,mean[0],std[0])
+                y[0] = max(0,ss.truncnorm.rvs(-num_std, num_std, scale=std[0], loc=mean[0], size=(1)))
+            else:
+                y[x_] = y_
+            for i in range(len(X)):
+                m[i] = mean[i]
+            for i in range(x_+1,len(X)):
+    #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+            for i in range(x_-1,-1,-1):
+    #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+    
             if(train):
-                line2 = ax.plot(X, prediction, color='red',linestyle='dashed', linewidth=1)
-            pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
-            pyplot.xlabel('choke')
-            pyplot.ylabel(goal)
-            pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
-                               alpha=0.2, facecolor='#089FFF', linewidth=1)
-            pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
-                               alpha=0.2, facecolor='#089FFF', linewidth=1)     
-            if save:
-                filepath = "scenarios\\nn\\startpoint\\"+w+"_"+str(iteration)+".png"
-                pyplot.savefig(filepath, bbox_inches="tight")
-                tools.save_variables(w+"_"+str(iteration), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\startpoint\\")
-            if plot:
-                pyplot.show()
+                model = build_model(neurons, dim, lr, regu=regu)
+                for i in range(100):
+                    model.fit(X,y,batch_size=batch_size,epochs=int(epochs/100),verbose=0)
+                    prediction = [x[0] for x in model.predict(X)]
+                    ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
+                    
+
+            else:
+                prediction = None
+            if plot or save:
+                if goal=="gas" and train:
+                    model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
+                    prediction = [x[0] for x in model.predict(X)]
+                    m = m*gas_factor
+                    y = y*gas_factor
+                    std = std*gas_factor
+                    mean = mean*gas_factor
+                plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train)
+                if save:
+                    filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
+                    pyplot.savefig(filepath, bbox_inches="tight")
+                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+                if plot:
+                    pyplot.show()
+            if (save_sos):
+                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\")
+
+def plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, prev=None):
+    if prev is None:
+        fig = pyplot.figure()
+        ax = fig.add_subplot(111)
+        line1 = ax.plot(X, y,color="green",linestyle="dashed", linewidth=1)
+        if(x_ is not None):
+            line1 = ax.plot([x_], [y_],color="red",linestyle="None", marker=".", markersize=7)
+    
+        line3 = ax.plot(X, m, color="black", linewidth=0.7)
+        if(train):
+            line2 = ax.plot(X, prediction, color='red',linestyle='dashed', linewidth=1)
+        else:
+            line2=None
+        pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
+        pyplot.xlabel('choke')
+        pyplot.ylabel(goal)
+        pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
+                           alpha=0.2, facecolor='#089FFF', linewidth=1)
+        pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
+                           alpha=0.2, facecolor='#089FFF', linewidth=1)
+    else:
+        ax, line1, line2, line3 = prev[0],prev[1],prev[2],prev[3]
+        line1[0].set_ydata(y)
+        if(x_ is not None):
+            line1[0].set_ydata([y_])
+        line3[0].set_ydata(m)
+        if(train):
+            line2[0].set_ydata(prediction)
+        ax.collections.clear()
+        pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
+        pyplot.xlabel('choke')
+        pyplot.ylabel(goal)
+        pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
+                           alpha=0.2, facecolor='#089FFF', linewidth=1)
+        pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
+                           alpha=0.2, facecolor='#089FFF', linewidth=1)
+    pyplot.pause(0.001)
+    return [ax, line1, line2, line3]
 
 
 def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2, num_std=4):
@@ -162,6 +180,22 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
+def save_sos2(x,y,phase, well, scen, folder):
+    filename = folder + "sos2_" +phase+".csv"
+#    well+'_'+phase+"_std":var, 
+#    x = [z[0] for z in x]
+    d = {well+"_"+phase+"_"+str(scen): y}
+    try:
+        df = pd.read_csv(filename, sep=';', index_col=0)
+#        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
+        for k, v in d.items():
+            df[k] = v
+    except Exception as e:
+        print(e)
+        df = pd.DataFrame(data=d)
+        print(df.columns)
+    with open(filename, 'w') as f:
+        df.to_csv(f,sep=";")
             
     
 #    model = retrieve_model(dims, w, b)

@@ -118,12 +118,8 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
-<<<<<<< HEAD
 def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
-           verbose=2, nan_ratio=0.0, goal='oil', mode="grid"):
-=======
-def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0, goal='oil', epochs=1000):
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
+           verbose=2, nan_ratio=0.0, goal='gas', mode="grid", epochs=1000):
     if(well):
         X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
 
@@ -146,7 +142,6 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     dim = len(X[0])
     N = float(len(X))
 
-<<<<<<< HEAD
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
     
     if(mode=="grid"):
@@ -155,10 +150,6 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     else:
         parameters = t.param_dict_rand
         gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True)
-=======
-    model = NeuralRegressor(build_fn=create_model, epochs = epochs, batch_size=20, verbose=0)
-    gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
 
     gs.fit(X, y)
     grid_result = gs.cv_results_

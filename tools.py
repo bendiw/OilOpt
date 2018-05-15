@@ -35,19 +35,12 @@ robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
 phasenames = ["oil", "gas"]
-<<<<<<< HEAD
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
 param_dict_rand = {'dropout':uniform(0.05, 0.4),
                   'regu':uniform(1e-6, 1e-1),
                   'layers':randint(1,3),
                   'neurons':randint(5,40)}
 
-=======
-param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 
-                         'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2], 
-                         'layers':[1,2], 'neurons':[20,40]}
- 
->>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
 
 #param_dict = {'dropout':[x for x in np.arange(0.1, 0.2, 0.1)], 'tau':[x for x in np.arange(1e-5, 2e-5, 1e-5)], 'length_scale':[x for x in np.arange(0.01, 0.02, 0.01)]}
