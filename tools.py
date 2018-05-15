@@ -30,6 +30,7 @@ wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_SOS2 = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
@@ -89,8 +90,8 @@ def get_limits(target, wellnames, well_to_sep, case):
         for well in wellnames:
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
-                lower[well][sep] = max(0.0, dfw.min()) #do not allow negative choke values
-                upper[well][sep] = dfw.max()
+                lower[well][sep] = max(0.0, 0.5*dfw.min()) #do not allow negative choke values
+                upper[well][sep] = min(100.0, 1.2*dfw.max())
         return lower, upper
 
 def normalize(data):

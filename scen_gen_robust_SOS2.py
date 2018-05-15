@@ -282,11 +282,10 @@ class NN:
         self.m = Model("Model")
         
         #load SOS2 breakpoints
-        self.choke_vals, self.oil_vals = choke_vals, out_vals = t.get_sos2_scenarios("gas", self.scenarios)
-
-        _, self.gas_vals = choke_vals, out_vals = t.get_sos2_scenarios("gas", self.scenarios)
-
-        
+        self.oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
+        self.gas_vals = t.get_sos2_scenarios("gas", self.scenarios)
+        self.choke_vals = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
+#        print(self.oil_vals)
         #workaround to multidims
         self.multidims= {}
 
@@ -315,11 +314,11 @@ class NN:
         inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.SEMICONT) #SEMICONT
         
         #continuous breakpoint variables
-        zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals[well]))], vtype = GRB.CONTINUOUS, name="zetas")
+        zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals))], vtype = GRB.CONTINUOUS, name="zetas")
 
         #routing and change tracking        
         routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
-        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])], vtype=GRB.BINARY, name="changes")
+        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)], vtype=GRB.BINARY, name="changes")
 
         #new variables to control routing decision and input/output
         outputs_gas = self.m.addVars([(scenario, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios)], vtype = GRB.CONTINUOUS, name="outputs_gas")
@@ -327,11 +326,10 @@ class NN:
 
 
 
-
         # =============================================================================
         # Oil output SOS2
         # =============================================================================
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == quicksum( zetas[brk, well, sep]*self.oil_vals[well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == quicksum( zetas[brk, well, sep]*self.oil_vals[well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
 
         # =============================================================================
@@ -341,14 +339,20 @@ class NN:
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_gas[scenario, well, sep] == 0) for scenario in range(self.scenarios) for well in self.wellnames for sep in self.well_to_sep[well] ) 
 
         # =============================================================================
+        # input limit constraints
+        # =============================================================================
+        self.m.addConstrs( inputs[well, sep, 0] == quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
+
+        # =============================================================================
         # SOS2 constraints 
         # =============================================================================
         #no way to do in one-liner
         for well in self.wellnames:
             for sep in self.well_to_sep[well]:
-                self.m.addSOS(2, [zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))])
+                self.m.addSOS(2, [zetas[brk, well, sep] for brk in range(len(self.choke_vals))])
         #tighten sos constraints
-        self.m.addConstrs( routes[well, sep] == quicksum( zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+        self.m.addConstrs( routes[well, sep] == quicksum( zetas[brk, well, sep] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
 
         
         # =============================================================================
@@ -383,10 +387,10 @@ class NN:
         # =============================================================================
 #         change tracking and total changes
 #         =============================================================================
-        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(w_initial_vars[well][dim] - quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
-        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
-                          (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
+                          (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)) <= max_changes)
 
@@ -415,12 +419,12 @@ class NN:
 
         self.m.optimize()
         
-        df = pd.DataFrame(columns=t.robust_res_columns) 
-        chokes = [inputs[well, "HP", 0].x if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
+        chokes = [sum(zetas[brk, well, "HP"].x*self.choke_vals[brk] for brk in range(len(self.choke_vals)))  if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
         rowlist=[]
         if(case==2 and save):
             gas_mean = np.zeros(len(self.wellnames))
-            gas_var=[]
+#            gas_var=[]
             w = 0
             for well in self.wellnames:
                 for scenario in range(self.scenarios):
@@ -434,7 +438,7 @@ class NN:
             tot_gas = sum(gas_mean)
             change = [abs(changes[w, "HP", 0].x) for w in self.wellnames]
 #            print(df.columns)
-            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+gas_var+change
+            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
 #            print(len(rowlist))
             if(store_init):
                 df.rename(columns={"scenarios": "name"}, inplace=True)
