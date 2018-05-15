@@ -6,7 +6,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras import optimizers
 from keras import backend as K
-from heteroscedastic_customloss import sced_loss
 
 # =============================================================================
 # Case 1
@@ -456,3 +455,14 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2.add(Dense(1, weights = [np.array([[factor]]), np.array([0.0])], trainable=False))
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
+
+def get_sos2_scenarios(phase):
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+    scenarios=(len(df.keys())-2)/7
+    dbs = {}
+    for i in range(int(scenarios)):
+        dbw ={}
+        for well in wellnames_2:
+            dbw[well] = df[well+"_"+phase+"_"+str(i)]
+        dbs[i]=dbw
+    return dbs
