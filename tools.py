@@ -460,9 +460,13 @@ def get_sos2_scenarios(phase):
     df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
     scenarios=(len(df.keys())-2)/7
     dbs = {}
-    for i in range(int(scenarios)):
-        dbw ={}
+    if phase=="gas":
+        for i in range(int(scenarios)):
+            dbw ={}
+            for well in wellnames_2:
+                dbw[well] = df[well+"_"+phase+"_"+str(i)]
+            dbs[i]=dbw
+    elif phase=="oil":
         for well in wellnames_2:
-            dbw[well] = df[well+"_"+phase+"_"+str(i)]
-        dbs[i]=dbw
+            dbs[well] = df[well+"_"+phase+"_"+str(0)]
     return dbs
