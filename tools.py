@@ -6,6 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from keras import optimizers
 from keras import backend as K
+from heteroscedastic_customloss import sced_loss
 
 # =============================================================================
 # Case 1
@@ -320,8 +321,8 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
 # =============================================================================
-def retrieve_model(well, goal="oil", lr=0.001, case=2):
-    dims, w, b = load_2(well,goal,case=case)
+def retrieve_model(well, goal="oil", lr=0.001, case=2, mode="mean"):
+    dims, w, b = load_2(well,goal,case=case, mode=mode)
     model_1= Sequential()
     for i in range(1,len(dims)):
         new_w = [np.array(w[i-1]), np.array(b[i-1])]
@@ -333,6 +334,20 @@ def retrieve_model(well, goal="oil", lr=0.001, case=2):
             model_1.add(Activation("relu"))
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
+
+#def retrieve_model(dims, w, b, lr=0.001):
+#    model_1= Sequential()
+#    for i in range(1,len(dims)):
+#        new_w = [np.array(w[i-1]), np.array(b[i-1])]
+#        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
+#                          weights = new_w))
+#        if (i == len(dims)-1):
+#            model_1.add(Activation("linear"))
+#        else:
+#            model_1.add(Activation("relu"))
+#            model_1.add(Dropout(0.05))
+#    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
+#    return model_1
 
 def build_and_plot_well(well, goal="oil", case=2):
     model = retrieve_model(well,goal=goal,lr=0.001,case=case)
@@ -377,19 +392,7 @@ def save_variance_func(X, var, mean, case, well, phase):
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";")
         
-def retrieve_model(dims, w, b, lr=0.001):
-    model_1= Sequential()
-    for i in range(1,len(dims)):
-        new_w = [np.array(w[i-1]), np.array(b[i-1])]
-        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
-                          weights = new_w))
-        if (i == len(dims)-1):
-            model_1.add(Activation("linear"))
-        else:
-            model_1.add(Activation("relu"))
-            model_1.add(Dropout(0.05))
-    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
-    return model_1
+    
         
 def sample_mean_std(model, X, n_iter, f):
     #gather results from forward pass
