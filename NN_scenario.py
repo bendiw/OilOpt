@@ -8,6 +8,7 @@ Created on Wed May  2 16:24:34 2018
 import pandas as pd
 from keras.layers import Input, Dense, Activation, LeakyReLU, PReLU, ELU, MaxoutDense, merge, Subtract, Dropout
 from keras.models import Model, Sequential
+from keras.callbacks import EarlyStopping
 from keras import losses, optimizers, backend, regularizers, initializers
 import numpy as np
 import tools
@@ -38,12 +39,13 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
                           kernel_regularizer=regularizers.l2(regu),
                           bias_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
-        model_1.add(Dense(neurons,
-                          kernel_initializer=initializers.VarianceScaling(),
-                          bias_initializer=initializers.Constant(value=0.1),
-                          kernel_regularizer=regularizers.l2(regu),
-                          bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
+
+#        model_1.add(Dense(neurons,
+#                          kernel_initializer=initializers.VarianceScaling(),
+#                          bias_initializer=initializers.Constant(value=0.1),
+#                          kernel_regularizer=regularizers.l2(regu),
+#                          bias_regularizer=regularizers.l2(regu)))
+#        model_1.add(Activation("relu"))
     #    model_1.add(Dense(neurons,
     #                      kernel_initializer=initializers.VarianceScaling(),
     #                      bias_initializer=initializers.Constant(value=0.1),
@@ -74,7 +76,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
-    batch_size=50
+    batch_size=7
     ax=None
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
@@ -84,9 +86,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             factor = int(100/points)
             mean = np.array([mean[i*factor] for i in range(points+1)])
             std = np.array([std[i*factor] for i in range(points+1)])
-            X = np.array([[i*factor] for i in range(points+1)])
-            y = np.zeros(len(X))
-            m = np.zeros(len(X))
+        X = np.array([[i*factor] for i in range(len(mean))])
+        y = np.zeros(len(X))
+        m = np.zeros(len(X))
 
         for scen in range(scen_start, scen_start+num_scen):
             if (goal=="gas" and train):
@@ -108,11 +110,13 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
     
             if(train):
+                early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
                 model = build_model(neurons, dim, lr, regu=regu)
-                for i in range(100):
-                    model.fit(X,y,batch_size=batch_size,epochs=int(epochs/100),verbose=0)
-                    prediction = [x[0] for x in model.predict(X)]
-                    ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
+#                for i in range(100):
+#                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
+                model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[early_stopping])
+                prediction = [x[0] for x in model.predict(X)]
+#                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
                     
 
             else:
