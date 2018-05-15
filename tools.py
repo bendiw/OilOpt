@@ -456,12 +456,15 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
 
-def get_sos2_scenarios(phase):
+def get_sos2_scenarios(phase, num_scen):
     df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
     scenarios=(len(df.keys())-2)/7
     dbs = {}
     if phase=="gas":
-        for i in range(int(scenarios)):
+        for i in range(int(num_scen)):
+            if (i>=scenarios):
+                print("Not enough generated scenarios")
+                break
             dbw ={}
             for well in wellnames_2:
                 dbw[well] = df[well+"_"+phase+"_"+str(i)]
