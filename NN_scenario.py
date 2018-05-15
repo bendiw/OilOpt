@@ -96,10 +96,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 std=std/gas_factor
             if(x_ is None or x_==0):
                 x_= 0
-                print(scen,mean[0],std[0])
-                y[0] = max(0,ss.truncnorm.rvs(-num_std, num_std, scale=std[0], loc=mean[0], size=(1)))
             else:
                 y[x_] = y_
+            y[0] = 0
             for i in range(len(X)):
                 m[i] = mean[i]
             for i in range(x_+1,len(X)):
@@ -108,7 +107,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             for i in range(x_-1,-1,-1):
     #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-    
             if(train):
                 early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
                 model = build_model(neurons, dim, lr, regu=regu)
