@@ -10,7 +10,14 @@ import numpy as np
 from matplotlib import pyplot
 
 
-def hey(well, phase="oil", mode="mean"):
+def hey(wells, phase="oil", mode="mean"):
+    filename = "variance_case"+str(case)+"_"+goal+".csv"
+    df = pd.read_csv(filename, sep=';', index_col=0)
+    for well in wells:
+        
+    
+    
+    
     model = tools.retrieve_model(well, goal=phase, mode=mode)
     print(model.layers)
     X=np.array([[i] for i in range(101)])    

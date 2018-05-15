@@ -445,7 +445,7 @@ def inverse_scale(model_1, dim, neurons, dropout, rs, lr, loss):
     model_2.compile(optimizer=optimizers.adam(lr=lr), loss = loss)
     return model_2
 
-def add_layer(model_1, neurons, loss):
+def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2= Sequential()
     model_2.add(Dense(neurons, input_shape=(1,), weights = [model_1.layers[0].get_weights()[0].reshape(1,neurons),
                       model_1.layers[0].get_weights()[1].reshape(-1,1).reshape(neurons,)]))
@@ -453,6 +453,6 @@ def add_layer(model_1, neurons, loss):
     model_2.add(Dense(1, weights = [model_1.layers[2].get_weights()[0].reshape(neurons,1),
                       model_1.layers[2].get_weights()[1].reshape(-1,1).reshape(1,)]))
     model_2.add(Activation("linear"))
-    model_2.add(Dense(1, weights = [np.array([[1000000.0]]), np.array([0.0])]))
+    model_2.add(Dense(1, weights = [np.array([[factor]]), np.array([0.0])], trainable=False))
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
