@@ -39,21 +39,13 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
                           kernel_regularizer=regularizers.l2(regu),
                           bias_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
-<<<<<<< HEAD
-        model_1.add(Dense(neurons,
-                          kernel_initializer=initializers.VarianceScaling(),
-                          bias_initializer=initializers.Constant(value=0.1),
-                          kernel_regularizer=regularizers.l2(regu),
-                          bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-=======
+
 #        model_1.add(Dense(neurons,
 #                          kernel_initializer=initializers.VarianceScaling(),
 #                          bias_initializer=initializers.Constant(value=0.1),
 #                          kernel_regularizer=regularizers.l2(regu),
 #                          bias_regularizer=regularizers.l2(regu)))
 #        model_1.add(Activation("relu"))
->>>>>>> master
     #    model_1.add(Dense(neurons,
     #                      kernel_initializer=initializers.VarianceScaling(),
     #                      bias_initializer=initializers.Constant(value=0.1),
@@ -84,11 +76,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
-<<<<<<< HEAD
-    batch_size=50
-=======
     batch_size=7
->>>>>>> master
     ax=None
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
@@ -98,15 +86,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             factor = int(100/points)
             mean = np.array([mean[i*factor] for i in range(points+1)])
             std = np.array([std[i*factor] for i in range(points+1)])
-<<<<<<< HEAD
-            X = np.array([[i*factor] for i in range(points+1)])
-            y = np.zeros(len(X))
-            m = np.zeros(len(X))
-=======
         X = np.array([[i*factor] for i in range(len(mean))])
         y = np.zeros(len(X))
         m = np.zeros(len(X))
->>>>>>> master
 
         for scen in range(scen_start, scen_start+num_scen):
             if (goal=="gas" and train):
@@ -128,13 +110,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
     
             if(train):
-<<<<<<< HEAD
-                model = build_model(neurons, dim, lr, regu=regu)
-                for i in range(100):
-                    model.fit(X,y,batch_size=batch_size,epochs=int(epochs/100),verbose=0)
-                    prediction = [x[0] for x in model.predict(X)]
-                    ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
-=======
                 early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
                 model = build_model(neurons, dim, lr, regu=regu)
 #                for i in range(100):
@@ -142,7 +117,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[early_stopping])
                 prediction = [x[0] for x in model.predict(X)]
 #                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
->>>>>>> master
                     
 
             else:
@@ -210,11 +184,6 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-<<<<<<< HEAD
-=======
-        
-
->>>>>>> master
 def save_sos2(x,y,phase, well, scen, folder):
     filename = folder + "sos2_" +phase+".csv"
 #    well+'_'+phase+"_std":var, 

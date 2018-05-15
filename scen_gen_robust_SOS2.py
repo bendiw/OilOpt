@@ -28,24 +28,6 @@ class NN:
 
     
     
-    # =============================================================================
-    # get breakpoints for scenario curves    
-    # =============================================================================
-    def getBreakpoints(self, case, points, scenarios, phase):
-        if(phase=="oil"):
-            choke_vals = {w:[] for w in self.wellnames}
-            out_vals = {w:[] for w in self.wellnames}
-            for well in self.wellnames:
-                #TODO: load values
-                pass
-        else:
-            choke_vals = {s : {w:[] for w in self.wellnames} for s in range(scenarios)}
-            out_vals = {s : {w:[] for w in self.wellnames} for s in range(scenarios)}
-            for s in range(scenarios):
-                for well in self.wellnames:
-                    #TODO: load values here
-                    pass
-        return choke_vals, out_vals
         
     # =============================================================================
     # Wrapper to evaluate EEV versus scenario based optimization    
@@ -300,8 +282,10 @@ class NN:
         self.m = Model("Model")
         
         #load SOS2 breakpoints
-        self.choke_vals, self.oil_vals = self.getBreakpoints(case=case, points=points, scenarios=self.scenarios, phase="oil")
-        _, self.gas_vals = self.getBreakpoints(case=case, points=points, scenarios=self.scenarios, phase="gas")
+        self.choke_vals, self.oil_vals = choke_vals, out_vals = t.get_sos2_scenarios("gas", self.scenarios)
+
+        _, self.gas_vals = choke_vals, out_vals = t.get_sos2_scenarios("gas", self.scenarios)
+
         
         #workaround to multidims
         self.multidims= {}
