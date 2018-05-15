@@ -232,7 +232,7 @@ class Evaluator:
         self.solution, self.indiv_cap, self.tot_cap = t.get_robust_solution(sol_scen)
         print(self.solution)
         multidims, weights = self.getNeuralNetsData(case=case)
-        multidims_var, weights_var = self.getNeuralNetsData(case=case, net_type="var")
+        multidims_var, weights_var = self.getNeuralNetsData(case=case, net_type="std")
         
 
         print("building models...")
