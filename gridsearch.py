@@ -5,7 +5,7 @@ Created on Sun Apr  8 12:00:28 2018
 @author: bendi
 """
 
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import tools as t
 import caseloader as cl
 from keras.wrappers.scikit_learn import KerasRegressor
@@ -124,7 +124,8 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
-def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0, goal='oil'):
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
+           verbose=2, nan_ratio=0.0, goal='oil', mode="grid"):
     if(well):
         X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
 
@@ -148,7 +149,13 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     N = float(len(X))
 
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
-    gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+    
+    if(mode=="grid"):
+        parameters = t.param_dict
+        gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+    else:
+        parameters = t.param_dict_rand
+        gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True)
 
     gs.fit(X, y)
     grid_result = gs.cv_results_
