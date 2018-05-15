@@ -119,7 +119,7 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
-           verbose=2, nan_ratio=0.0, goal='gas', mode="grid", n_iter=30, epochs=1000):
+           verbose=2, nan_ratio=0.0, goal='gas', mode="grid", n_iter=30, epochs=5000):
     if(well):
         X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
 
@@ -142,7 +142,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     dim = len(X[0])
     N = float(len(X))
 
-    model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
+    model = NeuralRegressor(build_fn=create_model, epochs = epochs, batch_size=20, verbose=0)
     
     if(mode=="grid"):
         parameters = t.param_dict
