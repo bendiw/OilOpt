@@ -67,7 +67,7 @@ def sced_loss(y_true, y_pred):
     return K.mean(0.5*multiply(K.exp(-y_pred[:,1]),K.square(y_pred[:,0]-y_true[:,0]))+0.5*y_pred[:,1], axis=0)
 
 def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll", 
-                 mode="relu", neurons = 25, learn_rate = 0.001, N=1000., variance="heterosced", regu=0.0001):
+                 mode="relu", neurons = 25, learn_rate = 0.001, N=1000., variance="heterosced", regu=0.0001, layers=2):
     #regularization parameter is calc based on hyperparameters
     if(variance!="homosced"):
         tau=1.
@@ -81,20 +81,14 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 #    print("tau:", tau, "\tlength_scale:", length_scale, "\tdropout:", dropout)
     if mode=="relu":
         model_1= Sequential()
-        model_1.add(Dense(neurons, input_shape=(dim,),
-                      kernel_initializer=initializers.VarianceScaling(),
-                      kernel_regularizer=regularizers.l2(regu), 
-                      bias_initializer=initializers.Constant(value=0.1),
-                      bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
-        model_1.add(Dense(neurons,
-                      kernel_initializer=initializers.VarianceScaling(),
-                      kernel_regularizer=regularizers.l2(regu), 
-                      bias_initializer=initializers.Constant(value=0.1),
-                      bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
-        model_1.add(Dropout(dropout))
+        for i in range(layers):
+            model_1.add(Dense(neurons, input_shape=(dim,),
+                          kernel_initializer=initializers.VarianceScaling(),
+                          kernel_regularizer=regularizers.l2(regu), 
+                          bias_initializer=initializers.Constant(value=0.1),
+                          bias_regularizer=regularizers.l2(regu)))
+            model_1.add(Activation("relu"))
+            model_1.add(Dropout(dropout))
         model_1.add(Dense(output_dim, kernel_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("linear"))
     
@@ -124,8 +118,12 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 
+<<<<<<< HEAD
 def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
            verbose=2, nan_ratio=0.0, goal='oil', mode="grid"):
+=======
+def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, verbose=2, nan_ratio=0.0, goal='oil', epochs=1000):
+>>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
     if(well):
         X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
 
@@ -148,6 +146,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     dim = len(X[0])
     N = float(len(X))
 
+<<<<<<< HEAD
     model = NeuralRegressor(build_fn=create_model, epochs = 500, batch_size=20, verbose=0)
     
     if(mode=="grid"):
@@ -156,6 +155,10 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     else:
         parameters = t.param_dict_rand
         gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+=======
+    model = NeuralRegressor(build_fn=create_model, epochs = epochs, batch_size=20, verbose=0)
+    gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+>>>>>>> 4a57e6ea9e798691c1213134ab3e14632c5b9a17
 
     gs.fit(X, y)
     grid_result = gs.cv_results_
