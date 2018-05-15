@@ -36,8 +36,8 @@ robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_me
 
 phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1]}
-param_dict_rand = {'dropout':uniform(0.05, 0.4),
-                  'regu':uniform(1e-6, 1e-1),
+param_dict_rand = {'dropout':uniform(0.01, 0.4),
+                  'regu':uniform(1e-6, 1e-2),
                   'layers':randint(1,3),
                   'neurons':randint(5,40)}
 

@@ -119,7 +119,7 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
 
 
 def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
-           verbose=2, nan_ratio=0.0, goal='gas', mode="grid", epochs=1000):
+           verbose=2, nan_ratio=0.0, goal='gas', mode="grid", n_iter=30, epochs=1000):
     if(well):
         X, y,_ = cl.BO_load(well, separator, case=case, nan_ratio=nan_ratio, goal=goal)
 
@@ -149,12 +149,12 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
         gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
     else:
         parameters = t.param_dict_rand
-        gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+        gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True, n_iter=n_iter)
 
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
-    filestring = "gridsearch/"+well+goal+("_"+separator if case==1 else "")+".csv"
+    filestring = "gridsearch/"+well+"_"+goal+("_"+separator if case==1 else "")+("_"+mode)+".csv"
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
