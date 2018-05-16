@@ -28,24 +28,6 @@ class NN:
 
     
     
-    # =============================================================================
-    # get breakpoints for scenario curves    
-    # =============================================================================
-    def getBreakpoints(self, case, points, scenarios, phase):
-        if(phase=="oil"):
-            choke_vals = {w:[] for w in self.wellnames}
-            out_vals = {w:[] for w in self.wellnames}
-            for well in self.wellnames:
-                #TODO: load values
-                pass
-        else:
-            choke_vals = {s : {w:[] for w in self.wellnames} for s in range(scenarios)}
-            out_vals = {s : {w:[] for w in self.wellnames} for s in range(scenarios)}
-            for s in range(scenarios):
-                for well in self.wellnames:
-                    #TODO: load values here
-                    pass
-        return choke_vals, out_vals
         
     # =============================================================================
     # Wrapper to evaluate EEV versus scenario based optimization    
@@ -240,10 +222,10 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
         
-        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
-                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
-        self.scenarios = len(self.s_draw)
-        self.results_file = "results/robust/res.csv"
+#        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
+#                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
+        self.scenarios = num_scen
+        self.results_file = "results/robust/res_sos2.csv"
         
         #alternative results file for storing init solutions
         self.results_file_init = "results/initial/res_initial.csv"
@@ -300,9 +282,12 @@ class NN:
         self.m = Model("Model")
         
         #load SOS2 breakpoints
-        self.choke_vals, self.oil_vals = self.getBreakpoints(case=case, points=points, scenarios=self.scenarios, phase="oil")
-        _, self.gas_vals = self.getBreakpoints(case=case, points=points, scenarios=self.scenarios, phase="gas")
-        
+        self.oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
+        self.gas_vals = t.get_sos2_scenarios("gas", self.scenarios)
+        if(self.scenarios=="eev"):
+            self.scenarios=1
+        self.choke_vals = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
+#        print(self.oil_vals)
         #workaround to multidims
         self.multidims= {}
 
@@ -320,8 +305,8 @@ class NN:
         #NOTE: changed order of inputs. needs to be taken into consideration when impl. case 1
         w_max_lims = [w_max_choke, w_max_glift] 
         w_min_lims = [w_min_choke, w_min_glift]
-        input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
-        input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
+        input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)}
+        input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)}
         
         
         # =============================================================================
@@ -331,63 +316,22 @@ class NN:
         inputs = self.m.addVars(input_upper.keys(), ub = input_upper, lb=input_lower, name="input", vtype=GRB.SEMICONT) #SEMICONT
         
         #continuous breakpoint variables
-        zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals[well]))], vtype = GRB.CONTINUOUS, name="zetas")
+        zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals))], vtype = GRB.CONTINUOUS, name="zetas")
 
         #routing and change tracking        
         routes = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.BINARY, name="routing")
-        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])], vtype=GRB.BINARY, name="changes")
+        changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)], vtype=GRB.BINARY, name="changes")
 
         #new variables to control routing decision and input/output
         outputs_gas = self.m.addVars([(scenario, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios)], vtype = GRB.CONTINUOUS, name="outputs_gas")
         outputs_oil = self.m.addVars([(well, sep) for well in self.wellnames for sep in self.well_to_sep[well]], vtype = GRB.CONTINUOUS, name="outputs_oil")
 
-        #variance networks
-        lambdas_var = self.m.addVars([(well,"oil",sep, layer, neuron) for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well]["oil"][sep]) for neuron in range(self.multidims_var[well]["oil"][sep][layer])], vtype = GRB.BINARY, name="lambda_var")
-        mus_var = self.m.addVars([(well,"oil",sep,layer, neuron) for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well]["oil"][sep]) for neuron in range(self.multidims_var[well]["oil"][sep][layer])], vtype = GRB.CONTINUOUS, name="mu_var")
-        rhos_var = self.m.addVars([(well,"oil",sep,layer, neuron) for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well]["oil"][sep]) for neuron in range(self.multidims_var[well]["oil"][sep][layer])], vtype = GRB.CONTINUOUS, name="rho_var")
-
-
-
-        # =============================================================================
-        # NN MILP constraints creation. Mean and variance networks.
-        # Variables mu and rho are indexed from 1 and up since the input layer
-        # is layer 0 in multidims. 
-        # =============================================================================
-
-        # mean
-        self.m.addConstrs(mus[well, phase, sep, 1, neuron] - rhos[well, phase, sep, 1, neuron] - quicksum(self.weights[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims[well][phase][sep][0])) == self.biases[well][phase][sep][0][neuron] for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims[well][phase][sep][1]) )
-        self.m.addConstrs(mus[well, phase, sep, layer, neuron] - rhos[well, phase, sep, layer, neuron] - quicksum((self.weights[well][phase][sep][layer-1][dim][neuron]*mus[well, phase, sep, layer-1, dim]) for dim in range(self.multidims[well][phase][sep][layer-1])) == self.biases[well][phase][sep][layer-1][neuron] for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer]) )
-
-        # var
-        self.m.addConstrs(mus_var[well, phase, sep, 1, neuron] - rhos_var[well, phase, sep, 1, neuron] - quicksum(self.weights_var[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims_var[well][phase][sep][0])) == self.biases_var[well][phase][sep][0][neuron] for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][1]) )
-        self.m.addConstrs(mus_var[well, phase, sep, layer, neuron] - rhos_var[well, phase, sep, layer, neuron] - quicksum((self.weights_var[well][phase][sep][layer-1][dim][neuron]*mus_var[well, phase, sep, layer-1, dim]) for dim in range(self.multidims_var[well][phase][sep][layer-1])) == self.biases_var[well][phase][sep][layer-1][neuron] for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]) )
-
-#        self.m.addConstrs(mus_var[well, phase, sep, 1, neuron] - rhos_var[well, phase, sep, 1, neuron] - quicksum(self.weights_var[well][phase][sep][0][dim][neuron]*inputs[well, sep, dim] for dim in range(self.multidims_var[well][phase][sep][0])) == self.biases_var[well][phase][sep][0][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for neuron in range(self.multidims_var[well][phase][sep][1]) )
-#        self.m.addConstrs(mus_var[well, phase, sep, layer, neuron] - rhos_var[well, phase, sep, layer, neuron] - quicksum((self.weights_var[well][phase][sep][layer-1][dim][neuron]*mus_var[well, phase, sep, layer-1, dim]) for dim in range(self.multidims_var[well][phase][sep][layer-1])) == self.biases_var[well][phase][sep][layer-1][neuron] for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(2, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]) )
-        
-
-        
-        #indicator constraints
-        if(load_M):
-            self.m.addConstrs(mus[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][0])*(1-lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(len(self.biases[well][phase][sep][0])))
-            self.m.addConstrs(rhos[well, phase, sep, layer, neuron] <= (big_M[well][phase][sep][neuron][1])*(lambdas[well, phase, sep, layer, neuron]) for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]) for neuron in range(len(self.biases[well][phase][sep][0])))
-        else:
-            #mean
-            self.m.addConstrs( (lambdas[well, phase, sep, layer, neuron] == 1) >> (mus[well, phase, sep, layer, neuron] <= 0)  for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer]))
-            self.m.addConstrs( (lambdas[well, phase, sep, layer, neuron] == 0) >> (rhos[well, phase, sep, layer, neuron] <= 0)  for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers[well][phase][sep]-1) for neuron in range(self.multidims[well][phase][sep][layer]))
-
-            #variance
-            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 1) >> (mus_var[well, phase, sep, layer, neuron] <= 0)  for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]))
-            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 0) >> (rhos_var[well, phase, sep, layer, neuron] <= 0)  for phase in ["oil"] for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]-1) for neuron in range(self.multidims_var[well][phase][sep][layer]))
-
-#            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 1) >> (mus_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]))
-#            self.m.addConstrs( (lambdas_var[well, phase, sep, layer, neuron] == 0) >> (rhos_var[well, phase, sep, layer, neuron] <= 0)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1, self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer]))
 
 
         # =============================================================================
         # Oil output SOS2
         # =============================================================================
-        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == quicksum( zetas[brk, well, sep]*self.oil_vals[well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( (routes[well, sep] == 1) >> (outputs_oil[well, sep] == quicksum( zetas[brk, well, sep]*self.oil_vals[well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
 
         # =============================================================================
@@ -397,19 +341,21 @@ class NN:
         self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_gas[scenario, well, sep] == 0) for scenario in range(self.scenarios) for well in self.wellnames for sep in self.well_to_sep[well] ) 
 
         # =============================================================================
+        # input limit constraints
+        # =============================================================================
+        self.m.addConstrs( inputs[well, sep, 0] == quicksum(zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
+
+        # =============================================================================
         # SOS2 constraints 
         # =============================================================================
-        self.m.addSOS()
         #no way to do in one-liner
         for well in self.wellnames:
             for sep in self.well_to_sep[well]:
-                self.m.addSOS(2, [zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))])
+                self.m.addSOS(2, [zetas[brk, well, sep] for brk in range(len(self.choke_vals))])
         #tighten sos constraints
-        self.m.addConstrs( routes[well, sep] == quicksum( zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+        self.m.addConstrs( routes[well, sep] == quicksum( zetas[brk, well, sep] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
 
-
-        #input should equal breakpoints to track changes
-        self.m.addConstrs( inputs[well, sep, dim] == quicksum(zetas[brk, well, sep]*self.choke_vals[well][brk] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         
         # =============================================================================
         # separator gas constraints
@@ -443,12 +389,13 @@ class NN:
         # =============================================================================
 #         change tracking and total changes
 #         =============================================================================
-        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] + 
+                          (w_initial_vars[well][dim]*(1-quicksum(routes[well, separ] for separ in self.well_to_sep[well]))*(1-w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
         self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+
-                          (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+                          (1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
-        self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
+        self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)) <= max_changes)
 
         # =============================================================================
         # Solver parameters
@@ -475,17 +422,16 @@ class NN:
 
         self.m.optimize()
         
-        df = pd.DataFrame(columns=t.robust_res_columns) 
-        chokes = [inputs[well, "HP", 0].x if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
+        chokes = [sum(zetas[brk, well, "HP"].x*self.choke_vals[brk] for brk in range(len(self.choke_vals)))  if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
         rowlist=[]
         if(case==2 and save):
             gas_mean = np.zeros(len(self.wellnames))
-            gas_var=[]
+#            gas_var=[]
             w = 0
             for well in self.wellnames:
                 for scenario in range(self.scenarios):
                     gas_mean[w] += outputs_gas[scenario, well, "HP"].x
-                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0])
 
                 w += 1
             gas_mean = (gas_mean/float(self.scenarios)).tolist()
@@ -495,7 +441,7 @@ class NN:
             tot_gas = sum(gas_mean)
             change = [abs(changes[w, "HP", 0].x) for w in self.wellnames]
 #            print(df.columns)
-            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+gas_var+change
+            rowlist = [self.scenarios, tot_exp_cap, well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
 #            print(len(rowlist))
             if(store_init):
                 df.rename(columns={"scenarios": "name"}, inplace=True)
@@ -515,8 +461,7 @@ class NN:
             gas_mean = []
             gas_var = []
             for well in self.wellnames:
-                gas_mean.append(sum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron].x for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0] if outputs_gas[0, well, "HP"].x>0 else 0)
-                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0] if outputs_gas[0, well, "HP"].x>0 else 0)
+                pass
             tot_oil = sum(oil_mean)
             tot_gas = sum(gas_mean)+sum([gas_var[w]*self.s_draw.loc[s][self.wellnames[w]] for w in range(len(self.wellnames)) for s in range(self.scenarios)])/self.scenarios
             change = [abs(changes[w, "HP", 0].x) for w in self.wellnames]

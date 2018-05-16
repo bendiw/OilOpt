@@ -39,6 +39,7 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
                           kernel_regularizer=regularizers.l2(regu),
                           bias_regularizer=regularizers.l2(regu)))
         model_1.add(Activation("relu"))
+
 #        model_1.add(Dense(neurons,
 #                          kernel_initializer=initializers.VarianceScaling(),
 #                          bias_initializer=initializers.Constant(value=0.1),
@@ -180,8 +181,6 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
     for w in t.wellnames_2:
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
-
-        
 
 def save_sos2(x,y,phase, well, scen, folder):
     filename = folder + "sos2_" +phase+".csv"
