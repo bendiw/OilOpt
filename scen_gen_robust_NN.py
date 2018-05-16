@@ -44,7 +44,7 @@ class NN:
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
     # =============================================================================
-    def getNeuralNets(self, mode, case, phase, net_type="mean"):
+    def getNeuralNets(self, mode, case, phase, net_type="scen"):
         weights = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios)}
         biases = {scenario : {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
         multidims = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios) }
@@ -57,7 +57,7 @@ class NN:
                 layers[scenario][well] = {} 
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
-                        multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, separator, case, net_type)
+                        multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(scenario, well, phase, separator, case, net_type)
                         layers[scenario][well][separator] = len(multidims[scenario][well][separator])
                         if net_type=="mean" and multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] > 1:
                             multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] -=1
@@ -144,8 +144,8 @@ class NN:
         self.m = Model("Model")
         
         #load mean and variance networks
-        self.layers_gas, self.multidims_gas, self.weights_gas, self.biases_gas = self.getNeuralNets(self.LOAD, case, net_type="mean", phase="gas")
-        self.layers_oil, self.multidims_oil, self.weights_oil, self.biases_oil = self.getNeuralNets(self.LOAD, case, net_type="mean", phase="oil")
+        self.layers_gas, self.multidims_gas, self.weights_gas, self.biases_gas = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="gas")
+        self.layers_oil, self.multidims_oil, self.weights_oil, self.biases_oil = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="oil")
 
         # =============================================================================
         # load big M values from file
