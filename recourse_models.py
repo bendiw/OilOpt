@@ -355,7 +355,6 @@ class NN(Recourse_Model):
     
     
 class Factor(Recourse_Model):
-
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
     # =============================================================================
