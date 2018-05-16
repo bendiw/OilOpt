@@ -134,10 +134,13 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def load_2(well, phase, separator="HP", case=1, mode = "mean"):
-    if(case==2):
-        separator=mode
-    filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
+def load_2(well, phase, separator="HP", case=1, mode = "mean", scen=0):
+    if mode == "scen":
+        filename = "scenarios/nn/points/"+well+"_"+str(scen)+"-scen-"+phase+".txt"
+    else:
+        if(case==2):
+            separator=mode
+        filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
@@ -163,6 +166,7 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean"):
         b.append([float(x) for x in content[i].split()])
     
     return dims, w, b
+
 
 def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
                    case=1, mode="mean", folder = "weights\\", num=""):

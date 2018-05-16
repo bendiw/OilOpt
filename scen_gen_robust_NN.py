@@ -57,7 +57,7 @@ class NN:
                 layers[scenario][well] = {} 
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
-                        multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(scenario, well, phase, separator, case, net_type)
+                        multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, separator, case, net_type, scenario)
                         layers[scenario][well][separator] = len(multidims[scenario][well][separator])
                         if net_type=="mean" and multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] > 1:
                             multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] -=1
