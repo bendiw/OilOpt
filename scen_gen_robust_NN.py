@@ -45,24 +45,44 @@ class NN:
     # get neural nets either by loading existing ones or training new ones
     # =============================================================================
     def getNeuralNets(self, mode, case, phase, net_type="scen"):
-        weights = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios)}
-        biases = {scenario : {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
-        multidims = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios) }
-        layers = {scenario: {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
-        for scenario in range(self.scenarios):
+        if phase=="gas":
+            weights = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios)}
+            biases = {scenario : {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
+            multidims = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios) }
+            layers = {scenario: {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
+            for scenario in range(self.scenarios):
+                for well in self.wellnames:
+                    weights[scenario][well] = {}
+                    biases[scenario][well] = {}
+                    multidims[scenario][well] = {}
+                    layers[scenario][well] = {} 
+                    for separator in self.well_to_sep[well]:
+                        if mode==self.LOAD:
+                            multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, separator, case, net_type, scenario)
+                            layers[scenario][well][separator] = len(multidims[scenario][well][separator])
+                            if net_type=="mean" and multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] > 1:
+                                multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] -=1
+                        else:
+                            layers[scenario][well][separator], multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.train(well, phase, separator, case)
+        elif phase == "oil":
+            weights = {well : {} for well in self.wellnames}
+            biases = {well : {} for well in self.wellnames}
+            multidims = {well : {} for well in self.wellnames}
+            layers = {well : {} for well in self.wellnames}
             for well in self.wellnames:
-                weights[scenario][well] = {}
-                biases[scenario][well] = {}
-                multidims[scenario][well] = {}
-                layers[scenario][well] = {} 
+                weights[well] = {}
+                biases[well] = {}
+                multidims[well] = {}
+                layers[well] = {} 
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
-                        multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, separator, case, net_type, scenario)
-                        layers[scenario][well][separator] = len(multidims[scenario][well][separator])
-                        if net_type=="mean" and multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] > 1:
-                            multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] -=1
+                        multidims[well][separator], weights[well][separator], biases[well][separator] = t.load_2(well, phase, separator, case, net_type, scen=0)
+                        layers[well][separator] = len(multidims[well][separator])
+                        if net_type=="mean" and multidims[well][separator][layers[well][separator]-1 ] > 1:
+                            multidims[well][separator][ layers[well][separator]-1 ] -=1
                     else:
-                        layers[scenario][well][separator], multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.train(well, phase, separator, case)
+                        layers[well][separator], multidims[well][separator], weights[well][separator], biases[well][separator] = t.train(well, phase, separator, case)
+            
         return layers, multidims, weights, biases
     
         
