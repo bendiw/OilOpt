@@ -43,7 +43,7 @@ class Recourse_Model:
     # =============================================================================
     def init(self, case=2,
                 num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
-                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
+                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -59,7 +59,6 @@ class Recourse_Model:
         self.case = case
         self.recourse_iter = recourse_iter
         self.max_changes = max_changes
-        self.verbose=verbose
         self.save=save
         self.neg_change_constr = None
         self.pos_change_constr = None
@@ -91,14 +90,14 @@ class Recourse_Model:
             
             if not init_name:
                 self.w_initial_prod = {well : 0 for well in self.wellnames}
-                self.w_initial_vars = {well : [0] for well in self.wellnames}
+                self.w_initial_vars = {well : 0 for well in self.wellnames}
             elif not isinstance(init_name, (dict)):
                 #load init from file
                 self.w_initial_df = t.get_robust_solution(init_name=init_name)
-                self.w_initial_vars = {w:[self.w_initial_df[w+"_choke"].values[0]] for w in self.wellnames}
+                self.w_initial_vars = {w:self.w_initial_df[w+"_choke"].values[0] for w in self.wellnames}
 #                print(self.w_initial_vars)
                 
-                self.w_initial_prod = {well : 1. if self.w_initial_vars[well][0]>0 else 0. for well in self.wellnames}
+                self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
 #                print(self.w_initial_prod)
             #constraints for case 2
             else:
@@ -106,11 +105,11 @@ class Recourse_Model:
 #                w_initial_vars=init_name
                 self.w_initial_vars={}
                 for w in self.wellnames:
-                    self.w_initial_vars[w] = [init_name[w+"_choke"]]
+                    self.w_initial_vars[w] = init_name[w+"_choke"]
 #                    del w_initial_vars[w+"_choke"]
                 
 #                print("optimization initial chokes:", w_initial_vars)
-                self.w_initial_prod = {well : 1 if self.w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
+                self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
             self.tot_exp_cap = 250000
             self.well_cap = {w:54166 for w in self.wellnames}
         else:
@@ -193,23 +192,24 @@ class Recourse_Model:
         
     def set_chokes(self, w_initial_vars):
         self.w_initial_vars = w_initial_vars
-        self.w_initial_prod = {well : 1. if self.w_initial_vars[well][0]>0 else 0. for well in self.wellnames}
+        self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
         if(self.neg_change_constr is not None):
             self.m.remove(self.neg_change_constr)
         if(self.pos_change_constr is not None):
             self.m.remove(self.pos_change_constr)
             
-        self.neg_change_constr = self.m.addConstrs(self.w_initial_vars[well][dim] - self.inputs[well, sep, dim] <= self.changes[well, sep, dim]*self.w_initial_vars[well][dim]*self.w_relative_change[well][dim] + 
-                          (self.w_initial_vars[well][dim]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        self.neg_change_constr = self.m.addConstrs(self.w_initial_vars[well] - self.inputs[well, sep, dim] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] + 
+                          (self.w_initial_vars[well]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
-        self.pos_change_constr = self.m.addConstrs(self.inputs[well, sep, dim] - self.w_initial_vars[well][dim] <= self.changes[well, sep, dim]*self.w_initial_vars[well][dim]*self.w_relative_change[well][dim]+
+        self.pos_change_constr = self.m.addConstrs(self.inputs[well, sep, dim] - self.w_initial_vars[well] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+
                           (1-self.w_initial_prod[well])*self.w_max_lims[dim][well][sep]*self.changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
 
-    def solve(self):
+    def solve(self, verbose=1):
         # =============================================================================
         # Solver parameters
         # =============================================================================
 #        self.m.setParam(GRB.Param.NumericFocus, 2)
+        self.verbose = verbose
         self.m.setParam(GRB.Param.LogToConsole, self.verbose)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
 #        self.m.setParam(GRB.Param.Presolve, 0)
@@ -240,7 +240,7 @@ class Recourse_Model:
             tot_gas = sum(gas_mean)
             change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
 #            print(df.columns)
-            rowlist = [self.scenarios, self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
+            rowlist = [self.scenarios, self.tot_exp_cap]+ [tot_oil, tot_gas]+list(self.well_cap.values())+chokes+gas_mean+oil_mean+change
 #            print(len(rowlist))
             if(self.store_init):
                 df.rename(columns={"scenarios": "name"}, inplace=True)
@@ -265,11 +265,11 @@ class Recourse_Model:
             tot_oil = sum(oil_mean)
 #            tot_gas = sum(gas_mean)+sum([gas_var[w]*self.s_draw.loc[s][self.wellnames[w]] for w in range(len(self.wellnames)) for s in range(self.scenarios)])/self.scenarios
             change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
-            rowlist = [self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
+            rowlist = [self.tot_exp_cap]+ [ tot_oil, tot_gas]+list(self.well_cap.values())+chokes+gas_mean+oil_mean+change
         return df
     
     def get_chokes(self):
-        chokes = {well:[self.inputs[well, "HP", 0].x] if self.outputs_gas[0, well, "HP"].x>0 else [0] for well in self.wellnames}
+        chokes = {well:self.inputs[well, "HP", 0].x if self.outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames}
         return chokes
     
 class NN(Recourse_Model):
@@ -325,7 +325,7 @@ class NN(Recourse_Model):
                 num_scen = 10, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
 
-        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter, verbose)        
+        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_NN.csv"
         #load mean and variance networks
         self.layers_gas, self.multidims_gas, self.weights_gas, self.biases_gas = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="gas")
@@ -407,7 +407,7 @@ class Factor(Recourse_Model):
                 num_scen = 10, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
         
-        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter, verbose)        
+        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_factor.csv"
         self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
                                      phase=phase, sep=sep, iteration=stability_iter, distr=distr)
@@ -465,7 +465,7 @@ class SOS2(Recourse_Model):
                 num_scen = 200, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1, points=10):
         
-        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter, verbose)        
+        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_SOS2.csv"
         #load SOS2 breakpoints
         self.oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
