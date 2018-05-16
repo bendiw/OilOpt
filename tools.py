@@ -29,9 +29,11 @@ well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
-robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_SOS2 = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+
+base_res = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+robust_res_columns = base_res+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_SOS2 = base_res+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
@@ -134,10 +136,13 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def load_2(well, phase, separator="HP", case=1, mode = "mean"):
-    if(case==2):
-        separator=mode
-    filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
+def load_2(well, phase, separator="HP", case=1, mode = "mean", scen=0):
+    if mode == "scen":
+        filename = "scenarios/nn/points/"+well+"_"+str(scen)+"-scen-"+phase+".txt"
+    else:
+        if(case==2):
+            separator=mode
+        filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
@@ -163,6 +168,7 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean"):
         b.append([float(x) for x in content[i].split()])
     
     return dims, w, b
+
 
 def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
                    case=1, mode="mean", folder = "weights\\", num=""):
