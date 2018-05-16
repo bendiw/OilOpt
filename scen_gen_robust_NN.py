@@ -89,7 +89,7 @@ class NN:
     
     
     # =============================================================================
-    # Function to run with all wells in the problem.
+    # Function to build a model with all wells in the problem.
     # =============================================================================
     def init(self, case=2, load_M = False,
                 num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 

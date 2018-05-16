@@ -29,14 +29,16 @@ well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
-robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_SOS2 = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+
+base_res = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+robust_res_columns = base_res+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_SOS2 = base_res+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
 phasenames = ["oil", "gas"]
-param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.05)], 'regu':[1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2]}
+param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.1)], 'regu':[1e-6, 1e-5, 1e-4, 1e-3, 1e-2], 'layers':[1,2], 'neurons':[20,40]}
 param_dict_rand = {'dropout':uniform(0.01, 0.4),
                   'regu':uniform(1e-6, 1e-4),
                   'layers':randint(1,3),

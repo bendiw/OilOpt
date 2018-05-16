@@ -101,7 +101,7 @@ class NN:
     # Function to run with all wells in the problem.
     # =============================================================================
     def init(self, case=2, load_M = False,
-                num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
+                num_scen = 10, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
         if(case==2):
             self.wellnames = t.wellnames_2

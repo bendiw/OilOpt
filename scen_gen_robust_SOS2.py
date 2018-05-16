@@ -226,7 +226,7 @@ class NN:
         self.m.addConstr(quicksum(self.changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)) <= max_changes)
 
 
-    def run(self):
+    def solve(self):
         # =============================================================================
         # Solver parameters
         # =============================================================================
@@ -238,18 +238,13 @@ class NN:
 #        self.m.setParam(GRB.Param.LogFile, "log.txt")
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
-        # =============================================================================
-        # temporary constraints to generate initial scenarios        
-        # =============================================================================
-#        self.m.addConstr(quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= 90.0)
-#        self.m.addConstr(outputs_oil["W3", "HP"] ==0)
-#        self.m.addConstr(outputs_oil["W1", "HP"] ==0)
 
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.setObjective( quicksum(outputs_oil[well, sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
 
         self.m.optimize()
         
+    def get_solution(self):
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
         chokes = [sum(self.zetas[brk, well, "HP"].x*self.choke_vals[brk] for brk in range(len(self.choke_vals)))  if outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
         rowlist=[]
