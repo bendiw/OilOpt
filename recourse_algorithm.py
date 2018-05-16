@@ -75,6 +75,9 @@ def iteration(model, init_chokes, changes, true_well_curves, verbose=0):
     for c in range(changes, -1, -1):
         inf_single, tot_oil, tot_gas, impl_chokes, change_well = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
         infeasible_count+=inf_single
+        if change_well is None:
+            print("No more suggested changes.")
+            return [infeasible_count, tot_oil, tot_gas]+ list(impl_chokes.values())
         if(verbose>1):
             print("\n==================================================")
             print("changes:", c+1, "\nchange well:", change_well, "   [", (round(init_chokes[change_well],2) if c==changes else round(old_chokes[change_well],2)), "--->", round(new_chokes[change_well],2), "]")
@@ -91,6 +94,8 @@ def iteration(model, init_chokes, changes, true_well_curves, verbose=0):
             break
         model.set_chokes(impl_chokes)
         model.set_changes(c)
+        #TODO: implement setting of true curve. Dunno whether to add new scenarios or not in this case
+        model.set_true_curve(change_well, true_well_curves[change_well])
         model.solve(verbose=max(verbose-2, 0))
         new_sol = model.get_solution()
 #        opt_results.append(new_sol.to_dict(), ignore_index=True)
@@ -117,8 +122,10 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
         for w in t.well_order:
             if(abs(new_chokes[w]-old_chokes[w]) >= 0.01):
                 change_well = w
+                found=True
                 break
-    
+    if not found:
+        return 1, tot_oil, tot_gas, old_chokes, None
     #implement change and check for infeasibility
     temp_chokes = {key: value for key, value in old_chokes.items()}
     temp_chokes[change_well] = new_chokes[change_well]
@@ -165,6 +172,7 @@ class SOSpredictor():
         self.oil_vals = t.get_sos2_true_curves("oil", init_name)[well]
         self.gas_vals = t.get_sos2_true_curves("gas", init_name)[well]
         self.choke_vals = [i*100/(len(self.oil_vals)-1) for i in range(len(self.oil_vals))]
+        self.p_type="sos2"
         return self
         
         
