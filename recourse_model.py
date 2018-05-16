@@ -90,7 +90,7 @@ class Recourse_Model:
         self.recourse_iter = recourse_iter
         self.max_changes = max_changes
         self.verbose=verbose
-        
+        self.save=save
 #        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
 #                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
         self.scenarios = num_scen

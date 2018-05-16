@@ -69,7 +69,7 @@ class SOS2(Recourse_Model):
         # input limit constraints
         # =============================================================================
         self.m.addConstrs( self.inputs[well, sep, 0] == quicksum(self.zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well])
-        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
+#        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 
         # =============================================================================
         # SOS2 constraints 
@@ -82,3 +82,50 @@ class SOS2(Recourse_Model):
         self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         
         return self
+
+    def get_solution(self):
+        df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
+        chokes = [sum(self.zetas[brk, well, "HP"].x*self.choke_vals[brk] for brk in range(len(self.choke_vals)))  if self.outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
+        rowlist=[]
+        if(self.case==2 and self.save):
+            gas_mean = np.zeros(len(self.wellnames))
+#            gas_var=[]
+            w = 0
+            for well in self.wellnames:
+                for scenario in range(self.scenarios):
+                    gas_mean[w] += self.outputs_gas[scenario, well, "HP"].x
+
+                w += 1
+            gas_mean = (gas_mean/float(self.scenarios)).tolist()
+            oil_mean = [self.outputs_oil[well, "HP"].x for well in self.wellnames]
+#            oil_var = [outputs_]
+            tot_oil = sum(oil_mean)
+            tot_gas = sum(gas_mean)
+            change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
+#            print(df.columns)
+            rowlist = [self.scenarios, self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
+#            print(len(rowlist))
+            if(self.store_init):
+                df.rename(columns={"scenarios": "name"}, inplace=True)
+                rowlist[0] = self.init_name
+                df.loc[df.shape[0]] = rowlist
+
+                head = not os.path.isfile(self.results_file_init)
+                with open(self.results_file_init, 'a') as f:
+                    df.to_csv(f, sep=';', index=False, header=head)
+            else:
+                df.loc[df.shape[0]] = rowlist
+                head = not os.path.isfile(self.results_file)
+                with open(self.results_file, 'a') as f:
+                    df.to_csv(f, sep=';', index=False, header=head)
+        elif self.recourse_iter:
+            oil_mean = [self.outputs_oil[well, "HP"].x for well in self.wellnames]
+            gas_mean = []
+            gas_var = []
+            for well in self.wellnames:
+                pass
+            tot_oil = sum(oil_mean)
+            tot_gas = sum(gas_mean)+sum([gas_var[w]*self.s_draw.loc[s][self.wellnames[w]] for w in range(len(self.wellnames)) for s in range(self.scenarios)])/self.scenarios
+            change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
+            rowlist = [self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+gas_var+change
+        return df

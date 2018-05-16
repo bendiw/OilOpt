@@ -29,9 +29,11 @@ well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
-robust_res_columns = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_SOS2 = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
-robust_res_columns_recourse = ["tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+
+base_res = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+robust_res_columns = base_res+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_SOS2 = base_res+ [w+"_changed" for w in wellnames_2]
+robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
