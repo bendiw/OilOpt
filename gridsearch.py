@@ -168,7 +168,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
 
 def search_all(case=2, goal="gas", mode="grid", n_iter=90, x_grid=None, y_grid=None):
     if(case==2):
-        for w in t.wellnames_2:
+        for w in t.wellnames_2[5:]:
             print(w, goal, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             search(w, case=case, verbose=0, goal=goal, mode=mode, n_iter=n_iter, x_grid=x_grid, y_grid=y_grid)
     else:
