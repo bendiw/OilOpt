@@ -200,11 +200,11 @@ def save_sos2(x,y,phase, well, scen, folder):
         df.to_csv(f,sep=";")
         
         
-def sos2_to_nn(well,epochs, phase="gas", num_scen=10, scens=[], neurons=20, lr=0.001):
-    df = tools.get_sos2_scenarios(phase, num_scen)
+def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], neurons=20, lr=0.001):
+    df = tools.get_sos2_scenarios(phase, start_scen+num_scen)
     X = np.array([[i*10] for i in range(11)])
-    for scen in (scens):
-        train(well, X, df[well], goal=phase, neurons=neurons, lr=lr,
+    for scen in range(start_scen, start_scen+num_scen):
+        train(well, X, df[scen][well], goal=phase, neurons=neurons, lr=lr,
               epochs=epochs, save=True, plot=True, scen=scen)
         
     
@@ -236,9 +236,9 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=10)    
         line2 = ax.plot(X, prediction, color="blue", linestyle="dashed", linewidth=1)
         if save:
-            filepath = "scenarios\\nn\\points\\"+well+"_oil.png"
+            filepath = "scenarios\\nn\\points\\"+well+"_"+scen.png"
             pyplot.savefig(filepath, bbox_inches="tight")
-            tools.save_variables(well+"_"+"oil", goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+            tools.save_variables(well+"_"+scen, goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
         if plot:
             pyplot.show()
 
