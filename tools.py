@@ -30,12 +30,15 @@ wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
 MOP_res_columns = ["alpha", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
-base_res = ["scenarios", "tot_cap", "indiv_cap", "tot_oil", "tot_gas"]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
+base_res = ["scenarios", "tot_cap"]+["tot_oil", "tot_gas"]+[w+"_indiv_cap" for w in wellnames_2]+[w+"_choke" for w in wellnames_2]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]
 robust_res_columns = base_res+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 robust_res_columns_SOS2 = base_res+ [w+"_changed" for w in wellnames_2]
 robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ [w+"_changed" for w in wellnames_2]
 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
+
+recourse_algo_columns = ["infeasible count", "oil output", "gas output"]+ [w+"_choke_final" for w in wellnames_2]
+
 
 phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.1)], 'regu':[1e-6, 1e-5, 1e-4, 1e-3, 1e-2], 'layers':[1,2], 'neurons':[20,40]}
@@ -309,7 +312,7 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
         df = pd.read_csv("results/initial/res_initial.csv", sep=";")
         df = df.loc[df["name"]==init_name]
         df.drop(["name"], axis=1, inplace=True)
-        df = pd.DataFrame(np.concatenate((df.values,np.zeros((1,7))), axis=1), columns=robust_res_columns_recourse)
+#        df = pd.DataFrame(np.concatenate((df.values,np.zeros((1,7))), axis=1), columns=robust_res_columns)
 #        df2 = pd.DataFrame(np.zeros((1,14)), columns=[w+"_gas_var" for w in wellnames_2]+[w+"_changed" for w in wellnames_2])
 #        df = pd.concat([df, df2], axis=1)
         return df
@@ -328,6 +331,15 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret = df[c]
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
+
+
+def get_init_chokes(init_name):
+    df = pd.read_csv("results/initial/res_initial.csv", sep=";")
+    df = df.loc[df["name"]==init_name]
+    df.drop(["name"], axis=1, inplace=True)
+    cols = [w+"_choke" for w in wellnames_2]
+    df = df[cols]
+    return {w:df[w+"_choke"].values[0] for w in wellnames_2}
 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
@@ -485,3 +497,12 @@ def get_sos2_scenarios(phase, num_scen):
         for well in wellnames_2:
             dbs[well] = df[well+"_"+phase+"_"+str(0)]
     return dbs
+
+#TODO: modify to load true
+def get_sos2_true_curves(phase, init_name):
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+    dbs = {}
+    for well in wellnames_2:
+        dbs[well] = df[well+"_"+phase+"_"+str(0)]
+    return dbs
+

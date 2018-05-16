@@ -136,56 +136,7 @@ class NN(Recourse_Model):
         self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights_oil[well][sep][self.layers_oil[well][sep]-2][neuron][0] * self.mus_oil[well, sep, self.layers_oil[well][sep]-2, neuron] for neuron in range(self.multidims_oil[well][sep][self.layers_oil[well][sep]-2]) ) + self.biases_oil[well][sep][self.layers_oil[well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
         
-        
         return self
 
 
-    def get_solution(self):        
-        df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
-        chokes = [self.inputs[well, "HP", 0].x if self.outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
-        rowlist=[]
-        if(self.case==2 and self.save):
-            gas_mean = np.zeros(len(self.wellnames))
-#            gas_var=[]
-            w = 0
-            for well in self.wellnames:
-                for scenario in range(self.scenarios):
-                    gas_mean[w] += self.outputs_gas[scenario, well, "HP"].x
-#                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0])
-
-                w += 1
-            gas_mean = (gas_mean/float(self.scenarios)).tolist()
-            oil_mean = [self.outputs_oil[well, "HP"].x for well in self.wellnames]
-#            oil_var = [outputs_]
-            tot_oil = sum(oil_mean)
-            tot_gas = sum(gas_mean)
-            change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
-#            print(df.columns)
-            rowlist = [self.scenarios, self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
-#            print(len(rowlist))
-            if(self.store_init):
-                df.rename(columns={"scenarios": "name"}, inplace=True)
-                rowlist[0] = self.init_name
-                df.loc[df.shape[0]] = rowlist
-
-                head = not os.path.isfile(self.results_file_init)
-                with open(self.results_file_init, 'a') as f:
-                    df.to_csv(f, sep=';', index=False, header=head)
-            else:
-                df.loc[df.shape[0]] = rowlist
-                head = not os.path.isfile(self.results_file)
-                with open(self.results_file, 'a') as f:
-                    df.to_csv(f, sep=';', index=False, header=head)
-        elif self.recourse_iter:
-            oil_mean = [self.outputs_oil[well, "HP"].x for well in self.wellnames]
-            gas_mean = []
-#            gas_var = []
-            for well in self.wellnames:
-                gas_mean.append(sum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron].x for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0] if self.outputs_gas[0, well, "HP"].x>0 else 0)
-#                gas_var.append(sum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron].x) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0] if self.outputs_gas[0, well, "HP"].x>0 else 0)
-            tot_oil = sum(oil_mean)
-            tot_gas = sum(gas_mean)+sum([gas_var[w]*self.s_draw.loc[s][self.wellnames[w]] for w in range(len(self.wellnames)) for s in range(self.scenarios)])/self.scenarios
-            change = [abs(self.changes[w, "HP", 0].x) for w in self.wellnames]
-            rowlist = [self.tot_exp_cap, self.well_cap, tot_oil, tot_gas]+chokes+gas_mean+oil_mean+change
-        return df
 
