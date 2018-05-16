@@ -309,7 +309,7 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
         df = pd.read_csv("results/initial/res_initial.csv", sep=";")
         df = df.loc[df["name"]==init_name]
         df.drop(["name"], axis=1, inplace=True)
-        df = pd.DataFrame(np.concatenate((df.values,np.zeros((1,7))), axis=1), columns=robust_res_columns_recourse)
+#        df = pd.DataFrame(np.concatenate((df.values,np.zeros((1,7))), axis=1), columns=robust_res_columns)
 #        df2 = pd.DataFrame(np.zeros((1,14)), columns=[w+"_gas_var" for w in wellnames_2]+[w+"_changed" for w in wellnames_2])
 #        df = pd.concat([df, df2], axis=1)
         return df
@@ -328,6 +328,15 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret = df[c]
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
+
+
+def get_init_chokes(init_name):
+    df = pd.read_csv("results/initial/res_initial.csv", sep=";")
+    df = df.loc[df["name"]==init_name]
+    df.drop(["name"], axis=1, inplace=True)
+    cols = [w+"_choke" for w in wellnames_2]
+    df = df[cols]
+    return {w:[df[w+"_choke"].values[0]] for w in wellnames_2}
 
 # =============================================================================
 # build a ReLU NN from dims, weights and bias
