@@ -112,7 +112,7 @@ class Recourse_Model:
 #                print("optimization initial chokes:", w_initial_vars)
                 self.w_initial_prod = {well : 1 if self.w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
             self.tot_exp_cap = 250000
-            self.well_cap = 54166
+            self.well_cap = {w:54166 for w in self.wellnames}
         else:
             raise ValueError("Case 1 not implemented yet.")
             
@@ -153,8 +153,8 @@ class Recourse_Model:
         # =============================================================================
         # separator gas constraints
         # =============================================================================
-        gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap for well in self.wellnames for scenario in range(self.scenarios))
-        exp_constr = self.m.addConstrs(quicksum(self.outputs_gas[scenario, well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= self.tot_exp_cap for scenario in range(self.scenarios))
+        self.gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap[well] for well in self.wellnames for scenario in range(self.scenarios))
+        self.exp_constr = self.m.addConstrs(quicksum(self.outputs_gas[scenario, well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= self.tot_exp_cap for scenario in range(self.scenarios))
         
         # =============================================================================
         # routing
@@ -171,6 +171,25 @@ class Recourse_Model:
 
     def set_changes(self, max_changes):
         self.change_constr.setAttr("rhs", max_changes)
+        
+    def set_tot_gas(self, gas):
+        for s in range(self.scenarios):
+            self.exp_constr[s].setAttr("rhs", gas)
+    
+    
+    #set indiv gas cap. if no well is specified, all wells are affected
+    def set_indiv_gas(self, gas, wells=None):
+        if wells:
+            if(isinstance(wells, (list))):
+                to_change = wells
+            else:
+                to_change = [wells]
+        else:
+            to_change = self.wellnames
+        print("tocange:", to_change)
+        for w in to_change:
+            for s in range(self.scenarios):
+                self.gas_constr[w, s].setAttr("rhs", gas)
         
     def set_chokes(self, w_initial_vars):
         self.w_initial_vars = w_initial_vars
