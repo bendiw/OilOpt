@@ -499,7 +499,7 @@ def get_sos2_scenarios(phase, num_scen):
     return dbs
 
 #TODO: modify to load true
-def get_sos2_true_curves(phase, init_name):
+def get_sos2_true_curves(phase, init_name, iteration):
     df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
     dbs = {}
     for well in wellnames_2:

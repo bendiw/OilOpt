@@ -46,9 +46,9 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     
     
     for i in range(num_iter):
-        #true" sos2 or NN models
         print("\n\niteration", i)
-        true_well_curves = get_true_models(init_name)
+        #get "true" sos2 or NN models
+        true_well_curves = get_true_models(init_name, i)
 
         #iterate with one less change since we have already found first solution
         results.loc[i] = iteration(model, init_chokes, max_changes-1, true_well_curves, verbose=verbose)
@@ -133,7 +133,7 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
     change_gas = true_well_curves[change_well].predict(temp_chokes[change_well], "gas")
     old_oil = true_well_curves[change_well].predict(old_chokes[change_well], "oil")
     change_oil = true_well_curves[change_well].predict(temp_chokes[change_well], "oil")
-    if(change_gas > indiv_cap[change_well] or tot_gas+(change_gas-old_gas) > tot_cap):
+    if(change_gas-0.01 > indiv_cap[change_well] or tot_gas+(change_gas-old_gas)-0.01 > tot_cap):
         #infeasible, revert
         return 1, tot_oil, tot_gas, old_chokes, change_well
     else:
@@ -155,9 +155,9 @@ def get_model(m_type):
 # =============================================================================
 # get "true" well curves
 # =============================================================================
-def get_true_models(init_name, m_type = "sos2"):
+def get_true_models(init_name, iteration, m_type = "sos2"):
     if(m_type=="sos2"):
-        return {w:SOSpredictor().init(w, init_name) for w in t.wellnames_2}
+        return {w:SOSpredictor().init(w, init_name, iteration) for w in t.wellnames_2}
     else:
         raise ValueError("Only SOS2 implemented!")
     
@@ -168,7 +168,7 @@ class SOSpredictor():
     def rounddown(self, x):
         return int(math.floor(x / 10.0))
     
-    def init(self, well, init_name):
+    def init(self, well, init_name, iteration):
         self.oil_vals = t.get_sos2_true_curves("oil", init_name)[well]
         self.gas_vals = t.get_sos2_true_curves("gas", init_name)[well]
         self.choke_vals = [i*100/(len(self.oil_vals)-1) for i in range(len(self.oil_vals))]
