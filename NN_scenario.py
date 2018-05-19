@@ -78,6 +78,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     df = pd.read_csv(filename, sep=';', index_col=0)
     batch_size=7
     ax=None
+    factor=1
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
         std = df[str(w)+"_"+goal+"_var"]
@@ -90,52 +91,52 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         y = np.zeros(len(X))
         m = np.zeros(len(X))
 #
-#        for scen in range(scen_start, scen_start+num_scen):
-#            if (goal=="gas" and train):
-#                mean=mean/gas_factor
-#                std=std/gas_factor
-#            if(x_ is None or x_==0):
-#                x_= 0
-#            else:
-#                y[x_] = y_
-#            y[0] = 0
-#            for i in range(len(X)):
-#                m[i] = mean[i]
-#            for i in range(x_+1,len(X)):
-#    #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-#            for i in range(x_-1,-1,-1):
-#    #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-#            if(train):
-#                early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
-#                model = build_model(neurons, dim, lr, regu=regu)
-##                for i in range(100):
-##                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
-#                model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[early_stopping])
-#                prediction = [x[0] for x in model.predict(X)]
-##                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
-#                    
-#
-#            else:
-#                prediction = None
-#            if plot or save:
-#                if goal=="gas" and train:
-#                    model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
-#                    prediction = [x[0] for x in model.predict(X)]
-#                    m = m*gas_factor
-#                    y = y*gas_factor
-#                    std = std*gas_factor
-#                    mean = mean*gas_factor
-#                plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train)
-#                if save:
-#                    filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
-#                    pyplot.savefig(filepath, bbox_inches="tight")
-#                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
-#                if plot:
-#                    pyplot.show()
-        if (save_sos):
-            save_sos2(X,mean,goal,w, 0, folder="scenarios\\nn\\points\\ads")
+        for scen in range(scen_start, scen_start+num_scen):
+            if (goal=="gas" and train):
+                mean=mean/gas_factor
+                std=std/gas_factor
+            if(x_ is None or x_==0):
+                x_= 0
+            else:
+                y[x_] = y_
+            y[0] = 0
+            for i in range(len(X)):
+                m[i] = mean[i]
+            for i in range(x_+1,len(X)):
+    #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+            for i in range(x_-1,-1,-1):
+    #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+            if(train):
+                early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
+                model = build_model(neurons, dim, lr, regu=regu)
+#                for i in range(100):
+#                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
+                model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[early_stopping])
+                prediction = [x[0] for x in model.predict(X)]
+#                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
+                    
+
+            else:
+                prediction = None
+            if plot or save:
+                if goal=="gas" and train:
+                    model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
+                    prediction = [x[0] for x in model.predict(X)]
+                    m = m*gas_factor
+                    y = y*gas_factor
+                    std = std*gas_factor
+                    mean = mean*gas_factor
+                plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train)
+                if save:
+                    filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
+                    pyplot.savefig(filepath, bbox_inches="tight")
+                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+                if plot:
+                    pyplot.show()
+            if (save_sos):
+                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\ads")
 
 def plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, prev=None):
     if prev is None:

@@ -38,7 +38,8 @@ robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
 recourse_algo_columns = ["infeasible count", "oil output", "gas output"]+ [w+"_choke_final" for w in wellnames_2]
-
+indiv_cap = 54166
+tot_cap = 250000
 
 phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.1)], 'regu':[1e-6, 1e-5, 1e-4, 1e-3, 1e-2], 'layers':[1,2], 'neurons':[20,40]}
@@ -500,9 +501,11 @@ def get_sos2_scenarios(phase, num_scen):
 
 #TODO: modify to load true
 def get_sos2_true_curves(phase, init_name, iteration):
-    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_true.csv", delimiter=";", header=0)
     dbs = {}
+    if phase=="oil":
+        iteration=0
     for well in wellnames_2:
-        dbs[well] = df[well+"_"+phase+"_"+str(0)]
+        dbs[well] = df[well+"_"+phase+"_"+str(iteration)]
     return dbs
 
