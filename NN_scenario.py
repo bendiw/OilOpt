@@ -88,7 +88,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             std = np.array([std_orig[i*factor] for i in range(points+1)])
         X = np.array([[i*factor] for i in range(len(mean))])
         y = np.zeros(len(X))
-<<<<<<< HEAD
 #        m = np.zeros(len(X))
 
         for scen in range(scen_start, scen_start+num_scen):
@@ -109,10 +108,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                     mean = np.insert(mean, index, mean_orig[x_])
                     std = np.insert(std, index, std_orig[x_])
             y[0] = 0
-            print("X after:",X)
-            print("y after:",y)
-            print("mean after:",mean)
-            print("std after:",std)
 #            for i in range(len(X)):
 #                m[i] = mean[i]
             for i in range(index+1,len(X)):
@@ -150,8 +145,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                     pyplot.show()
             if (save_sos):
                 save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\")
-=======
-        m = np.zeros(len(X))
+#        m = np.zeros(len(X))
 #
 #        for scen in range(scen_start, scen_start+num_scen):
 #            if (goal=="gas" and train):
@@ -197,9 +191,8 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
 #                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
 #                if plot:
 #                    pyplot.show()
-        if (save_sos):
-            save_sos2(X,mean,goal,w, 0, folder="scenarios\\nn\\points\\ads")
->>>>>>> 716bf3009423fa832bbfb5eba13f83ae881408e5
+#        if (save_sos):
+#            save_sos2(X,mean,goal,w, 0, folder="scenarios\\nn\\points\\ads")
 
 def plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train, prev=None):
     if prev is None:
