@@ -78,32 +78,45 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     batch_size=7
     ax=None
     for w in well:
-        mean = df[str(w)+"_"+goal+"_mean"]
-        std = df[str(w)+"_"+goal+"_var"]
+        mean_orig = df[str(w)+"_"+goal+"_mean"]
+        std_orig = df[str(w)+"_"+goal+"_var"]
         if(points):
             assert(100%points==0)
             factor = int(100/points)
-            mean = np.array([mean[i*factor] for i in range(points+1)])
-            std = np.array([std[i*factor] for i in range(points+1)])
+            mean = np.array([mean_orig[i*factor] for i in range(points+1)])
+            std = np.array([std_orig[i*factor] for i in range(points+1)])
         X = np.array([[i*factor] for i in range(len(mean))])
         y = np.zeros(len(X))
-        m = np.zeros(len(X))
+#        m = np.zeros(len(X))
 
         for scen in range(scen_start, scen_start+num_scen):
             if (goal=="gas" and train):
                 mean=mean/gas_factor
                 std=std/gas_factor
             if(x_ is None or x_==0):
-                x_= 0
+                index= 0
             else:
-                y[x_] = y_
+                if(x_ % factor == 0):
+                    index = int(x_/factor)
+                    y[index] = y_
+                else:
+                    X = np.append(X, [[x_]], axis=0)
+                    X = np.sort(X,axis=0)
+                    index = np.where(X==x_)[0][0]
+                    y=np.insert(y, index, y_)
+                    mean = np.insert(mean, index, mean_orig[x_])
+                    std = np.insert(std, index, std_orig[x_])
             y[0] = 0
-            for i in range(len(X)):
-                m[i] = mean[i]
-            for i in range(x_+1,len(X)):
+            print("X after:",X)
+            print("y after:",y)
+            print("mean after:",mean)
+            print("std after:",std)
+#            for i in range(len(X)):
+#                m[i] = mean[i]
+            for i in range(index+1,len(X)):
     #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-            for i in range(x_-1,-1,-1):
+            for i in range(index-1,-1,-1):
     #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             if(train):
@@ -126,7 +139,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                     y = y*gas_factor
                     std = std*gas_factor
                     mean = mean*gas_factor
-                plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train)
+                plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train)
                 if save:
                     filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
                     pyplot.savefig(filepath, bbox_inches="tight")
@@ -136,7 +149,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             if (save_sos):
                 save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\")
 
-def plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, prev=None):
+def plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train, prev=None):
     if prev is None:
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
@@ -144,7 +157,7 @@ def plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, tr
         if(x_ is not None):
             line1 = ax.plot([x_], [y_],color="red",linestyle="None", marker=".", markersize=7)
     
-        line3 = ax.plot(X, m, color="black", linewidth=0.7)
+        line3 = ax.plot(X, mean, color="black", linewidth=0.7)
         if(train):
             line2 = ax.plot(X, prediction, color='red',linestyle='dashed', linewidth=1)
         else:
