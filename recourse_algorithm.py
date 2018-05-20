@@ -152,24 +152,19 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
         return 0, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
     
     
-def test_init_scen(init_name, num_true):
+def test_init_scen(init_name):
     init_chokes = t.get_init_chokes(init_name)
     c = ["tot_gas"] + [w for w in t.wellnames_2]
-    inf = {col:0 for col in c}
-    for i in range(num_true):
-        stdout.write("\r scenario %d" % i)
-        stdout.flush()
-        true_well_curves = get_true_models(init_name, i)
-        tot_gas = 0
-        for w in t.wellnames_2:
-            w_gas = true_well_curves[w].predict(init_chokes[w], "gas")
-            tot_gas+=w_gas
-            if(w_gas-0.01 > t.indiv_cap):
-                inf[w] +=1
-        if(tot_gas-0.01 > t.tot_cap):
-            inf["tot_gas"]+=1
+    gas = {col:0 for col in c}
+    true_well_curves = get_true_models(init_name, None)
+    tot_gas = 0
+    for w in t.wellnames_2:
+        w_gas =  true_well_curves[w].predict(init_chokes[w], "gas")
+        gas[w] =w_gas
+        tot_gas+=w_gas
+    gas["tot_gas"] = tot_gas
     df = pd.DataFrame(columns=c)
-    df.loc[0] = inf
+    df.loc[0] = gas
     return df
     
 # =============================================================================
