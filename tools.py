@@ -482,12 +482,16 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     return model_2
 
 def get_sos2_scenarios(phase, num_scen, init_name=""):
+<<<<<<< HEAD
     if(phase=="oil"):
         df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
     else:
         if(len(init_name)>0):
             init_name="_"+init_name
         df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+init_name+".csv", delimiter=";", header=0)
+=======
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+".csv", delimiter=";", header=0)
+>>>>>>> d7992df1b5688e938b6708efd09ebe3786fc84c9
     scenarios=(len(df.keys())-2)/7
     dbs = {}
     if phase=="gas":
@@ -506,6 +510,10 @@ def get_sos2_scenarios(phase, num_scen, init_name=""):
 
 #TODO: modify to load true
 def get_sos2_true_curves(phase, init_name, iteration):
+<<<<<<< HEAD
+=======
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+"_true.csv", delimiter=";", header=0)
+>>>>>>> d7992df1b5688e938b6708efd09ebe3786fc84c9
     dbs = {}
     if phase=="oil":
         df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_true.csv", delimiter=";", header=0)
