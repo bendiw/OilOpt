@@ -244,18 +244,19 @@ class Recourse_Model:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.optimize()
-#        print("\n=====================")
-#        for p_well in self.wellnames:
-#            print("max input", self.input_upper[p_well, "HP", 0])
-#            if(len(self.gas_vals)>0):
-#                try:
-#                    for brk in range(len(self.choke_vals[p_well])):
-#                        print(self.zetas[brk, p_well, "HP"])
-#                except:
-#                    pass
-#            for s in range(self.scenarios):
-#    #            print("\n",self.gas_vals[s]["W5"])
-#                print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
+        if(self.verbose>0):
+            print("\n=====================")
+            for p_well in ["W2"]:
+                print("max input", self.input_upper[p_well, "HP", 0])
+                if(len(self.gas_vals)>0):
+                    try:
+                        for brk in range(len(self.choke_vals[p_well])):
+                            print(self.zetas[brk, p_well, "HP"])
+                    except:
+                        pass
+                for s in range(self.scenarios):
+        #            print("\n",self.gas_vals[s]["W5"])
+                    print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
         
     def get_solution(self):        
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 

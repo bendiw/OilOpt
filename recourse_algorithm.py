@@ -50,7 +50,10 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     for i in range(num_iter):
         stdout.write("\r iteration %d" % i)
         stdout.flush()
-#        print("\n\niteration", i)
+        if(i in [34, 45, 138, 147, 164, 179, 185]):
+            verbose=3
+        else:
+            verbose=0
         #get "true" sos2 or NN models
         true_well_curves = get_true_models(init_name, i)
         #iterate with one less change since we have already found first solution
