@@ -88,7 +88,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         X = np.array([[i*factor] for i in range(len(mean))])
         y = np.zeros(len(X))
 #        m = np.zeros(len(X))
-
         if (goal=="gas" and train):
             mean=mean/gas_factor
             std=std/gas_factor
@@ -101,11 +100,11 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 insert_index = index
                 y = np.append(y,0)
                 if (x_[w]<100):
-                    X = np.insert(X, index+1, [x_[w]+0.5*factor])
+                    X = np.insert(X, index+1, [x_[w]+0.5*factor], axis=0)
                     y[index] = y_[w]
                     insert_index = index + 1
                 else:
-                    X = np.insert(X, index, [x_[w]-0.5*factor])
+                    X = np.insert(X, index, [x_[w]-0.5*factor], axis=0)
                     y[index+1] = y_[w]
                 interpol_mean = (1-(X[insert_index]-np.floor(X[insert_index]))) * mean_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * mean_orig[np.ceil(X[insert_index])]
                 interpol_std = (1-(X[insert_index]-np.floor(X[insert_index]))) * std_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * std_orig[np.ceil(X[insert_index])]
@@ -116,11 +115,12 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 insert_index = index
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
-                print(interpol_mean)
+#                print(interpol_mean)
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
             mean = np.insert(mean, insert_index, interpol_mean)
             std = np.insert(std, insert_index, interpol_std)
         y[0] = 0
+
         for scen in range(scen_start, scen_start+num_scen):
 #            for i in range(len(X)):
 #                m[i] = mean[i]
@@ -223,7 +223,7 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
         print("Exception:", e)
         d[well+"_choke"] = np.array([x[0] for x in X])
         df = pd.DataFrame(data=d)
-        print(df.columns)
+#        print(df.columns)
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";")
         
