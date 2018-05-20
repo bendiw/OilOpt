@@ -96,8 +96,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             index= 0
         else:
             if(x_[w] % factor == 0):
+                #point is already in list, so we add another one between two points to ensure same length in scenarios
                 index = int(x_[w]/factor)
-                y[index] = y_[w]
+                y[index] = y_[w]+
             else:
                 X = np.append(X, [[x_[w]]], axis=0)
                 X = np.sort(X,axis=0)
@@ -198,6 +199,7 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
     filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
+    print(well, "Y", len(y))
     d = {well+"_"+phase+"_"+str(scen): y}
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
@@ -207,7 +209,7 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
         for k, v in d.items():
             df[k] = v
     except Exception as e:
-        print(e)
+        print("Exception:", e)
         d[well+"_choke"] = np.array([x[0] for x in X])
         df = pd.DataFrame(data=d)
         print(df.columns)
