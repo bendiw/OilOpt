@@ -92,13 +92,27 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         if (goal=="gas" and train):
             mean=mean/gas_factor
             std=std/gas_factor
-        if(x_ is None or x_[w]==0):
+        if(x_ is None):
             index= 0
         else:
             if(x_[w] % factor == 0):
                 #point is already in list, so we add another one between two points to ensure same length in scenarios
                 index = int(x_[w]/factor)
+<<<<<<< HEAD
                 y[index] = y_[w]+
+=======
+                insert_index = index
+                y = np.append(y,0)
+                if (x_[w]<100):
+                    X = np.insert(X, index+1, [x_[w]+0.5*factor])
+                    y[index] = y_[w]
+                    insert_index = index + 1
+                else:
+                    X = np.insert(X, index, [x_[w]-0.5*factor])
+                    y[index+1] = y_[w]
+                interpol_mean = (1-(X[insert_index]-np.floor(X[insert_index]))) * mean_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * mean_orig[np.ceil(X[insert_index])]
+                interpol_std = (1-(X[insert_index]-np.floor(X[insert_index]))) * std_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * std_orig[np.ceil(X[insert_index])]
+>>>>>>> master
             else:
                 X = np.append(X, [[x_[w]]], axis=0)
                 X = np.sort(X,axis=0)
@@ -106,8 +120,8 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
-                mean = np.insert(mean, index, interpol_mean)
-                std = np.insert(std, index, interpol_std)
+            mean = np.insert(mean, index, interpol_mean)
+            std = np.insert(std, index, interpol_std)
         y[0] = 0
         for scen in range(scen_start, scen_start+num_scen):
 #            for i in range(len(X)):
