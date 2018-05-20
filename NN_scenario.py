@@ -72,16 +72,18 @@ def hey():
     df = pd.read_csv(filename, sep=';', index_col=0)
     df_true = pd.read_csv("scenarios/nn/points/sos2_gas_w2_off_true.csv", sep=";",index_col=0)
     y = []
-    X = [[c] for c in df["W2_choke"]]
-    for i in range(200):
-        y.append([c for c in df["W2_gas_"+str(i)]])
+    X = [[c] for c in df["W1_choke"]]
+    for i in range(1000):
+        y.append([c for c in df["W1_gas_"+str(i)]])
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
     y_true = []
     for i in range(200):
-        y_true.append([c for c in df_true["W2_gas_"+str(i)]])
-    for i in range(200):
-        line1 = ax.plot(X, y_true[i],color="blue",linestyle="dashed", linewidth=0.5)
+        y_true.append([c for c in df_true["W1_gas_"+str(i)]])
+#    for i in range(200):
+#        line1 = ax.plot(X, y_true[i],color="blue",linestyle="dashed", linewidth=0.5)
+    for i in range(5,1000):
+        line1 = ax.plot(X, y[i],color="blue",linestyle="dashed", linewidth=0.3)
     for i in range(5):
         line1 = ax.plot(X, y[i],color="green",linestyle="-", linewidth=1)
         line2 = ax.plot(X, y[i],color="red",linestyle="None", marker=".", markersize=7)
