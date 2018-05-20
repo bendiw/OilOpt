@@ -75,7 +75,8 @@ class Recourse_Model:
         self.oil_vals={w:[] for w in self.wellnames}
         self.gas_vals = {s:{w:[] for w in self.wellnames} for s in range(self.scenarios)}
         #TODO: this is a hack to let all subclasses set zetas. should be independent but we'll use 10 for now
-        self.choke_vals = [i*10 for i in range(11)]
+#        self.choke_vals = [i*10 for i in range(11)]
+        self.choke_vals ={}
 #        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
 #                                     phase=phase, sep=sep, iteration=stability_iter, distr=distr)
         
@@ -244,15 +245,17 @@ class Recourse_Model:
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.optimize()
 #        print("\n=====================")
-#        if(len(self.gas_vals)>0):
-#            try:
-#                for brk in range(len(self.choke_vals)):
-#                    print(self.zetas[brk, "W3", "HP"])
-#            except:
-#                pass
-#        for s in range(self.scenarios):
-##            print("\n",self.gas_vals[s]["W5"])
-#            print(s, "choke", self.inputs["W3", "HP", 0].x, "W3 gas", self.outputs_gas[s, "W3", "HP"].x, "vals", self.gas_vals[s]["W3"])
+#        for p_well in self.wellnames:
+#            print("max input", self.input_upper[p_well, "HP", 0])
+#            if(len(self.gas_vals)>0):
+#                try:
+#                    for brk in range(len(self.choke_vals[p_well])):
+#                        print(self.zetas[brk, p_well, "HP"])
+#                except:
+#                    pass
+#            for s in range(self.scenarios):
+#    #            print("\n",self.gas_vals[s]["W5"])
+#                print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
         
     def get_solution(self):        
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
@@ -511,13 +514,13 @@ class Factor(Recourse_Model):
                     self.m.remove(self.gas_out_constr[change_well, self.well_to_sep[change_well][0], s])
                     self.gas_vals[s][change_well] = gases
     
-                self.choke_vals = [i*100/(len(self.oil_vals[change_well])-1) for i in range(len(self.oil_vals[change_well]))]
+                self.choke_vals[change_well] = true_curve.choke_vals.values.tolist()
 
                 #add zetas, link to inputs
-                self.zetas = self.m.addVars([(brk, change_well, sep) for sep in self.well_to_sep[change_well] for brk in range(len(self.choke_vals))], vtype = GRB.CONTINUOUS, name="zetas")
-                self.zeta_constr = self.m.addConstrs( self.inputs[change_well, sep, 0] == quicksum(self.zetas[brk, change_well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) for sep in self.well_to_sep[change_well])
-                self.zeta_route = self.m.addConstrs( self.routes[change_well, sep] == quicksum(self.zetas[brk, change_well, sep] for brk in range(len(self.choke_vals))) for sep in self.well_to_sep[change_well])
-                self.zeta_sos2 = self.m.addSOS(2, [self.zetas[brk, change_well, "HP"] for brk in range(len(self.choke_vals))])
+                self.zetas = self.m.addVars([(brk, change_well, sep) for sep in self.well_to_sep[change_well] for brk in range(len(self.choke_vals[change_well]))], vtype = GRB.CONTINUOUS, name="zetas")
+                self.zeta_constr = self.m.addConstrs( self.inputs[change_well, sep, 0] == quicksum(self.zetas[brk, change_well, sep]*self.choke_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
+                self.zeta_route = self.m.addConstrs( self.routes[change_well, sep] == quicksum(self.zetas[brk, change_well, sep] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
+                self.zeta_sos2 = self.m.addSOS(2, [self.zetas[brk, change_well, "HP"] for brk in range(len(self.choke_vals[change_well]))])
 
                 #store constr to remove later
                 self.learned_vars.append(self.zetas)
@@ -526,9 +529,9 @@ class Factor(Recourse_Model):
                 self.learned_constr["gas"].append(self.zeta_route)
                 
                 #add new constrs
-                self.oil_constr =self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals)))) for sep in self.well_to_sep[change_well])
+                self.oil_constr =self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well])))) for sep in self.well_to_sep[change_well])
                 self.learned_constr["oil"].append(self.oil_constr)
-                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
+                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
                 self.learned_constr["gas"].append(self.gas_constr)
 
         else:
@@ -559,34 +562,34 @@ class SOS2(Recourse_Model):
 
         self.results_file = "results/robust/res_SOS2.csv"
         #load SOS2 breakpoints
-        self.orig_oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
-        self.orig_gas_vals = t.get_sos2_scenarios("gas", self.scenarios)
-        self.oil_vals = t.get_sos2_scenarios("oil", self.scenarios)
-        self.gas_vals = t.get_sos2_scenarios("gas", self.scenarios)
+        self.orig_oil_vals, self.choke_vals = t.get_sos2_scenarios("oil", self.scenarios, init_name)
+        self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name)
+        self.oil_vals, _ = t.get_sos2_scenarios("oil", self.scenarios, init_name)
+        self.gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name)
         if(self.scenarios=="eev"):
             self.scenarios=1
-        self.choke_vals = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
+#         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
         
         # =============================================================================
         # variable creation                    
         # =============================================================================
         #continuous breakpoint variables
-        self.zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals))], vtype = GRB.CONTINUOUS, name="zetas")
+        self.zetas = self.m.addVars([(brk, well, sep) for well in self.wellnames for sep in self.well_to_sep[well] for brk in range(len(self.choke_vals[well]))], vtype = GRB.CONTINUOUS, name="zetas")
 
         # =============================================================================
         # SOS2
         # =============================================================================
         #oil
-        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
         #gas
-        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_gas[scenario, well, sep] == 0) for scenario in range(self.scenarios) for well in self.wellnames for sep in self.well_to_sep[well] ) 
         # =============================================================================
         # input limit constraints
         # =============================================================================
-        self.m.addConstrs( self.inputs[well, sep, 0] == quicksum(self.zetas[brk, well, sep]*self.choke_vals[brk] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well])
-        self.m.addConstrs( self.routes[well, sep] == quicksum(self.zetas[brk, well, sep] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( self.inputs[well, sep, 0] == quicksum(self.zetas[brk, well, sep]*self.choke_vals[well][brk] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.m.addConstrs( self.routes[well, sep] == quicksum(self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 
@@ -596,9 +599,9 @@ class SOS2(Recourse_Model):
         #no way to do in one-liner
         for well in self.wellnames:
             for sep in self.well_to_sep[well]:
-                self.m.addSOS(2, [self.zetas[brk, well, sep] for brk in range(len(self.choke_vals))])
+                self.m.addSOS(2, [self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))])
         #tighten sos constraints
-        self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+        self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         return self
     
     
@@ -626,9 +629,9 @@ class SOS2(Recourse_Model):
                     self.gas_vals[s][change_well] = gases
                     
                 #add new ones
-                self.oil_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals)))) for sep in self.well_to_sep[change_well])
+                self.oil_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well])))) for sep in self.well_to_sep[change_well])
                 self.learned_constr["oil"].append(self.oil_constr)
-                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
+                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
                 self.learned_constr["gas"].append(self.gas_constr)
         else:
             raise ValueError("Only SOS2-based true curve discovery is implemented yet!")
@@ -640,6 +643,6 @@ class SOS2(Recourse_Model):
         self.m.remove(self.gas_out_constr)
         
         #re-add orig constraints
-        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well])
-        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         self.learned_wells =[]

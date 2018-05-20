@@ -96,6 +96,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             index= 0
         else:
             if(x_[w] % factor == 0):
+                #point is already in list, so we add another one between two points to ensure same length in scenarios
                 index = int(x_[w]/factor)
                 insert_index = index
                 y = np.append(y,0)
@@ -112,11 +113,13 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 X = np.append(X, [[x_[w]]], axis=0)
                 X = np.sort(X,axis=0)
                 index = np.where(X==x_[w])[0][0]
+                insert_index = index
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
+                print(interpol_mean)
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
-            mean = np.insert(mean, index, interpol_mean)
-            std = np.insert(std, index, interpol_std)
+            mean = np.insert(mean, insert_index, interpol_mean)
+            std = np.insert(std, insert_index, interpol_std)
         y[0] = 0
         for scen in range(scen_start, scen_start+num_scen):
 #            for i in range(len(X)):
@@ -155,7 +158,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
+                save_sos2(X,mean,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
 #        m = np.zeros(len(X))
 #
 
@@ -217,7 +220,7 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
         for k, v in d.items():
             df[k] = v
     except Exception as e:
-        print(e)
+        print("Exception:", e)
         d[well+"_choke"] = np.array([x[0] for x in X])
         df = pd.DataFrame(data=d)
         print(df.columns)
