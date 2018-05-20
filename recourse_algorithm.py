@@ -26,7 +26,7 @@ from recourse_models import NN, SOS2, Factor
 # =============================================================================
 def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False):
     
-    filestring = str(num_iter)+"iter_"+init_name+"_"+model_type+".csv"
+    filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+".csv"
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name)
     
@@ -62,7 +62,8 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         model.m.update()
 #        print(model.oil_out_constr)
     if(save):
-        results.to_csv(filestring, sep=';') 
+        results.to_csv(filestring, sep=';')
+    print("\n")
     return results
 
 # =============================================================================
@@ -152,19 +153,28 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
         return 0, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
     
     
-def test_init_scen(init_name):
+def test_init_scen(init_name, num_scen, phase="gas"):
     init_chokes = t.get_init_chokes(init_name)
-    c = ["tot_gas"] + [w for w in t.wellnames_2]
-    gas = {col:0 for col in c}
-    true_well_curves = get_true_models(init_name, None)
-    tot_gas = 0
-    for w in t.wellnames_2:
-        w_gas =  true_well_curves[w].predict(init_chokes[w], "gas")
-        gas[w] =w_gas
-        tot_gas+=w_gas
-    gas["tot_gas"] = tot_gas
-    df = pd.DataFrame(columns=c)
-    df.loc[0] = gas
+    c = ["tot_"+phase, "infeasible"] + [w for w in t.wellnames_2]
+    gas = {col:[] for col in c}
+    for s in range(num_scen):
+        stdout.write("\r scenario %d" % s)
+        stdout.flush()
+        true_well_curves = get_true_models(init_name, s)
+        tot_gas = 0
+        inf = 0
+        for w in t.wellnames_2:
+            w_gas =  true_well_curves[w].predict(init_chokes[w], phase)
+            gas[w].append(w_gas)
+            tot_gas+=w_gas
+            if(w_gas-0.01 > indiv_cap):
+                inf=1
+        if(tot_gas-0.01 > tot_cap):
+            inf=1
+        gas["infeasible"].append(inf)
+        gas["tot_"+phase].append(tot_gas)
+    df = pd.DataFrame(gas, columns=c)
+#    df.loc[0] = gas
     return df
     
 # =============================================================================
@@ -197,19 +207,29 @@ class SOSpredictor():
         return int(math.floor(x / 10.0))
     
     def init(self, well, init_name, iteration):
-        self.oil_vals = t.get_sos2_true_curves("oil", init_name, iteration)[well]
-        self.gas_vals = t.get_sos2_true_curves("gas", init_name, iteration)[well]
-        self.choke_vals = [i*100/(len(self.oil_vals)-1) for i in range(len(self.oil_vals))]
+        self.oil_vals, self.choke_vals = t.get_sos2_true_curves("oil", init_name, iteration)
+        self.oil_vals = self.oil_vals[well]
+        self.choke_vals = self.choke_vals[well]
+        self.gas_vals, _ = t.get_sos2_true_curves("gas", init_name, iteration)
+        self.gas_vals = self.gas_vals[well]
+        
         self.p_type="sos2"
         return self
         
         
     def predict(self, choke, phase):
-        lower = self.rounddown(choke)
-        upper = self.roundup(choke)
-        factor = choke/10-lower
-#        print("l:", lower, "u:", upper, "fac:", factor, "val_l:", self.gas_vals[lower], "val_u:", self.gas_vals[upper])
+        index = None
+        for i in range(len(self.choke_vals)):
+            if(choke < round(self.choke_vals[i], 3)):
+                index = i
+                break
+                
+        factor = 1-(choke - self.choke_vals[index-1])/10
+#        lower = self.rounddown(choke)
+#        upper = self.roundup(choke)
+#        factor = choke/10-lower
+#        print("l:", index-1, "u:", index, "fac:", factor, "val_l:", self.gas_vals[index-1], "val_u:", self.gas_vals[index])
         if(phase=="oil"):
-            return (1-factor)*self.oil_vals[lower]+factor*self.oil_vals[upper]
+            return (factor)*self.oil_vals[index-1]+(1-factor)*self.oil_vals[index]
         else:
-            return (1-factor)*self.gas_vals[lower]+factor*self.gas_vals[upper]
+            return (factor)*self.gas_vals[index-1]+(1-factor)*self.gas_vals[index]

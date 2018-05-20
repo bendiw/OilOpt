@@ -88,7 +88,7 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
             
-        self.results_file = "results/mop/res.csv"
+        self.results_file = "results/mop/res_"+init_name+".csv"
         self.alpha=alpha
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
@@ -102,20 +102,32 @@ class NN:
         #Case relevant numerics
         if case==2:
             if(not w_relative_change):
-                w_relative_change = {well : [1., 0.1] for well in self.wellnames}
-#            dict with binary var describing whether or not wells are producing in initial setting
+                self.w_relative_change = {well : [0.4] for well in self.wellnames}
+            
             if not init_name:
-                w_initial_prod = {well : 0 for well in self.wellnames}
-                w_initial_vars = {well : [0] for well in self.wellnames}
-            else:
-                w_initial_df,_,_ = t.get_robust_solution(init_name=init_name)
-                w_initial_vars = {w:[w_initial_df[w].values[0]] for w in self.wellnames}
-                print(w_initial_vars)
-                w_initial_prod = {well : 1 if w_initial_vars[well][0]>0 else 0 for well in self.wellnames}
-                print(w_initial_prod)
+                self.w_initial_prod = {well : 0 for well in self.wellnames}
+                self.w_initial_vars = {well : 0 for well in self.wellnames}
+            elif not isinstance(init_name, (dict)):
+                #load init from file
+                self.w_initial_df = t.get_robust_solution(init_name=init_name)
+                self.w_initial_vars = {w:self.w_initial_df[w+"_choke"].values[0] for w in self.wellnames}
+#                print(self.w_initial_vars)
+                
+                self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
+#                print(self.w_initial_prod)
             #constraints for case 2
-            tot_exp_cap = 250000
-            well_cap = 54166
+            else:
+                #we were given a dict of initial values
+#                w_initial_vars=init_name
+                self.w_initial_vars={}
+                for w in self.wellnames:
+                    self.w_initial_vars[w] = init_name[w+"_choke"]
+#                    del w_initial_vars[w+"_choke"]
+                
+#                print("optimization initial chokes:", w_initial_vars)
+                self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
+            self.tot_exp_cap = 250000
+            self.well_cap = {w:54166 for w in self.wellnames}
         else:
             raise ValueError("Case 1 not implemented yet.")
 
@@ -123,7 +135,7 @@ class NN:
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
-        self.m = Model("Ekofisk")
+        self.m = Model("")
         
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")
@@ -243,36 +255,14 @@ class NN:
 #        self.m.addConstrs( (routes[well, sep] == 0) >> (outputs_var[well, phase, sep] == 0) for well in self.wellnames for phase in self.phasenames for sep in self.well_to_sep[well] )
 
     
-        # =============================================================================
-        # big-M constraints on input/routing        
-        # =============================================================================
-        if(case==1):
-            #do not use input dummies in case 2 since these are needed for gas lift only
-            self.m.addConstrs( (routes[well, sep] == 1) >> (input_dummies[well, sep, dim] == inputs[well, sep, dim]) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-            self.m.addConstrs( (routes[well, sep] == 0) >> (input_dummies[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]))
-    #        self.m.addConstrs( (routes[well, sep] == 1) >> (inputs[well, sep, dim] >= 1) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]) )
-#            self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep]) )
 
     
         # =============================================================================
         # separator gas constraints
         # =============================================================================
-        if(case==1):
-            lp_constr = self.m.addConstr(quicksum(outputs[well, "gas", "LP"] for p in sep_p_route["LP"] for well in p_dict[p]) - quicksum(input_dummies[c_well, "LP", 0] for c_well in p_dict["C"]) <= sep_cap["LP"])
-    
-    #        lp_constr = self.m.addConstr(quicksum(outputs[well, "gas", "LP"] for p in sep_p_route["LP"] for well in p_dict[p]) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= sep_cap["LP"])
-            hp_constr = self.m.addConstr(quicksum(outputs[well, "gas", "HP"] for p in sep_p_route["HP"] for well in p_dict[p]) <= sep_cap["HP"])
-        else:
-            #single gas constraint per well in case2
-            gas_constr = self.m.addConstrs(outputs[well, "gas", "HP"] <= well_cap for well in self.wellnames)
-            
-        # =============================================================================
-        # gas lift constraints, valid for case 1
-        # =============================================================================
-        if(case==1):
-            glift_constr = self.m.addConstr(quicksum(input_dummies[well, sep, 0] for pform in glift_groups for well in p_dict[pform] for sep in self.well_to_sep[well]) <= glift_caps[0])
-#        glift_constr = self.m.addConstr(quicksum(inputs[well, sep, 0] for pform in glift_groups for well in p_dict[pform] for sep in self.well_to_sep[well]) <= glift_caps[0])
-
+        #single gas constraint per well in case2
+        gas_constr = self.m.addConstrs(outputs[well, "gas", "HP"] <= well_cap for well in self.wellnames)
+        
     
         # =============================================================================
         # total gas export
@@ -296,10 +286,9 @@ class NN:
         
         # =============================================================================
         # change tracking and total changes
-        # Probably do not care about these when generating pareto front for now
         # =============================================================================
-        self.m.addConstrs(w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
-        self.m.addConstrs(inputs[well, sep, dim] - w_initial_vars[well][dim] <= changes[well, sep, dim]*w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(self.w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well][dim] <= changes[well, sep, dim]*self.w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
 
         # =============================================================================

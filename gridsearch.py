@@ -146,10 +146,10 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     
     if(mode=="grid"):
         parameters = t.param_dict
-        gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True)
+        gs = GridSearchCV(model, parameters, verbose=verbose, return_train_score=True, error_score=np.NaN)
     else:
         parameters = t.param_dict_rand
-        gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True, n_iter=n_iter)
+        gs = RandomizedSearchCV(model, parameters, verbose=verbose, return_train_score=True, n_iter=n_iter, error_score=np.NaN)
 
     gs.fit(X, y)
     grid_result = gs.cv_results_

@@ -97,7 +97,7 @@ def get_limits(target, wellnames, well_to_sep, case):
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
                 lower[well][sep] = max(0.0, 0.5*dfw.min()) #do not allow negative choke values
-                upper[well][sep] = min(100.0, 1.2*dfw.max())
+                upper[well][sep] = min(100.0, 1.3*dfw.max())
         return lower, upper
 
 def normalize(data):
@@ -494,14 +494,10 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     return model_2
 
 def get_sos2_scenarios(phase, num_scen, init_name=""):
-    if(phase=="oil"):
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
-    else:
-        if(len(init_name)>0):
-            init_name="_"+init_name
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+init_name+".csv", delimiter=";", header=0)
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+".csv", delimiter=";", header=0)
     scenarios=(len(df.keys())-2)/7
     dbs = {}
+    chks = {}
     if phase=="gas":
         for i in range(int(num_scen)):
             if (i>=scenarios):
@@ -514,21 +510,28 @@ def get_sos2_scenarios(phase, num_scen, init_name=""):
     elif phase=="oil":
         for well in wellnames_2:
             dbs[well] = df[well+"_"+phase+"_"+str(0)]
-    return dbs
+    #get choke vals
+    for well in wellnames_2:
+        chks[well] = df[well+"_choke"]
+    return dbs, chks
 
 #TODO: modify to load true
 def get_sos2_true_curves(phase, init_name, iteration):
     dbs = {}
+    chks = {}
     if phase=="oil":
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_true.csv", delimiter=";", header=0)
         iteration=0
+        true_string = ""
     else:
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+"_true.csv", delimiter=";", header=0)
-    if not iteration:
+        true_string = "_true"
+    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+true_string+".csv", delimiter=";", header=0)
+    if iteration is None:
         addstr = ""
     else:
         addstr = "_"+str(iteration)
     for well in wellnames_2:
         dbs[well] = df[well+"_"+phase+addstr]
-    return dbs
+    for well in wellnames_2:
+        chks[well] = df[well+"_choke"]
+    return dbs, chks
 
