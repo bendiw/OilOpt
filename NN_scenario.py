@@ -113,11 +113,13 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 X = np.append(X, [[x_[w]]], axis=0)
                 X = np.sort(X,axis=0)
                 index = np.where(X==x_[w])[0][0]
+                insert_index = index
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
+                print(interpol_mean)
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
-            mean = np.insert(mean, index, interpol_mean)
-            std = np.insert(std, index, interpol_std)
+            mean = np.insert(mean, insert_index, interpol_mean)
+            std = np.insert(std, insert_index, interpol_std)
         y[0] = 0
         for scen in range(scen_start, scen_start+num_scen):
 #            for i in range(len(X)):
@@ -156,7 +158,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
+                save_sos2(X,mean,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
 #        m = np.zeros(len(X))
 #
 
@@ -209,7 +211,6 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
     filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
-    print(well, "Y", len(y))
     d = {well+"_"+phase+"_"+str(scen): y}
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
