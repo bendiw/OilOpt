@@ -123,7 +123,7 @@ class NN:
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
-        self.m = Model("Ekofisk")
+        self.m = Model("Model")
         
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")
