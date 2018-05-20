@@ -93,8 +93,10 @@ class NN:
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
             self.oil_optimal = res_df["tot_oil"].max()
+            self.header=False
         except Exception as e:
             self.oil_optimal = prod_optimal
+            self.header=True
         self.phasenames = t.phasenames
         print("MOP optimization. alpha =", self.alpha)
         print("oil_optimal:", self.oil_optimal)
@@ -103,6 +105,8 @@ class NN:
         if case==2:
             if(not w_relative_change):
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
+            else:
+                self.w_relative_change = w_relative_change
             
             if not init_name:
                 self.w_initial_prod = {well : 0 for well in self.wellnames}
@@ -135,11 +139,8 @@ class NN:
         # =============================================================================
         # initialize an optimization model
         # =============================================================================
-<<<<<<< HEAD
-        self.m = Model("Model")
-=======
+
         self.m = Model("")
->>>>>>> master
         
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")
@@ -265,7 +266,7 @@ class NN:
         # separator gas constraints
         # =============================================================================
         #single gas constraint per well in case2
-        gas_constr = self.m.addConstrs(outputs[well, "gas", "HP"] <= well_cap for well in self.wellnames)
+        gas_constr = self.m.addConstrs(outputs[well, "gas", "HP"] <= self.well_cap[well] for well in self.wellnames)
         
     
         # =============================================================================
@@ -275,24 +276,24 @@ class NN:
             exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(input_dummies[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
 #        exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) - quicksum(inputs[c_well, "LP", 0] for c_well in p_dict["C"]) <= tot_exp_cap)
         else:
-            exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= tot_exp_cap)
+            exp_constr = self.m.addConstr(quicksum(outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= self.tot_exp_cap)
         
         # =============================================================================
         # routing
         # =============================================================================
         self.m.addConstrs(quicksum(routes[well, sep] for sep in self.well_to_sep[well]) <= 1 for well in self.wellnames)
 
-    
-        # =============================================================================
-        # alpha constraint for MOP
-        # =============================================================================
-        self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
+        if self.alpha != "inf":
+            # =============================================================================
+            # alpha constraint for MOP
+            # =============================================================================
+            self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
         # =============================================================================
-        self.m.addConstrs(self.w_initial_vars[well][dim] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well][dim]*w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
-        self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well][dim] <= changes[well, sep, dim]*self.w_initial_vars[well][dim]*w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(self.w_initial_vars[well] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+        self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
 
         # =============================================================================
@@ -306,14 +307,16 @@ class NN:
 #        self.m.setParam(GRB.Param.LogFile, "log.txt")
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         
-        #maximization of mean oil
-#        self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
-        
-        #minimization of var gas
-        self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
+        if(self.alpha == "inf"):
+            #maximization of mean oil
+            self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
+        else:
+            #minimization of var gas
+            self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
 
         self.m.optimize()
+        
         
         if(save and case==2):
             #note, only works for case 2 as of now
@@ -338,7 +341,7 @@ class NN:
 #            newrow = pd.DataFrame(rowlist, columns=t.MOP_res_columns)
 #            df.append(newrow)
             with open(self.results_file, 'a') as f:
-                df.to_csv(f, sep=';', index=False, header=False)
+                df.to_csv(f, sep=';', index=False, header=self.header)
         
 #        for p in self.platforms:
 #            print("Platform", p)
