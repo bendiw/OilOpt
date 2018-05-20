@@ -89,32 +89,32 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         y = np.zeros(len(X))
 #        m = np.zeros(len(X))
 
-        for scen in range(scen_start, scen_start+num_scen):
-            if (goal=="gas" and train):
-                mean=mean/gas_factor
-                std=std/gas_factor
-            if(x_ is None or x_[w]==0):
-                index= 0
+        if (goal=="gas" and train):
+            mean=mean/gas_factor
+            std=std/gas_factor
+        if(x_ is None or x_[w]==0):
+            index= 0
+        else:
+            if(x_[w] % factor == 0):
+                index = int(x_[w]/factor)
+                y[index] = y_[w]
             else:
-                if(x_[w] % factor == 0):
-                    index = int(x_[w]/factor)
-                    y[index] = y_[w]
-                else:
-                    X = np.append(X, [[x_[w]]], axis=0)
-                    X = np.sort(X,axis=0)
-                    index = np.where(X==x_[w])[0][0]
-                    y=np.insert(y, index, y_[w])
-                    interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
-                    interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
-                    mean = np.insert(mean, index, interpol_mean)
-                    std = np.insert(std, index, interpol_std)
-            y[0] = 0
+                X = np.append(X, [[x_[w]]], axis=0)
+                X = np.sort(X,axis=0)
+                index = np.where(X==x_[w])[0][0]
+                y=np.insert(y, index, y_[w])
+                interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
+                interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
+                mean = np.insert(mean, index, interpol_mean)
+                std = np.insert(std, index, interpol_std)
+        y[0] = 0
+        for scen in range(scen_start, scen_start+num_scen):
 #            for i in range(len(X)):
 #                m[i] = mean[i]
             for i in range(index+1,len(X)):
     #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-            for i in range(index-1,-1,-1):
+            for i in range(index-1,0,-1):
     #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
                 y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             if(train):
@@ -194,7 +194,7 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(x,y,phase, well, scen, folder, name=""):
+def save_sos2(X,y,phase, well, scen, folder, name=""):
     filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
@@ -202,10 +202,13 @@ def save_sos2(x,y,phase, well, scen, folder, name=""):
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
 #        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
+        if not (well+"_choke" in df.keys()):
+            d[well+"_choke"] = X
         for k, v in d.items():
             df[k] = v
     except Exception as e:
         print(e)
+        d[well+"_choke"] = np.array([x[0] for x in X])
         df = pd.DataFrame(data=d)
         print(df.columns)
     with open(filename, 'w') as f:
