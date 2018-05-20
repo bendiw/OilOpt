@@ -1,0 +1,2 @@
+over_cap: scenario 39 from "sos2_gas_zero_true" (with 500 scenarios in the csv)
+under_cap: scenario 100 from "sos2_gas_w2_off_true" (with 200 scenarios in the csv)
