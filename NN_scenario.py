@@ -98,9 +98,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             if(x_[w] % factor == 0):
                 #point is already in list, so we add another one between two points to ensure same length in scenarios
                 index = int(x_[w]/factor)
-<<<<<<< HEAD
-                y[index] = y_[w]+
-=======
                 insert_index = index
                 y = np.append(y,0)
                 if (x_[w]<100):
@@ -112,7 +109,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                     y[index+1] = y_[w]
                 interpol_mean = (1-(X[insert_index]-np.floor(X[insert_index]))) * mean_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * mean_orig[np.ceil(X[insert_index])]
                 interpol_std = (1-(X[insert_index]-np.floor(X[insert_index]))) * std_orig[np.floor(X[insert_index])] + (X[insert_index]-np.floor(X[insert_index])) * std_orig[np.ceil(X[insert_index])]
->>>>>>> master
             else:
                 X = np.append(X, [[x_[w]]], axis=0)
                 X = np.sort(X,axis=0)
