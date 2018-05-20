@@ -77,7 +77,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     batch_size=7
-    ax=None
+#    ax=None
     for w in well:
         mean_orig = df[str(w)+"_"+goal+"_mean"]
         std_orig = df[str(w)+"_"+goal+"_var"]
@@ -94,19 +94,21 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             if (goal=="gas" and train):
                 mean=mean/gas_factor
                 std=std/gas_factor
-            if(x_ is None or x_==0):
+            if(x_ is None or x_[w]==0):
                 index= 0
             else:
-                if(x_ % factor == 0):
-                    index = int(x_/factor)
-                    y[index] = y_
+                if(x_[w] % factor == 0):
+                    index = int(x_[w]/factor)
+                    y[index] = y_[w]
                 else:
-                    X = np.append(X, [[x_]], axis=0)
+                    X = np.append(X, [[x_[w]]], axis=0)
                     X = np.sort(X,axis=0)
-                    index = np.where(X==x_)[0][0]
-                    y=np.insert(y, index, y_)
-                    mean = np.insert(mean, index, mean_orig[x_])
-                    std = np.insert(std, index, std_orig[x_])
+                    index = np.where(X==x_[w])[0][0]
+                    y=np.insert(y, index, y_[w])
+                    mean = np.insert(mean, index, mean_orig[x_[w]])
+                    std = np.insert(std, index, std_orig[x_[w]])
+                    print("HER")
+                    print(X, y, index, mean, std)
             y[0] = 0
 #            for i in range(len(X)):
 #                m[i] = mean[i]
@@ -132,11 +134,11 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if goal=="gas" and train:
                     model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
                     prediction = [x[0] for x in model.predict(X)]
-                    m = m*gas_factor
+#                    m = m*gas_factor
                     y = y*gas_factor
                     std = std*gas_factor
                     mean = mean*gas_factor
-                plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train)
+                plot_all(X, y, prediction, mean, std, goal, weight, points, x_[w], y_[w], w, train)
                 if save:
                     filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
                     pyplot.savefig(filepath, bbox_inches="tight")
