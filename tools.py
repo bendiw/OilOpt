@@ -333,6 +333,18 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
 
+def extract_xy(df_w):
+    xcols = [w+"_choke" for w in wellnames_2]
+    ycols = [w+"_gas_mean" for w in wellnames_2]
+    x_ = df_w[xcols]
+    y_ = df_w[ycols]
+    x_.columns = wellnames_2
+    y_.columns = wellnames_2
+    x_= x_.loc[x_.index[0]]
+    y_= y_.loc[y_.index[0]]
+
+    return x_.to_dict(), y_.to_dict()
+
 
 def get_init_chokes(init_name):
     df = pd.read_csv("results/initial/res_initial.csv", sep=";")
