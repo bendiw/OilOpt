@@ -185,6 +185,7 @@ class Recourse_Model:
         self.change_constr.setAttr("rhs", max_changes)
         
     def set_tot_gas(self, gas):
+        self.tot_exp_cap = gas
         for s in range(self.scenarios):
             self.exp_constr[s].setAttr("rhs", gas)
     
@@ -244,19 +245,19 @@ class Recourse_Model:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.optimize()
-        if(self.verbose>0):
-            print("\n=====================")
-            for p_well in ["W2"]:
-                print("max input", self.input_upper[p_well, "HP", 0])
-                if(len(self.gas_vals)>0):
-                    try:
-                        for brk in range(len(self.choke_vals[p_well])):
-                            print(self.zetas[brk, p_well, "HP"])
-                    except:
-                        pass
-                for s in range(self.scenarios):
-        #            print("\n",self.gas_vals[s]["W5"])
-                    print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
+#        if(self.verbose>0):
+#            print("\n=====================")
+#            for p_well in ["W2"]:
+#                print("max input", self.input_upper[p_well, "HP", 0])
+#                if(len(self.gas_vals)>0):
+#                    try:
+#                        for brk in range(len(self.choke_vals[p_well])):
+#                            print(self.zetas[brk, p_well, "HP"])
+#                    except:
+#                        pass
+#                for s in range(self.scenarios):
+#        #            print("\n",self.gas_vals[s]["W5"])
+#                    print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
         
     def get_solution(self):        
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
@@ -591,6 +592,10 @@ class SOS2(Recourse_Model):
         # =============================================================================
         self.m.addConstrs( self.inputs[well, sep, 0] == quicksum(self.zetas[brk, well, sep]*self.choke_vals[well][brk] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( self.routes[well, sep] == quicksum(self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
+
+
+        self.m.addConstr( self.inputs["W1", "HP", 0] == 0)
+        self.m.addConstr( self.inputs["W4", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 

@@ -158,7 +158,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,mean,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
+                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
 #        m = np.zeros(len(X))
 #
 
