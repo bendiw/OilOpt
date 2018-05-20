@@ -10,6 +10,8 @@ import math
 import pandas as pd
 import tools as t
 import os.path
+from sys import stdout
+
 from recourse_models import NN, SOS2, Factor
    
 
@@ -46,39 +48,49 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     
     
     for i in range(num_iter):
-        #true" sos2 or NN models
-        print("\n\niteration", i)
-        true_well_curves = get_true_models(init_name)
-
+        stdout.write("\r iteration %d" % i)
+        stdout.flush()
+#        print("\n\niteration", i)
+        #get "true" sos2 or NN models
+        true_well_curves = get_true_models(init_name, i)
         #iterate with one less change since we have already found first solution
-        results.loc[i] = iteration(model, init_chokes, max_changes-1, true_well_curves, verbose=verbose)
+        results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose)
+        
+        #revert to initial model
         model.set_chokes(first_sol)
+        model.reset_m()
+        model.m.update()
+#        print(model.oil_out_constr)
     if(save):
-        results.to_csv(filestring, sep=';')
+        results.to_csv(filestring, sep=';') 
     return results
 
 # =============================================================================
 # Perform one iteration of algorithm
 # =============================================================================
-def iteration(model, init_chokes, changes, true_well_curves, verbose=0):
+def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0):
     #store intermediary results as optimization finds them
-    opt_results = model.get_solution()
+#    opt_results = model.get_solution()
     #store implemented chokes, first we use only the starting point
     impl_chokes = init_chokes
     infeasible_count = 0
     tot_oil = sum([true_well_curves[w].predict(init_chokes[w], "oil") for w in t.wellnames_2])
     tot_gas = sum([true_well_curves[w].predict(init_chokes[w], "gas") for w in t.wellnames_2])
 #    print("initchoke", init_chokes, "oil", tot_oil, "\ngas", tot_gas)
-    new_chokes = model.get_chokes()
+    new_chokes = first_sol
     
     #since we start by checking for #changes+1, we need to iterate an 'extra' time including 0
     for c in range(changes, -1, -1):
-        inf_single, tot_oil, tot_gas, impl_chokes, change_well = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
+        inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
         infeasible_count+=inf_single
+        if change_well is None:
+            if verbose>1:
+                print("No more suggested changes.")
+            return [infeasible_count, tot_oil, tot_gas]+ list(impl_chokes.values())
         if(verbose>1):
             print("\n==================================================")
             print("changes:", c+1, "\nchange well:", change_well, "   [", (round(init_chokes[change_well],2) if c==changes else round(old_chokes[change_well],2)), "--->", round(new_chokes[change_well],2), "]")
-            print("Infeasible!" if inf_single==1 else "Feasible")
+            print("Infeasible! " if inf_single==1 else "Feasible.", change_well+" gas: "+str(round(change_gas,2)))
             print("\nimpl chokes:\t\t\tsuggested chokes:")
             for w in t.wellnames_2:
                 print(w+"\t", round(impl_chokes[w],2), "\t\t\t", round(new_chokes[w],2))
@@ -91,10 +103,13 @@ def iteration(model, init_chokes, changes, true_well_curves, verbose=0):
             break
         model.set_chokes(impl_chokes)
         model.set_changes(c)
+#        model.set_changes(changes)
+
+        model.set_true_curve(change_well, true_well_curves[change_well])
         model.solve(verbose=max(verbose-2, 0))
-        new_sol = model.get_solution()
+#        new_sol = model.get_solution()
 #        opt_results.append(new_sol.to_dict(), ignore_index=True)
-        opt_results.loc[changes+1-c] = new_sol.loc[0].values.tolist()
+#        opt_results.loc[changes+1-c] = new_sol.loc[0].values.tolist()
         new_chokes = model.get_chokes()
     rowlist = [infeasible_count, tot_oil, tot_gas]+ list(impl_chokes.values())
     return rowlist
@@ -117,20 +132,40 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
         for w in t.well_order:
             if(abs(new_chokes[w]-old_chokes[w]) >= 0.01):
                 change_well = w
+                found=True
                 break
-    
+    if not found:
+        return 0, tot_oil, tot_gas, old_chokes, None, None
     #implement change and check for infeasibility
     temp_chokes = {key: value for key, value in old_chokes.items()}
     temp_chokes[change_well] = new_chokes[change_well]
+#    print("\nchangewell:", change_well)
     old_gas = true_well_curves[change_well].predict(old_chokes[change_well], "gas")
     change_gas = true_well_curves[change_well].predict(temp_chokes[change_well], "gas")
     old_oil = true_well_curves[change_well].predict(old_chokes[change_well], "oil")
     change_oil = true_well_curves[change_well].predict(temp_chokes[change_well], "oil")
-    if(change_gas > indiv_cap[change_well] or tot_gas+(change_gas-old_gas) > tot_cap):
+    if(change_gas-0.01 > indiv_cap[change_well] or tot_gas+(change_gas-old_gas)-0.01 > tot_cap):
         #infeasible, revert
-        return 1, tot_oil, tot_gas, old_chokes, change_well
+#        print("tot", tot_gas+(change_gas-old_gas), "\tindiv:", change_gas)
+        return 1, tot_oil, tot_gas, old_chokes, change_well, change_gas
     else:
-        return 0, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well
+        return 0, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
+    
+    
+def test_init_scen(init_name):
+    init_chokes = t.get_init_chokes(init_name)
+    c = ["tot_gas"] + [w for w in t.wellnames_2]
+    gas = {col:0 for col in c}
+    true_well_curves = get_true_models(init_name, None)
+    tot_gas = 0
+    for w in t.wellnames_2:
+        w_gas =  true_well_curves[w].predict(init_chokes[w], "gas")
+        gas[w] =w_gas
+        tot_gas+=w_gas
+    gas["tot_gas"] = tot_gas
+    df = pd.DataFrame(columns=c)
+    df.loc[0] = gas
+    return df
     
 # =============================================================================
 # return correct model type
@@ -148,9 +183,9 @@ def get_model(m_type):
 # =============================================================================
 # get "true" well curves
 # =============================================================================
-def get_true_models(init_name, m_type = "sos2"):
+def get_true_models(init_name, iteration, m_type = "sos2"):
     if(m_type=="sos2"):
-        return {w:SOSpredictor().init(w, init_name) for w in t.wellnames_2}
+        return {w:SOSpredictor().init(w, init_name, iteration) for w in t.wellnames_2}
     else:
         raise ValueError("Only SOS2 implemented!")
     
@@ -161,10 +196,11 @@ class SOSpredictor():
     def rounddown(self, x):
         return int(math.floor(x / 10.0))
     
-    def init(self, well, init_name):
-        self.oil_vals = t.get_sos2_true_curves("oil", init_name)[well]
-        self.gas_vals = t.get_sos2_true_curves("gas", init_name)[well]
+    def init(self, well, init_name, iteration):
+        self.oil_vals = t.get_sos2_true_curves("oil", init_name, iteration)[well]
+        self.gas_vals = t.get_sos2_true_curves("gas", init_name, iteration)[well]
         self.choke_vals = [i*100/(len(self.oil_vals)-1) for i in range(len(self.oil_vals))]
+        self.p_type="sos2"
         return self
         
         
@@ -172,6 +208,7 @@ class SOSpredictor():
         lower = self.rounddown(choke)
         upper = self.roundup(choke)
         factor = choke/10-lower
+#        print("l:", lower, "u:", upper, "fac:", factor, "val_l:", self.gas_vals[lower], "val_u:", self.gas_vals[upper])
         if(phase=="oil"):
             return (1-factor)*self.oil_vals[lower]+factor*self.oil_vals[upper]
         else:

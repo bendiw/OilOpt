@@ -38,7 +38,8 @@ robust_res_columns_recourse = base_res[1:]+[w+"_gas_var" for w in wellnames_2]+ 
 robust_eval_columns = ["inf_tot", "inf_indiv", "tot_oil", "tot_gas"]+[w+"_gas_mean" for w in wellnames_2]+[w+"_oil_mean" for w in wellnames_2]+[w+"_oil_var" for w in wellnames_2]+[w+"_gas_var" for w in wellnames_2]
 
 recourse_algo_columns = ["infeasible count", "oil output", "gas output"]+ [w+"_choke_final" for w in wellnames_2]
-
+indiv_cap = 54166
+tot_cap = 250000
 
 phasenames = ["oil", "gas"]
 param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.1)], 'regu':[1e-6, 1e-5, 1e-4, 1e-3, 1e-2], 'layers':[1,2], 'neurons':[20,40]}
@@ -332,6 +333,18 @@ def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", 
     df_ret.columns = wellnames_2
     return df_ret, indiv_cap, tot_cap
 
+def extract_xy(df_w):
+    xcols = [w+"_choke" for w in wellnames_2]
+    ycols = [w+"_gas_mean" for w in wellnames_2]
+    x_ = df_w[xcols]
+    y_ = df_w[ycols]
+    x_.columns = wellnames_2
+    y_.columns = wellnames_2
+    x_= x_.loc[x_.index[0]]
+    y_= y_.loc[y_.index[0]]
+
+    return x_.to_dict(), y_.to_dict()
+
 
 def get_init_chokes(init_name):
     df = pd.read_csv("results/initial/res_initial.csv", sep=";")
@@ -480,8 +493,13 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
 
-def get_sos2_scenarios(phase, num_scen):
-    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+def get_sos2_scenarios(phase, num_scen, init_name=""):
+    if(phase=="oil"):
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+    else:
+        if(len(init_name)>0):
+            init_name="_"+init_name
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+init_name+".csv", delimiter=";", header=0)
     scenarios=(len(df.keys())-2)/7
     dbs = {}
     if phase=="gas":
@@ -499,10 +517,18 @@ def get_sos2_scenarios(phase, num_scen):
     return dbs
 
 #TODO: modify to load true
-def get_sos2_true_curves(phase, init_name):
-    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+".csv", delimiter=";", header=0)
+def get_sos2_true_curves(phase, init_name, iteration):
     dbs = {}
+    if phase=="oil":
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_true.csv", delimiter=";", header=0)
+        iteration=0
+    else:
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+"_true.csv", delimiter=";", header=0)
+    if not iteration:
+        addstr = ""
+    else:
+        addstr = "_"+str(iteration)
     for well in wellnames_2:
-        dbs[well] = df[well+"_"+phase+"_"+str(0)]
+        dbs[well] = df[well+"_"+phase+addstr]
     return dbs
 

@@ -11,7 +11,7 @@ from keras.models import Model, Sequential
 from keras.callbacks import EarlyStopping
 from keras import losses, optimizers, backend, regularizers, initializers
 import numpy as np
-import tools
+import tools as t
 from matplotlib import pyplot
 import scipy.stats as ss
 # =============================================================================
@@ -73,11 +73,10 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
 def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None,
         weight=0.4, iteration=0, points=None, train=False, maxout=False,
-        gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0):
+        gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0, name=""):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     batch_size=7
-#    ax=None
     for w in well:
         mean_orig = df[str(w)+"_"+goal+"_mean"]
         std_orig = df[str(w)+"_"+goal+"_var"]
@@ -132,7 +131,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 prediction = None
             if plot or save:
                 if goal=="gas" and train:
-                    model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
+                    model = t.add_layer(model,neurons,"mse", factor=gas_factor)
                     prediction = [x[0] for x in model.predict(X)]
 #                    m = m*gas_factor
                     y = y*gas_factor
@@ -142,59 +141,13 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if save:
                     filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
                     pyplot.savefig(filepath, bbox_inches="tight")
-                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+                    t.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\")
+                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
 #        m = np.zeros(len(X))
 #
-#        for scen in range(scen_start, scen_start+num_scen):
-#            if (goal=="gas" and train):
-#                mean=mean/gas_factor
-#                std=std/gas_factor
-#            if(x_ is None or x_==0):
-#                x_= 0
-#            else:
-#                y[x_] = y_
-#            y[0] = 0
-#            for i in range(len(X)):
-#                m[i] = mean[i]
-#            for i in range(x_+1,len(X)):
-#    #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-#            for i in range(x_-1,-1,-1):
-#    #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-#            if(train):
-#                early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
-#                model = build_model(neurons, dim, lr, regu=regu)
-##                for i in range(100):
-##                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
-#                model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=1, callbacks=[early_stopping])
-#                prediction = [x[0] for x in model.predict(X)]
-##                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
-#                    
-#
-#            else:
-#                prediction = None
-#            if plot or save:
-#                if goal=="gas" and train:
-#                    model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
-#                    prediction = [x[0] for x in model.predict(X)]
-#                    m = m*gas_factor
-#                    y = y*gas_factor
-#                    std = std*gas_factor
-#                    mean = mean*gas_factor
-#                plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train)
-#                if save:
-#                    filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
-#                    pyplot.savefig(filepath, bbox_inches="tight")
-#                    tools.save_variables(w+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
-#                if plot:
-#                    pyplot.show()
-#        if (save_sos):
-#            save_sos2(X,mean,goal,w, 0, folder="scenarios\\nn\\points\\ads")
 
 def plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train, prev=None):
     if prev is None:
@@ -241,8 +194,8 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(x,y,phase, well, scen, folder):
-    filename = folder + "sos2_" +phase+".csv"
+def save_sos2(x,y,phase, well, scen, folder, name=""):
+    filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
     d = {well+"_"+phase+"_"+str(scen): y}
@@ -260,7 +213,7 @@ def save_sos2(x,y,phase, well, scen, folder):
         
         
 def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], neurons=20, lr=0.001):
-    df = tools.get_sos2_scenarios(phase, start_scen+num_scen)
+    df = t.get_sos2_scenarios(phase, start_scen+num_scen)
     X = np.array([[i*10] for i in range(11)])
     for scen in range(start_scen, start_scen+num_scen):
         train(well, X, df[scen][well], goal=phase, neurons=neurons, lr=lr,
@@ -287,7 +240,7 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     
     if plot or save:
         if goal=="gas" and train:
-            model = tools.add_layer(model,neurons,"mse", factor=gas_factor)
+            model = t.add_layer(model,neurons,"mse", factor=gas_factor)
             prediction = [x[0] for x in model.predict(X)]
             y = y*gas_factor
         fig = pyplot.figure()
@@ -297,7 +250,7 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         if save:
             filepath = "scenarios\\nn\\points\\"+well+"_"+str(scen)+".png"
             pyplot.savefig(filepath, bbox_inches="tight")
-            tools.save_variables(well+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+            t.save_variables(well+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
         if plot:
             pyplot.show()
 
