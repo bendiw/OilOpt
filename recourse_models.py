@@ -64,6 +64,7 @@ class Recourse_Model:
         self.pos_change_constr = None
         self.scenarios = num_scen
         self.phasenames = t.phasenames
+        self.lock_wells = []
         
         #track for which wells we have learned true curves
         self.learned_wells = []
@@ -203,6 +204,9 @@ class Recourse_Model:
         
     def set_chokes(self, w_initial_vars):
         self.w_initial_vars = w_initial_vars
+        for w in self.lock_wells:
+            #permit only one change per well
+            self.w_relative_change[w][0] = 0
         self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
         if(self.neg_change_constr is not None):
             self.m.remove(self.neg_change_constr)
@@ -496,7 +500,7 @@ class Factor(Recourse_Model):
                 return
             else:
                 self.learned_wells.append(change_well)
-
+                self.lock_wells.append(change_well)
                 #remove old constr
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, self.well_to_sep[change_well][0]])
@@ -606,6 +610,7 @@ class SOS2(Recourse_Model):
                 return
             else:
                 self.learned_wells.append(change_well)
+                self.lock_wells.append(change_well)
                 #remove old curves, update values dict
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, self.well_to_sep[change_well][0]])
@@ -617,7 +622,7 @@ class SOS2(Recourse_Model):
 #                gases = true_curve.gas_vals.values.tolist()
                 gases = true_curve.gas_vals
                 for s in range(self.scenarios):
-                    self.m.remove(self.gas_out_constr[change_well, self.well_to_sep[change_well][0], s])
+                    self.m.remove(self.gas_out_constr[change_well, "HP", s])
                     self.gas_vals[s][change_well] = gases
                     
                 #add new ones
@@ -625,12 +630,15 @@ class SOS2(Recourse_Model):
                 self.learned_constr["oil"].append(self.oil_constr)
                 self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
                 self.learned_constr["gas"].append(self.gas_constr)
-
         else:
             raise ValueError("Only SOS2-based true curve discovery is implemented yet!")
             
     def reset_m(self):
         Recourse_Model.reset_m(self)
+        #remove all well output constr
+        self.m.remove(self.oil_out_constr)
+        self.m.remove(self.gas_out_constr)
+        
         #re-add orig constraints
         self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals)))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )

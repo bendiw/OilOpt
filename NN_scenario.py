@@ -73,12 +73,13 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
 def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None,
         weight=0.4, iteration=0, points=None, train=False, maxout=False,
-        gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0):
+        gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0, name=""):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     batch_size=7
     ax=None
     factor=1
+    print(x_, y_)
     for w in well:
         mean = df[str(w)+"_"+goal+"_mean"]
         std = df[str(w)+"_"+goal+"_var"]
@@ -136,7 +137,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\ads")
+                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
 
 def plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, prev=None):
     if prev is None:
@@ -183,8 +184,8 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(x,y,phase, well, scen, folder):
-    filename = folder + "sos2_" +phase+".csv"
+def save_sos2(x,y,phase, well, scen, folder, name=""):
+    filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
     d = {well+"_"+phase+"_"+str(scen): y}

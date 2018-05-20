@@ -84,7 +84,8 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
         infeasible_count+=inf_single
         if change_well is None:
-            print("No more suggested changes.")
+            if verbose>1:
+                print("No more suggested changes.")
             return [infeasible_count, tot_oil, tot_gas]+ list(impl_chokes.values())
         if(verbose>1):
             print("\n==================================================")
@@ -134,7 +135,7 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
                 found=True
                 break
     if not found:
-        return 0, tot_oil, tot_gas, old_chokes, None
+        return 0, tot_oil, tot_gas, old_chokes, None, None
     #implement change and check for infeasibility
     temp_chokes = {key: value for key, value in old_chokes.items()}
     temp_chokes[change_well] = new_chokes[change_well]
