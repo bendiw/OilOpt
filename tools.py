@@ -97,8 +97,8 @@ def get_limits(target, wellnames, well_to_sep, case):
         for well in wellnames:
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
-                lower[well][sep] = max(0.0, 0.5*dfw.min()) #do not allow negative choke values
-                upper[well][sep] = min(100.0, 1.3*dfw.max())
+                lower[well][sep] = max(0.0, 0.5*dfw.min()-0.01) #do not allow negative choke values
+                upper[well][sep] = min(100.0, 1.3*dfw.max()+0.01)
         return lower, upper
 
 def normalize(data):
@@ -277,26 +277,31 @@ def delaunay(x, y, z):
 #    return(data[tri.simplices])
     return data[triang.triangles]
 
-def generate_scenario_trunc_normal(case, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None, distr="truncnorm"):
-    if (case == 1):
-        return
+def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None, distr="truncnorm", predeterm=None):
     if(distr=="truncnorm"):
         scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
     elif(distr=="triang"):
         scen = np.random.triangular(lower, 0, upper, size=(num_scen,len(wellnames_2)))
+    elif(distr=="eev"):
+        num_scen=1
+        scen = np.zeros((num_scen, len(wellnames_2)))
     else:
         raise ValueError("Unknown distribution specified.")
 #    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
     df = pd.DataFrame(columns=wellnames_2)
     for i in range(num_scen):
         df.loc[i] = scen[i]
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
+    if predeterm is not None:
+        #set predetermined constants
+        for w in predeterm.keys():
+            df[w] = predeterm[w]
+    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
         
-def load_scenario(case, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
-    filename = "scenarios\case"+str(case)+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+("_"+distr if distr=="triang" else "")+".csv"
+def load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
+    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     df = pd.read_csv(filename, sep=';')
     return df
 
@@ -497,10 +502,17 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     return model_2
 
 def get_sos2_scenarios(phase, num_scen, init_name=""):
-    df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+".csv", delimiter=";", header=0)
-    scenarios=(len(df.keys())-2)/7
     dbs = {}
     chks = {}
+    if(num_scen=="eev"):
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+"_eev.csv", delimiter=";", header=0)
+        for well in wellnames_2:
+            dbs[well] = df[well+"_"+phase+"_"+str(0)]
+            chks[well] = df[well+"_choke"]
+            return dbs, chks
+    else:
+        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+".csv", delimiter=";", header=0)
+    scenarios=(len(df.keys())-2)/7
     if phase=="gas":
         for i in range(int(num_scen)):
             if (i>=scenarios):

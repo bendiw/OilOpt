@@ -78,26 +78,11 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
         
     if (len(X[0]) >= 2):
-<<<<<<< HEAD
-        dim=2
-=======
         dim=2 
     X_test = gen_x_test(X, dim, sampling_density)
->>>>>>> master
     y = np.array([[i[0], 0] for i in y])
     
-#    X_ = np.array([[1]])
-#    y_ = np.array([[1,1]])
-#    for i in range(len(X)):
-#        if(X[i][0] > 0):
-#            print(X[i][0])
-#            X_ = np.append(X_, [X[i]], axis=0)
-#            y_ = np.append(y_, [y[i]], axis=0)
-#    X = X_[1:]
-#    y = y_[1:]
-    print(X, y)
     
-    X_test = gen_x_test(X, dim, sampling_density)
     model = build_model(neurons, dim, regu, dropout, lr, layers)
 
     #setup plots

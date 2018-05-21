@@ -62,7 +62,10 @@ class Recourse_Model:
         self.save=save
         self.neg_change_constr = None
         self.pos_change_constr = None
-        self.scenarios = num_scen
+        if(num_scen=="eev"):
+            self.scenarios=1
+        else:
+            self.scenarios = num_scen
         self.phasenames = t.phasenames
         self.lock_wells = []
         
@@ -247,7 +250,7 @@ class Recourse_Model:
         self.m.optimize()
 #        if(self.verbose>0):
 #            print("\n=====================")
-#            for p_well in ["W2"]:
+#            for p_well in ["W5"]:
 #                print("max input", self.input_upper[p_well, "HP", 0])
 #                if(len(self.gas_vals)>0):
 #                    try:
@@ -451,7 +454,10 @@ class Factor(Recourse_Model):
         
         Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_factor.csv"
-        self.s_draw = t.get_scenario(case, num_scen, lower=lower, upper=upper,
+        if(num_scen=="eev"):
+            num_scen=1
+            distr="eev"
+        self.s_draw = t.get_scenario(init_name, num_scen, lower=lower, upper=upper,
                                      phase=phase, sep=sep, iteration=stability_iter, distr=distr)
         
         #load mean and variance networks
@@ -568,9 +574,9 @@ class SOS2(Recourse_Model):
         self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name)
         self.oil_vals, _ = t.get_sos2_scenarios("oil", self.scenarios, init_name)
         self.gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name)
+#         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
         if(self.scenarios=="eev"):
             self.scenarios=1
-#         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
         
         # =============================================================================
         # variable creation                    
@@ -594,8 +600,8 @@ class SOS2(Recourse_Model):
         self.m.addConstrs( self.routes[well, sep] == quicksum(self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
 
 
-        self.m.addConstr( self.inputs["W1", "HP", 0] == 0)
-        self.m.addConstr( self.inputs["W4", "HP", 0] == 0)
+#        self.m.addConstr( self.inputs["W3", "HP", 0] == 0)
+#        self.m.addConstr( self.inputs["W4", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 
