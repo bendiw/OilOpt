@@ -614,7 +614,7 @@ class SOS2(Recourse_Model):
             for sep in self.well_to_sep[well]:
                 self.m.addSOS(2, [self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))])
         #tighten sos constraints
-        self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
+#        self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         return self
     
     

@@ -79,11 +79,13 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
     tot_gas = sum([true_well_curves[w].predict(init_chokes[w], "gas") for w in t.wellnames_2])
 #    print("initchoke", init_chokes, "oil", tot_oil, "\ngas", tot_gas)
     new_chokes = first_sol
-    
     #since we start by checking for #changes+1, we need to iterate an 'extra' time including 0
     for c in range(changes, -1, -1):
         inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
         infeasible_count+=inf_single
+#        print("CHANGE RHS:", model.change_constr.getAttr("rhs"), "CHK:", model.w_initial_vars)
+#        for w in t.wellnames_2:
+#            print("\n",w, model.routes[w, "HP"].x)
         if change_well is None:
             if verbose>1:
                 print("No more suggested changes.")
@@ -105,7 +107,6 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         if(c<1):
             break
 #        model.set_changes(changes)
-
         model.set_true_curve(change_well, true_well_curves[change_well])
         model.solve(verbose=max(verbose-2, 0))
 #        new_sol = model.get_solution()
@@ -219,6 +220,9 @@ class SOSpredictor():
         
     def predict(self, choke, phase):
         index = None
+        if(choke==0):
+            return 0.
+        
         for i in range(len(self.choke_vals)):
             if(choke < round(self.choke_vals[i], 3)):
                 index = i
