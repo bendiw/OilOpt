@@ -78,7 +78,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
         
     if (len(X[0]) >= 2):
-        dim=2
+        dim=2 
     X_test = gen_x_test(X, dim, sampling_density)
     y = np.array([[i[0], 0] for i in y])
     model = build_model(neurons, dim, regu, dropout, lr, layers)

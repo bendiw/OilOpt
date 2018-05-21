@@ -7,6 +7,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras import optimizers
 from keras import backend as K
 from scipy.stats import randint, uniform
+from matplotlib import pyplot
 
 # =============================================================================
 # Case 1
@@ -390,12 +391,14 @@ def build_and_plot_well(well, goal="oil", case=2):
     X = np.array([[i] for i in range(101)])
     pred = [x[0] for x in model.predict(X)]
     print(pred)
+    return pred
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
     line2 = ax.plot(X, pred, color='green',linestyle='dashed', linewidth=1)
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
+    
 
 #def save_variance_func_2(X, var, mean, case, well, phase):
 #    filename = "variance_case" + str(case) +"_"+phase+".csv"

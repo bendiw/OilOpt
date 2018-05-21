@@ -67,6 +67,28 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
 
+def hey():
+    filename = "scenarios/nn/points/sos2_gas_w2_off.csv"
+    df = pd.read_csv(filename, sep=';', index_col=0)
+    df_true = pd.read_csv("scenarios/nn/points/sos2_gas_w2_off_true.csv", sep=";",index_col=0)
+    y = []
+    X = [[c] for c in df["W1_choke"]]
+    for i in range(1000):
+        y.append([c for c in df["W1_gas_"+str(i)]])
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111)
+    y_true = []
+    for i in range(200):
+        y_true.append([c for c in df_true["W1_gas_"+str(i)]])
+#    for i in range(200):
+#        line1 = ax.plot(X, y_true[i],color="blue",linestyle="dashed", linewidth=0.5)
+    for i in range(5,1000):
+        line1 = ax.plot(X, y[i],color="blue",linestyle="dashed", linewidth=0.3)
+    for i in range(5):
+        line1 = ax.plot(X, y[i],color="green",linestyle="-", linewidth=1)
+        line2 = ax.plot(X, y[i],color="red",linestyle="None", marker=".", markersize=7)
+    return X,y
+
 # =============================================================================
 # main function
 # =============================================================================
@@ -77,7 +99,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
     batch_size=7
+    
     for w in well:
+        big_y = []
         mean_orig = df[str(w)+"_"+goal+"_mean"]
         std_orig = df[str(w)+"_"+goal+"_var"]
         if(points):
@@ -115,7 +139,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 insert_index = index
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
-#                print(interpol_mean)
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
             mean = np.insert(mean, insert_index, interpol_mean)
             std = np.insert(std, insert_index, interpol_std)
@@ -158,7 +181,11 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if plot:
                     pyplot.show()
             if (save_sos):
-                save_sos2(X,y,goal,w, scen, folder="scenarios\\nn\\points\\", name=name)
+                if goal=="oil":
+                    y=mean
+                big_y.append(np.copy(y))
+        print("SAVING",w)
+        save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\", name=name, scen_start=scen_start)
 #        m = np.zeros(len(X))
 #
 
@@ -207,11 +234,15 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(X,y,phase, well, scen, folder, name=""):
+def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name=""):
     filename = folder + "sos2_" +phase+"_"+name+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
-    d = {well+"_"+phase+"_"+str(scen): y}
+    d={}
+    j=0
+    for i in range(scen_start, scen_start + scen):
+        d[well+"_"+phase+"_"+str(i)] = y[j]
+        j+=1
     try:
         df = pd.read_csv(filename, sep=';', index_col=0)
 #        old = pd.read_csv("variance_case_2.csv",sep=";",index_col=0)
