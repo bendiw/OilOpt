@@ -92,11 +92,11 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
             return [infeasible_count, tot_oil, tot_gas]+ list(impl_chokes.values())
         if(verbose>1):
             print("\n==================================================")
-            print("changes:", c+1, "\nchange well:", change_well, "   [", (round(init_chokes[change_well],4) if c==changes else round(old_chokes[change_well],4)), "--->", round(new_chokes[change_well],2), "]")
-            print("Infeasible! " if inf_single==1 else "Feasible.", change_well+" gas: "+str(round(change_gas,4)))
+            print("changes:", c+1, "\nchange well:", change_well, "   [", (round(init_chokes[change_well],2) if c==changes else round(old_chokes[change_well],2)), "--->", round(new_chokes[change_well],2), "]")
+            print("Infeasible! " if inf_single==1 else "Feasible.", change_well+" gas: "+str(round(change_gas,2)))
             print("\nimpl chokes:\t\t\tsuggested chokes:")
             for w in t.wellnames_2:
-                print(w+"\t", round(impl_chokes[w],3), "\t\t\t", round(new_chokes[w],3))
+                print(w+"\t", round(impl_chokes[w],2), "\t\t\t", round(new_chokes[w],2))
             print("\ntot oil:\t", tot_oil, "\ntot gas:\t", tot_gas)
             print("==================================================\n")
 
