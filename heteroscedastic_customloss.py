@@ -81,8 +81,9 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         dim=2 
     X_test = gen_x_test(X, dim, sampling_density)
     y = np.array([[i[0], 0] for i in y])
+    
+    
     model = build_model(neurons, dim, regu, dropout, lr, layers)
-
 
     #setup plots
     if(dim==1):
