@@ -600,11 +600,8 @@ class SOS2(Recourse_Model):
         self.m.addConstrs( self.routes[well, sep] == quicksum(self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well])
 
 
-<<<<<<< HEAD
-#        self.m.addConstr( self.inputs["W1", "HP", 0] == 0)
-=======
+
 #        self.m.addConstr( self.inputs["W3", "HP", 0] == 0)
->>>>>>> master
 #        self.m.addConstr( self.inputs["W4", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])

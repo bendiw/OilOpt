@@ -100,10 +100,10 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
 
 #        print("res\n", opt_results)
         old_chokes = {key: value for key, value in impl_chokes.items()}
-        if(c<1):
-            break
         model.set_chokes(impl_chokes)
         model.set_changes(c)
+        if(c<1):
+            break
 #        model.set_changes(changes)
 
         model.set_true_curve(change_well, true_well_curves[change_well])
