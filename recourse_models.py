@@ -91,12 +91,13 @@ class Recourse_Model:
         if case==2:
             if(not w_relative_change):
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
-            
+            else:
+                self.w_relative_change=w_relative_change
             if(lock_wells):
                 #wells which are not allowed to change
                 assert(isinstance(lock_wells, (list)))
                 for w in lock_wells:
-                    self.w_relative_change[w] = [0, 0]
+                    self.w_relative_change[w] = [0]
                     
             if(scen_const):
                 #provide "locked" scenario constant for certain wells
@@ -186,12 +187,13 @@ class Recourse_Model:
 
     def set_changes(self, max_changes):
         self.change_constr.setAttr("rhs", max_changes)
+        self.m.update()
         
     def set_tot_gas(self, gas):
         self.tot_exp_cap = gas
         for s in range(self.scenarios):
             self.exp_constr[s].setAttr("rhs", gas)
-    
+        self.m.update()
     
     #set indiv gas cap. if no well is specified, all wells are affected
     def set_indiv_gas(self, gas, wells=None):
@@ -206,12 +208,13 @@ class Recourse_Model:
         for w in to_change:
             for s in range(self.scenarios):
                 self.gas_constr[w, s].setAttr("rhs", gas)
+        self.m.update()
         
     def set_chokes(self, w_initial_vars):
         self.w_initial_vars = w_initial_vars
-        for w in self.lock_wells:
-            #permit only one change per well
-            self.w_relative_change[w][0] = 0
+#        for w in self.lock_wells:
+#            #permit only one change per well
+#            self.w_relative_change[w][0] = 0
         self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
         if(self.neg_change_constr is not None):
             self.m.remove(self.neg_change_constr)
@@ -219,10 +222,13 @@ class Recourse_Model:
             self.m.remove(self.pos_change_constr)
             
         self.neg_change_constr = self.m.addConstrs(self.w_initial_vars[well] - self.inputs[well, sep, dim] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] + 
-                          (self.w_initial_vars[well]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim])) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+                          (self.w_initial_vars[well]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim]))
+                          for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
         self.pos_change_constr = self.m.addConstrs(self.inputs[well, sep, dim] - self.w_initial_vars[well] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+
-                          (1-self.w_initial_prod[well])*self.w_max_lims[dim][well][sep]*self.changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+                          (1-self.w_initial_prod[well])*self.w_max_lims[dim][well][sep]*self.changes[well, sep, dim]
+                          for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        self.m.update()
 
     def reset_m(self):
         #remove old constraints
@@ -231,6 +237,7 @@ class Recourse_Model:
         for p in self.phasenames:
             for c in self.learned_constr[p]:
                 self.m.remove(c)
+
         self.learned_vars = []
         self.learned_constr = {p:[] for p in self.phasenames}
     
@@ -452,14 +459,15 @@ class Factor(Recourse_Model):
                 num_scen = 10, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
         
-        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
-        self.results_file = "results/robust/res_factor.csv"
         if(num_scen=="eev"):
             num_scen=1
             distr="eev"
+        elif(num_scen==1):
+            distr="eev"
+        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
+        self.results_file = "results/robust/res_factor.csv"
         self.s_draw = t.get_scenario(init_name, num_scen, lower=lower, upper=upper,
                                      phase=phase, sep=sep, iteration=stability_iter, distr=distr)
-        
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")
         self.layers_var, self.multidims_var, self.weights_var, self.biases_var = self.getNeuralNets(self.LOAD, case, net_type="std")
@@ -474,6 +482,8 @@ class Factor(Recourse_Model):
         self.lambdas_var = self.m.addVars([(well,phase,sep, layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.BINARY, name="lambda_var")
         self.mus_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="mu_var")
         self.rhos_var = self.m.addVars([(well,phase,sep,layer, neuron)  for phase in self.phasenames for well in self.wellnames for sep in self.well_to_sep[well] for layer in range(1,self.layers_var[well][phase][sep]) for neuron in range(self.multidims_var[well][phase][sep][layer])], vtype = GRB.CONTINUOUS, name="rho_var")
+
+        
 
         # =============================================================================
         # NN MILP constraints creation. Mean and variance networks.
@@ -502,9 +512,16 @@ class Factor(Recourse_Model):
         #oil
         self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights[well]["oil"][sep][self.layers[well]["oil"][sep]-2][neuron][0] * self.mus[well, "oil", sep, self.layers[well]["oil"][sep]-2, neuron] for neuron in range(self.multidims[well]["oil"][sep][self.layers[well]["oil"][sep]-2]) ) + self.biases[well]["oil"][sep][self.layers[well]["oil"][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
+        
+        #TODO: DELETE
+        #TEST DUMMIES
+#        self.out_gas_mean = self.m.addVars([(well) for well in self.wellnames])
+#        self.out_gas_var = self.m.addVars([(well) for well in self.wellnames])
+#        self.gmean_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.out_gas_mean[well] ==  quicksum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron] for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+#        self.gvar_constr = self.m.addConstrs(  (self.routes[well, sep] == 1) >> (self.out_gas_var[well] == quicksum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+        
         return self
     
-    #TODO: fix this
     def set_true_curve(self, change_well, true_curve):
         if(true_curve.p_type=="sos2"):
             if(change_well in self.learned_wells):
@@ -530,7 +547,7 @@ class Factor(Recourse_Model):
                 self.zeta_route = self.m.addConstrs( self.routes[change_well, sep] == quicksum(self.zetas[brk, change_well, sep] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
                 self.zeta_sos2 = self.m.addSOS(2, [self.zetas[brk, change_well, "HP"] for brk in range(len(self.choke_vals[change_well]))])
 
-                #store constr to remove later
+                #store constr, vars to remove later
                 self.learned_vars.append(self.zetas)
                 self.learned_constr["gas"].append(self.zeta_constr)
                 self.learned_constr["gas"].append(self.zeta_sos2)
@@ -541,6 +558,7 @@ class Factor(Recourse_Model):
                 self.learned_constr["oil"].append(self.oil_constr)
                 self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
                 self.learned_constr["gas"].append(self.gas_constr)
+            self.m.update()
 
         else:
             raise ValueError("Only SOS2-based true curve discovery is implemented yet!")
@@ -556,6 +574,7 @@ class Factor(Recourse_Model):
                       self.s_draw.loc[scenario][well] *(quicksum(self.weights_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2][neuron][0] * (self.mus_var[well, "gas", sep, self.layers_var[well]["gas"][sep]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2])) + self.biases_var[well]["gas"][sep][self.layers_var[well]["gas"][sep]-2][0]) )  for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
         self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights[well]["oil"][sep][self.layers[well]["oil"][sep]-2][neuron][0] * self.mus[well, "oil", sep, self.layers[well]["oil"][sep]-2, neuron] for neuron in range(self.multidims[well]["oil"][sep][self.layers[well]["oil"][sep]-2]) ) + self.biases[well]["oil"][sep][self.layers[well]["oil"][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
         self.learned_wells =[]
+        self.m.update()
     
 class SOS2(Recourse_Model):
     # =============================================================================
@@ -626,13 +645,13 @@ class SOS2(Recourse_Model):
                 return
             else:
                 self.learned_wells.append(change_well)
-                self.lock_wells.append(change_well)
+#                self.lock_wells.append(change_well)
                 #remove old curves, update values dict
                 #oil
-                self.m.remove(self.oil_out_constr[change_well, self.well_to_sep[change_well][0]])
+                self.m.remove(self.oil_out_constr[change_well, "HP"])
 #                self.oil_vals[change_well] = true_curve.oil_vals.values.tolist()
 #                print("old", self.oil_vals[change_well])
-#                print("\nnew", true_curve.oil_vals)
+
                 self.oil_vals[change_well] = true_curve.oil_vals
                 #gas
 #                gases = true_curve.gas_vals.values.tolist()
@@ -646,6 +665,7 @@ class SOS2(Recourse_Model):
                 self.learned_constr["oil"].append(self.oil_constr)
                 self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
                 self.learned_constr["gas"].append(self.gas_constr)
+            self.m.update()
         else:
             raise ValueError("Only SOS2-based true curve discovery is implemented yet!")
             
@@ -659,3 +679,4 @@ class SOS2(Recourse_Model):
         self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum( self.zetas[brk, well, sep]*self.orig_oil_vals[well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well])
         self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] == quicksum(self.zetas[brk, well, sep]*self.orig_gas_vals[scenario][well][brk] for brk in range(len(self.choke_vals[well])))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         self.learned_wells =[]
+        self.m.update()
