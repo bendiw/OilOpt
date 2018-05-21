@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
+import math
 import scipy.stats as ss
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
@@ -97,7 +98,7 @@ def get_limits(target, wellnames, well_to_sep, case):
         for well in wellnames:
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
-                lower[well][sep] = max(0.0, 0.5*dfw.min()-0.01) #do not allow negative choke values
+                lower[well][sep] = max(0.0, 0.8*dfw.min()-0.01) #do not allow negative choke values
                 upper[well][sep] = min(100.0, 1.3*dfw.max()+0.01)
         return lower, upper
 
@@ -277,6 +278,15 @@ def delaunay(x, y, z):
 #    return(data[tri.simplices])
     return data[triang.triangles]
 
+def get_factors(init_name):
+    cols = [w+"_factor" for w in wellnames_2]
+    df = pd.read_csv("results/initial/res_initial.csv", sep=";")
+    df = df.loc[df["name"]==init_name]
+    df = df[cols]
+    df.columns=wellnames_2
+    df = df.loc[df.index[0]]
+    return df
+
 def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", lower=-4, upper=4, folder="", iteration=None, distr="truncnorm", predeterm=None):
     if(distr=="truncnorm"):
         scen = ss.truncnorm.rvs(lower, upper, size=(num_scen,len(wellnames_2)))
@@ -287,14 +297,18 @@ def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", l
         scen = np.zeros((num_scen, len(wellnames_2)))
     else:
         raise ValueError("Unknown distribution specified.")
+        
+    
 #    df = pd.DataFrame(pd.Series(scen), dtype=wellnames_2)
     df = pd.DataFrame(columns=wellnames_2)
     for i in range(num_scen):
         df.loc[i] = scen[i]
-    if predeterm is not None:
-        #set predetermined constants
-        for w in predeterm.keys():
-            df[w] = predeterm[w]
+
+    #get scenario factors and apply
+    factors = get_factors(init_name)
+    for w in wellnames_2:
+        if(factors[w] != math.inf):
+            df[w] = factors[w]
     filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
@@ -305,14 +319,14 @@ def load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=None,
     df = pd.read_csv(filename, sep=';')
     return df
 
-def get_scenario(case, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None, distr="truncnorm"):
+def get_scenario(init_name, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None, distr="truncnorm"):
     #iteration flag determines if we wish to create a new version of the specified scenario number
     #use the flag for calc during in-sample/out-of-sample stability testing
     try:
-        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
+        return load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     except Exception as e:
-        generate_scenario_trunc_normal(case, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration, distr=distr)
-        return load_scenario(case, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
+        generate_scenario_trunc_normal(init_name, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration, distr=distr)
+        return load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     
 def get_robust_solution(num_scen=100, lower=-4, upper=4, phase="gas", sep="HP", init_name=None):
     if(init_name):
