@@ -139,10 +139,6 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 insert_index = index
                 y=np.insert(y, index, y_[w])
                 interpol_mean = (1-(x_[w]-np.floor(x_[w]))) * mean_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * mean_orig[np.ceil(x_[w])]
-<<<<<<< HEAD
-=======
-#                print(interpol_mean)
->>>>>>> master
                 interpol_std = (1-(x_[w]-np.floor(x_[w]))) * std_orig[np.floor(x_[w])] + (x_[w]-np.floor(x_[w])) * std_orig[np.ceil(x_[w])]
             mean = np.insert(mean, insert_index, interpol_mean)
             std = np.insert(std, insert_index, interpol_std)
