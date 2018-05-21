@@ -224,6 +224,7 @@ def save_sos2(X,y,phase, well, scen, folder, name=""):
         d[well+"_choke"] = np.array([x[0] for x in X])
         df = pd.DataFrame(data=d)
 #        print(df.columns)
+        
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";")
         

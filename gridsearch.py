@@ -154,7 +154,7 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
     gs.fit(X, y)
     grid_result = gs.cv_results_
     df = pd.DataFrame.from_dict(grid_result)
-    filestring = "gridsearch/"+well+"_"+goal+("_"+separator if case==1 else "")+("_"+mode)+".csv"
+    filestring = "gridsearch/"+well+"_"+goal+("_"+separator if case==1 else "")+("_"+mode)+("x_"+str(x_grid) if x_grid is not None else "")+".csv"
     with open(filestring, 'w') as f:
         df.to_csv(f, sep=';', index=False)
     print("Best: %f using %s" % (gs.best_score_, gs.best_params_))
