@@ -14,6 +14,7 @@ import numpy as np
 import tools as t
 from matplotlib import pyplot
 import scipy.stats as ss
+import matplotlib.colors as colors
 # =============================================================================
 # This class grossly overfits a PWL NN to data points sampled from a
 # distribution with mean and variation from a network trained on well data
@@ -89,6 +90,113 @@ def hey():
         line2 = ax.plot(X, y[i],color="red",linestyle="None", marker=".", markersize=7)
     return X,y
 
+def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=None,y_=None):
+    filename = "variance_case2_"+goal+".csv"
+    real = pd.read_csv(filename, sep=';', index_col=0)
+    mean = real[str(w)+"_"+goal+"_mean"]
+    std = real[str(w)+"_"+goal+"_var"]
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111)
+    X = [[x] for x in range(101)]
+    if mode=="fac":
+        scen = []
+        for i in range(-5,0):
+            print(i)
+            scen.append(float(i/2.3))
+        for i in range(1,6):
+            print(i)
+            scen.append(float(i/2.3))
+        print(scen)
+
+#        scenarios = t.get_scenario("zero",num_scen)
+#        scen = [scenarios[w][i] for i in range(len(scenarios))]
+        if known_point:
+            weight=0.6
+            y=[]
+            for i in range(num_scen):
+                y.append([0]*(len(X)))
+            for s in range(len(scen)):
+                y[s][round(x_)]=y_
+                for i in range(round(x_)+1,len(X)):
+        #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+                    y[s][i] = max(0, (1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i-1])
+                for i in range(round(x_)-1,-1,-1):
+                    y[s][i] = max(0,(1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i+1])
+    else:
+        if known_point:
+            gas,choke = t.get_sos2_scenarios(goal,num_scen,"w2_off")
+            X_ = [choke[w][i] for i in range(len(choke[w]))]
+            points = len(gas[0]["W1"])
+            scen = [[gas[i]["W1"][j] for j in range(points)] for i in range(len(gas))]
+        else:
+            gas, choke = t.get_sos2_scenarios(goal,num_scen,"zero")
+            points = len(gas[0]["W1"])
+            factor = int(100/points)
+            X_ = np.array([[i*factor] for i in range(points+1)])
+            scen = [[gas[i]["W1"][j] for j in range(points)] for i in range(len(gas))]
+            for i in range(num_scen):
+                scen[i].insert(0,0)
+        
+        
+#        if (x_[w]<100):
+#            X_ = np.insert(X, index+1, [x_[w]+0.5*factor], axis=0)
+#            y[index] = y_[w]
+#            insert_index = index + 1
+#        else:
+#            X = np.insert(X, index, [x_[w]-0.5*factor], axis=0)
+#            y[index+1] = y_[w]
+#        mean = np.array([mean[i*factor] for i in range(points+1)])
+#        std = np.array([std[i*factor] for i in range(points+1)])
+    col = [c for c in colors.cnames]
+    ax.plot(X, mean,color="black",linestyle="-", linewidth=1)
+    lines = []
+    for i in range(len(scen)):
+        if mode=="fac":
+            if known_point:
+                lines.append(ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
+#    line1,=ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line2,=ax.plot(X, mean+scen[1]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line3,=ax.plot(X, mean+scen[2]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line4,=ax.plot(X, mean+scen[3]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line5,=ax.plot(X, mean+scen[4]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line6,=ax.plot(X, mean+scen[5]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line7,=ax.plot(X, mean+scen[6]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line8,=ax.plot(X, mean+scen[7]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line9,=ax.plot(X, mean+scen[8]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+#    line10,=ax.plot(X,mean+ scen[9]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+    
+    
+            else:
+                lines.append(ax.plot(X, mean + scen[i]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
+        else:
+            ax.plot(X_, scen[i],color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
+    print(["Factor: "+str(i) for i in scen])
+    if mode=="fac":
+        for i in range(len(scen)):
+            if scen[i]<0:
+                scen[i] = str(scen[i])[:4]
+            else:
+                scen[i] = str(scen[i])[:3]
+        leg = ax.legend(lines,["Factor: "+i for i in scen])
+        leg_lines = leg.get_lines()
+        pyplot.setp(leg_lines, linewidth=2)
+#    for line in ax.legend().get_lines():
+#        line.set_linewidth(3)
+#    ax.legend((line1,line2,line3,line4,line5,line6,line7,line8,line9,line10),
+#                  ("-2,2","-1,7","-1,3","-0.9","-0.4","0.4","0.9","1.3","1.7","2.2"))
+#    pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
+#    pyplot.xlabel('choke')
+#    pyplot.ylabel(goal)
+#    pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
+#                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+    pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std,
+                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+#    pyplot.fill_between([x[0] for x in X], mean-3*std, mean+3*std,
+#                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+    pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
+                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+    
+
 # =============================================================================
 # main function
 # =============================================================================
@@ -148,11 +256,11 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
 #            for i in range(len(X)):
 #                m[i] = mean[i]
             for i in range(index+1,len(X)):
-    #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             for i in range(index-1,0,-1):
-    #                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             if(train):
                 early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
                 model = build_model(neurons, dim, lr, regu=regu)
@@ -173,7 +281,10 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                     y = y*gas_factor
                     std = std*gas_factor
                     mean = mean*gas_factor
-                plot_all(X, y, prediction, mean, std, goal, weight, points, x_[w], y_[w], w, train)
+                if x_ is not None:
+                    plot_all(X, y, prediction, mean, std, goal, weight, points, x_[w], y_[w], w, train)
+                else:
+                    plot_all(X, y, prediction, mean, std, goal, weight, points, None, None, w, train)
                 if save:
                     filepath = "scenarios\\nn\\points\\"+w+"_"+str(scen)+".png"
                     pyplot.savefig(filepath, bbox_inches="tight")
@@ -184,6 +295,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if goal=="oil":
                     y=mean
                 big_y.append(np.copy(y))
+
         if(save_sos):
             print("SAVING",w)
             save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\"+("stability\\" if iteration is not None else ""), name=name, scen_start=scen_start, iteration=iteration)

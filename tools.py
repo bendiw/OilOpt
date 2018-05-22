@@ -472,6 +472,27 @@ def sample_mean_std(model, X, n_iter, f):
     std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
     return pred_mean, std
 
+def sample_mean_2var(model, X, n_iter, f):
+    #gather results from forward pass
+    results = np.column_stack(f((X,1.))[0])
+    if (np.isnan(results[0][0])):
+        print("NAN")
+        return
+
+    res_mean = [results[0]]
+    res_var = [np.exp(results[1])]
+    for i in range(1,n_iter):
+        a = np.column_stack(f((X,1.))[0])
+        res_mean.append(a[0])
+        res_var.append(np.exp(a[1]))
+        
+    pred_mean = np.mean(res_mean, axis=0)
+    pred_sq_mean = np.mean(np.square(res_mean), axis=0)
+    var_mean = np.mean(res_var, axis=0)
+#    std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
+    epi = pred_sq_mean-np.square(pred_mean)
+    return pred_mean, var_mean, epi
+
 def mean_var_to_csv(well, phase="gas", mode="mean", n_iter=200, case=2):
     dims, w, b = load_2(well, phase=phase, case=2, mode=mode)
 #    print(w)

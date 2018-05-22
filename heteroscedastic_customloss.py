@@ -153,6 +153,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         #this is the current network's prediction with dropout switched off
         prediction = [x[0] for x in model.predict(X_test)]
         pred_mean, std = tools.sample_mean_std(model, X_test, n_iter, f)
+#        pred_mean, al, ep = tools.sample_mean_2var(model, X_test, n_iter, f)
+
         
         #plot results from current run
         if dim==1:
@@ -161,6 +163,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
                 for i in range(2):
                     (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-al-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
                 line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
@@ -168,6 +172,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
                 for i in range(2):
                     (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+var1*(i+1), pred_mean-var1*(i+1), alpha=0.5, facecolor='#0F0F0F', linewidth=2))
