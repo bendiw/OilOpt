@@ -88,7 +88,9 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
             
-        self.results_file = "results/mop/res_"+init_name+str(max_changes)+"_changes.csv"
+
+        self.results_file = "results/mop/res_"+(init_name if  init_name is not None else "")+str(max_changes)+"_changes.csv"
+
         self.alpha=alpha
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
@@ -292,11 +294,18 @@ class NN:
         # =============================================================================
         # change tracking and total changes
         # =============================================================================
-        self.m.addConstrs(self.w_initial_vars[well] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
-        self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+#        self.m.addConstrs(self.w_initial_vars[well] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
+#        self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
-        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
 
+        self.neg_change_constr = self.m.addConstrs(self.w_initial_vars[well] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] + 
+                          (self.w_initial_vars[well]*(1-quicksum(routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim]))
+                          for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        
+        self.pos_change_constr = self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+
+                          (1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim]
+                          for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
 
 
         # =============================================================================
