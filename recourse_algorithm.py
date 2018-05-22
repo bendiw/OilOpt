@@ -220,9 +220,8 @@ class SOSpredictor():
         
     def predict(self, choke, phase):
         index = None
-        if(choke==0):
+        if(choke<=0.001):
             return 0.
-        
         for i in range(len(self.choke_vals)):
             if(choke < round(self.choke_vals[i], 3)):
                 index = i
