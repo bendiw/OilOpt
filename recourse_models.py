@@ -622,7 +622,7 @@ class SOS2(Recourse_Model):
 
 
 
-#        self.m.addConstr( self.inputs["W3", "HP", 0] == 0)
+#        self.m.addConstr( self.inputs["W2", "HP", 0] == 0)
 #        self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
