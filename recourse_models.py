@@ -589,11 +589,12 @@ class SOS2(Recourse_Model):
 
         self.results_file = "results/robust/res_SOS2.csv"
         #load SOS2 breakpoints
-        self.orig_oil_vals, self.choke_vals = t.get_sos2_scenarios("oil", self.scenarios, init_name, stability_iter)
-        self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name, stability_iter)
-        self.oil_vals, _ = t.get_sos2_scenarios("oil", self.scenarios, init_name, stability_iter)
-        self.gas_vals, _ = t.get_sos2_scenarios("gas", self.scenarios, init_name, stability_iter)
+        self.orig_oil_vals, self.choke_vals = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
+        self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
+        self.oil_vals, _ = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
+        self.gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
 #         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
+#        print(self.orig_oil_vals)
         if(self.scenarios=="eev"):
             self.scenarios=1
         
