@@ -541,17 +541,19 @@ def get_sos2_scenarios(phase, num_scen, init_name="", iteration=None):
     chks = {}
     folder = "scenarios\\nn\\points\\"+("stability\\" if iteration is not None and phase=="gas" else "")
     if(num_scen=="eev"):
-        df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+"_eev.csv", delimiter=";", header=0)
-        for well in wellnames_2:
-            dbs[well] = df[well+"_"+phase+"_"+str(0)]
-            chks[well] = df[well+"_choke"]
-            return dbs, chks
+        df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+("_eev" if phase=="gas" else "")+".csv", delimiter=";", header=0)
+        num_scen=1
+#        dbs[0] = {}
+#        for well in wellnames_2:
+#            dbs[0][well] = df[well+"_"+phase+"_"+str(0)]
+#            chks[0][well] = df[well+"_choke"]
+#        return dbs, chks
     else:
         df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+".csv", delimiter=";", header=0)
-    scenarios=(len(df.keys())-2)/7
+    avail_scenarios=(len(df.keys())-2)/7
     if phase=="gas":
         for i in range(int(num_scen)):
-            if (i>=scenarios):
+            if (i>=avail_scenarios):
                 print("Not enough generated scenarios")
                 break
             dbw ={}
