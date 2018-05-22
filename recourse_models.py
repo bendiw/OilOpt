@@ -472,7 +472,7 @@ class Factor(Recourse_Model):
         #load mean and variance networks
         self.layers, self.multidims, self.weights, self.biases = self.getNeuralNets(self.LOAD, case, net_type="mean")
         self.layers_var, self.multidims_var, self.weights_var, self.biases_var = self.getNeuralNets(self.LOAD, case, net_type="std")
-        
+#        print(self.layers_var)
         # =============================================================================
         # variable creation                    
         # =============================================================================
@@ -516,10 +516,10 @@ class Factor(Recourse_Model):
         
 #        TODO: DELETE
 #        TEST DUMMIES
-        self.out_gas_mean = self.m.addVars([(well) for well in self.wellnames])
-        self.out_gas_var = self.m.addVars([(well) for well in self.wellnames])
-        self.gmean_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.out_gas_mean[well] ==  quicksum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron] for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
-        self.gvar_constr = self.m.addConstrs(  (self.routes[well, sep] == 1) >> (self.out_gas_var[well] == quicksum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+#        self.out_gas_mean = self.m.addVars([(well) for well in self.wellnames])
+#        self.out_gas_var = self.m.addVars([(well) for well in self.wellnames])
+#        self.gmean_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.out_gas_mean[well] ==  quicksum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron] for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+#        self.gvar_constr = self.m.addConstrs(  (self.routes[well, sep] == 1) >> (self.out_gas_var[well] == quicksum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
         
         return self
     
@@ -623,7 +623,7 @@ class SOS2(Recourse_Model):
 
 
 #        self.m.addConstr( self.inputs["W3", "HP", 0] == 0)
-        self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
+#        self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 
