@@ -94,7 +94,7 @@ def hey():
 # =============================================================================
 def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         epochs=1000, save=False, plot=False, num_std=4, regu=0.0, x_=None, y_=None,
-        weight=0.4, iteration=0, points=None, train=False, maxout=False,
+        weight=0.4, iteration=None, points=None, train=False, maxout=False,
         gas_factor = 1000.0, save_sos=False, num_scen=1, scen_start=0, name=""):
     filename = "variance_case"+str(case)+"_"+goal+".csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
@@ -184,8 +184,9 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if goal=="oil":
                     y=mean
                 big_y.append(np.copy(y))
-                print("SAVING",w)
-                save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\", name=name, scen_start=scen_start)
+        if(save_sos):
+            print("SAVING",w)
+            save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\"+("stability\\" if iteration is not None else ""), name=name, scen_start=scen_start, iteration=iteration)
 #        m = np.zeros(len(X))
 #
 
@@ -234,8 +235,8 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name=""):
-    filename = folder + "sos2_" +phase+"_"+name+".csv"
+def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="", iteration=None):
+    filename = folder + "sos2_" +phase+"_"+name+((" ("+str(iteration)+")") if iteration else "")+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
     d={}
