@@ -292,15 +292,10 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                 if goal=="oil":
                     y=mean
                 big_y.append(np.copy(y))
-<<<<<<< HEAD
-        if (save_sos):
-            print("SAVING",w)
-            save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\", name=name, scen_start=scen_start)
-=======
+
         if(save_sos):
             print("SAVING",w)
             save_sos2(X,big_y,goal,w, num_scen, folder="scenarios\\nn\\points\\"+("stability\\" if iteration is not None else ""), name=name, scen_start=scen_start, iteration=iteration)
->>>>>>> master
 #        m = np.zeros(len(X))
 #
 
