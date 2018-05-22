@@ -88,7 +88,7 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
             
-        self.results_file = "results/mop/res_"+init_name+".csv"
+        self.results_file = "results/mop/res_"+init_name+str(max_changes)+".csv"
         self.alpha=alpha
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
