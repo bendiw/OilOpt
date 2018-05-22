@@ -88,49 +88,50 @@ class Recourse_Model:
 
             
         #Case relevant numerics
-        if case==2:
-            if(not w_relative_change):
-                self.w_relative_change = {well : [0.4] for well in self.wellnames}
-            else:
-                self.w_relative_change=w_relative_change
-            if(lock_wells):
-                #wells which are not allowed to change
-                assert(isinstance(lock_wells, (list)))
-                for w in lock_wells:
-                    self.w_relative_change[w] = [0]
-                    
-            if(scen_const):
-                #provide "locked" scenario constant for certain wells
-                assert(isinstance(scen_const, (dict)))
-                for well, val in scen_const.items():
-                    self.s_draw[well] = val
-            
-            if not init_name:
-                self.w_initial_prod = {well : 0 for well in self.wellnames}
-                self.w_initial_vars = {well : 0 for well in self.wellnames}
-            elif not isinstance(init_name, (dict)):
-                #load init from file
-                self.w_initial_df = t.get_robust_solution(init_name=init_name)
-                self.w_initial_vars = {w:self.w_initial_df[w+"_choke"].values[0] for w in self.wellnames}
-#                print(self.w_initial_vars)
-                
-                self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
-#                print(self.w_initial_prod)
-            #constraints for case 2
-            else:
-                #we were given a dict of initial values
-#                w_initial_vars=init_name
-                self.w_initial_vars={}
-                for w in self.wellnames:
-                    self.w_initial_vars[w] = init_name[w+"_choke"]
-#                    del w_initial_vars[w+"_choke"]
-                
-#                print("optimization initial chokes:", w_initial_vars)
-                self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
-            self.tot_exp_cap = 250000
-            self.well_cap = {w:54166 for w in self.wellnames}
+#        if case==2:
+        if(not w_relative_change):
+            self.w_relative_change = {well : [0.4] for well in self.wellnames}
         else:
-            raise ValueError("Case 1 not implemented yet.")
+            self.w_relative_change=w_relative_change
+        if(lock_wells):
+            #wells which are not allowed to change
+            assert(isinstance(lock_wells, (list)))
+            for w in lock_wells:
+                self.w_relative_change[w] = [0]
+                
+        if(scen_const):
+            #provide "locked" scenario constant for certain wells
+            assert(isinstance(scen_const, (dict)))
+            for well, val in scen_const.items():
+                self.s_draw[well] = val
+        
+        if not init_name:
+            self.w_initial_prod = {well : 0 for well in self.wellnames}
+            self.w_initial_vars = {well : 0 for well in self.wellnames}
+        elif not isinstance(init_name, (dict)):
+            #load init from file
+            self.w_initial_df = t.get_robust_solution(init_name=init_name)
+            self.w_initial_vars = {w:self.w_initial_df[w+"_choke"].values[0] for w in self.wellnames}
+#                print(self.w_initial_vars)
+            
+            self.w_initial_prod = {well : 1. if self.w_initial_vars[well]>0 else 0. for well in self.wellnames}
+#                print(self.w_initial_prod)
+        #constraints for case 2
+        else:
+            #we were given a dict of initial values
+#                w_initial_vars=init_name
+            self.w_initial_vars={}
+            for w in self.wellnames:
+                self.w_initial_vars[w] = init_name[w+"_choke"]
+#                    del w_initial_vars[w+"_choke"]
+            
+#                print("optimization initial chokes:", w_initial_vars)
+            self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
+#            self.tot_exp_cap = 250000
+        self.tot_exp_cap = t.tot_exp_caps[init_name]
+        self.well_cap = {w:54166 for w in self.wellnames}
+#        else:
+#            raise ValueError("Case 1 not implemented yet.")
             
         # =============================================================================
         # initialize an optimization model
@@ -622,7 +623,7 @@ class SOS2(Recourse_Model):
 
 
 #        self.m.addConstr( self.inputs["W3", "HP", 0] == 0)
-#        self.m.addConstr( self.inputs["W4", "HP", 0] == 0)
+        self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
 
 #        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
 

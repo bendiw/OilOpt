@@ -24,13 +24,17 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False):
     
     filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+".csv"
     #init model
-    model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name)
+    model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     
-    
+    #failsafe check in case we forget to specify :)
+    if(init_name=="over_cap"):
+        from_infeasible=True
+        
+        
     #this is our starting point in terms of chokes
     init_chokes = t.get_init_chokes(init_name)
     if(verbose>0):
@@ -54,7 +58,7 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         #get "true" sos2 or NN models
         true_well_curves = get_true_models(init_name, i)
         #iterate with one less change since we have already found first solution
-        results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose)
+        results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible)
         
         #revert to initial model
         model.set_chokes(first_sol)
@@ -69,7 +73,7 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
 # =============================================================================
 # Perform one iteration of algorithm
 # =============================================================================
-def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0):
+def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False):
     #store intermediary results as optimization finds them
 #    opt_results = model.get_solution()
     #store implemented chokes, first we use only the starting point
@@ -81,7 +85,7 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
     new_chokes = first_sol
     #since we start by checking for #changes+1, we need to iterate an 'extra' time including 0
     for c in range(changes, -1, -1):
-        inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap)
+        inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap, from_infeasible)
         infeasible_count+=inf_single
 #        print("CHANGE RHS:", model.change_constr.getAttr("rhs"), "CHK:", model.w_initial_vars)
 #        for w in t.wellnames_2:
@@ -104,7 +108,14 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         old_chokes = {key: value for key, value in impl_chokes.items()}
         model.set_chokes(impl_chokes)
         model.set_changes(c)
+        
+        #if we came from infeasibility, only care about whether or not we ended up in infeasibility
         if(c<1):
+            if(from_infeasible):
+                if(inf_single==1):
+                    infeasible_count=1
+                else:
+                    infeasible_count=0
             break
 #        model.set_changes(changes)
         model.set_true_curve(change_well, true_well_curves[change_well])
@@ -119,9 +130,10 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
     
 # =============================================================================
 # Evaluate a solution given the true well curves and check infeasibility,
-# implement a change if feasible
+# implement a change if feasible, or if we came from infeasibility we perform
+# the change anyway.
 # =============================================================================
-def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_chokes, indiv_cap, tot_cap):
+def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_chokes, indiv_cap, tot_cap, from_infeasible):
 #    tot_gas = 0
     found=False
     #find which well to change. prioritize negative changes
@@ -146,9 +158,12 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
     change_gas = true_well_curves[change_well].predict(temp_chokes[change_well], "gas")
     old_oil = true_well_curves[change_well].predict(old_chokes[change_well], "oil")
     change_oil = true_well_curves[change_well].predict(temp_chokes[change_well], "oil")
+    
     if(change_gas-0.01 > indiv_cap[change_well] or tot_gas+(change_gas-old_gas)-0.01 > tot_cap):
-        #infeasible, revert
-#        print("tot", tot_gas+(change_gas-old_gas), "\tindiv:", change_gas)
+        if(from_infeasible):
+            #implement the change
+            return 1, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
+        #else, revert
         return 1, tot_oil, tot_gas, old_chokes, change_well, change_gas
     else:
         return 0, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
