@@ -284,7 +284,7 @@ class NN:
             # =============================================================================
             # alpha constraint for MOP
             # =============================================================================
-            self.m.addConstr(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]) >= self.oil_optimal*self.alpha)
+            self.alpha_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) >= self.oil_optimal*self.alpha)
         
         # =============================================================================
         # change tracking and total changes
@@ -322,7 +322,9 @@ class NN:
             self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
         self.m.optimize()
-        
+        print(routes)
+        print(inputs)
+        print("oilopt:", self.oil_optimal, "needed oil:",self.oil_optimal*self.alpha, "\nsumoil:", sum([outputs[well, "oil", "HP"].x for well in self.wellnames]),  "slack:", self.alpha_constr.slack)
         
         df = pd.DataFrame(columns=t.MOP_res_columns)
         chokes = [inputs[well, "HP", 0].x for well in self.wellnames]
