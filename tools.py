@@ -515,17 +515,18 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
 
-def get_sos2_scenarios(phase, num_scen, init_name=""):
+def get_sos2_scenarios(phase, num_scen, init_name="", iteration=None):
     dbs = {}
     chks = {}
+    folder = "scenarios\\nn\\points\\"+("stability\\" if iteration is not None and phase=="gas" else "")
     if(num_scen=="eev"):
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+"_eev.csv", delimiter=";", header=0)
+        df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+"_eev.csv", delimiter=";", header=0)
         for well in wellnames_2:
             dbs[well] = df[well+"_"+phase+"_"+str(0)]
             chks[well] = df[well+"_choke"]
             return dbs, chks
     else:
-        df = pd.read_csv("scenarios\\nn\\points\\sos2_"+phase+"_"+init_name+".csv", delimiter=";", header=0)
+        df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+".csv", delimiter=";", header=0)
     scenarios=(len(df.keys())-2)/7
     if phase=="gas":
         for i in range(int(num_scen)):
