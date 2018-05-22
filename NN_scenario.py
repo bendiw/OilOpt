@@ -100,13 +100,13 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
     X = [[x] for x in range(101)]
     if mode=="fac":
         scen = []
-        for i in range(-5,0):
-            print(i)
-            scen.append(float(i/2.3))
-        for i in range(1,6):
-            print(i)
-            scen.append(float(i/2.3))
-        print(scen)
+#        for i in range(-5,0):
+#            print(i)
+#            scen.append(float(i/2.3))
+#        for i in range(1,6):
+#            print(i)
+#            scen.append(float(i/2.3))
+        scen.append(1.3)
 
 #        scenarios = t.get_scenario("zero",num_scen)
 #        scen = [scenarios[w][i] for i in range(len(scenarios))]
@@ -153,18 +153,7 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
     for i in range(len(scen)):
         if mode=="fac":
             if known_point:
-                lines.append(ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
-#    line1,=ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line2,=ax.plot(X, mean+scen[1]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line3,=ax.plot(X, mean+scen[2]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line4,=ax.plot(X, mean+scen[3]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line5,=ax.plot(X, mean+scen[4]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line6,=ax.plot(X, mean+scen[5]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line7,=ax.plot(X, mean+scen[6]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line8,=ax.plot(X, mean+scen[7]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line9,=ax.plot(X, mean+scen[8]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-#    line10,=ax.plot(X,mean+ scen[9]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
-    
+                lines.append(ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])    
     
             else:
                 lines.append(ax.plot(X, mean + scen[i]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
@@ -177,9 +166,9 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
                 scen[i] = str(scen[i])[:4]
             else:
                 scen[i] = str(scen[i])[:3]
-        leg = ax.legend(lines,["Factor: "+i for i in scen])
-        leg_lines = leg.get_lines()
-        pyplot.setp(leg_lines, linewidth=2)
+#        leg = ax.legend(lines,["Factor: "+i for i in scen])
+#        leg_lines = leg.get_lines()
+#        pyplot.setp(leg_lines, linewidth=2)
 #    for line in ax.legend().get_lines():
 #        line.set_linewidth(3)
 #    ax.legend((line1,line2,line3,line4,line5,line6,line7,line8,line9,line10),

@@ -77,7 +77,7 @@ class NN:
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15, save=False):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15, save=False, verbose=0):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -88,7 +88,7 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
             
-        self.results_file = "results/mop/res_"+init_name+".csv"
+        self.results_file = "results/mop/res_"+init_name+str(max_changes)+"_changes.csv"
         self.alpha=alpha
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
@@ -300,7 +300,7 @@ class NN:
         # Solver parameters
         # =============================================================================
 #        self.m.setParam(GRB.Param.NumericFocus, 2)
-#        self.m.setParam(GRB.Param.LogToConsole, 0)
+        self.m.setParam(GRB.Param.LogToConsole, verbose)
 #        self.m.setParam(GRB.Param.Heuristics, 0)
 #        self.m.setParam(GRB.Param.Presolve, 0)
 #        self.m.Params.timeLimit = 360.0
