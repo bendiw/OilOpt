@@ -297,7 +297,7 @@ class NN:
         self.m.addConstrs(self.w_initial_vars[well] - inputs[well, sep, dim] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstrs(inputs[well, sep, dim] - self.w_initial_vars[well] <= changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+(1-self.w_initial_prod[well])*w_max_lims[dim][well][sep]*changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0]))
         self.m.addConstr(quicksum(changes[well, sep, dim] for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])) <= max_changes)
-        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
+        self.m.addConstrs( (routes[well, sep] == 0) >> (inputs[well, sep, dim] == 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
 
 
 
