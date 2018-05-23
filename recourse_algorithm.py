@@ -24,14 +24,14 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False):
     
     filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+".csv"
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     
     #failsafe check in case we forget to specify :)
-    if(init_name=="over_cap"):
+    if(init_name=="over_cap" or init_name=="over_cap_old"):
         from_infeasible=True
         
         
@@ -58,8 +58,10 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         #get "true" sos2 or NN models
         true_well_curves = get_true_models(init_name, i)
         #iterate with one less change since we have already found first solution
-        results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible)
-        
+        if(not simul_change):
+            results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name)
+        else:
+            simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=verbose)
         #revert to initial model
         model.set_chokes(first_sol)
         model.reset_m()
@@ -71,9 +73,18 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     return results
 
 # =============================================================================
-# Perform one iteration of algorithm
+# Perform one iteration of algo with simultaneous changes.
 # =============================================================================
-def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False):
+def simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=0):
+    
+    
+    print("\n==================================================")
+
+
+# =============================================================================
+# Perform one iteration of algorithm. Step-wise changes
+# =============================================================================
+def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False, init_name=None):
     #store intermediary results as optimization finds them
 #    opt_results = model.get_solution()
     #store implemented chokes, first we use only the starting point
@@ -118,7 +129,11 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
                     infeasible_count=0
             break
 #        model.set_changes(changes)
-        model.set_true_curve(change_well, true_well_curves[change_well])
+        if(init_name == "over_cap" or init_name=="over_cap_old"):
+            if(impl_chokes[change_well] != 0):
+                model.set_true_curve(change_well, true_well_curves[change_well])
+        else:
+            model.set_true_curve(change_well, true_well_curves[change_well])
         model.solve(verbose=max(verbose-2, 0))
 #        new_sol = model.get_solution()
 #        opt_results.append(new_sol.to_dict(), ignore_index=True)
@@ -135,21 +150,32 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
 # =============================================================================
 def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_chokes, indiv_cap, tot_cap, from_infeasible):
 #    tot_gas = 0
-    found=False
+    found1=False
+    found2=False
     #find which well to change. prioritize negative changes
+    change_well1 = None
+    change_well2 = None
     for w in reversed(t.well_order):
         if(new_chokes[w] - old_chokes[w] < -0.01):
-            change_well = w
-            found=True
-            break
-    if not found:
+            if(new_chokes[w]<0.01 and not found2):
+                change_well2 = w
+                found2=True
+            if(new_chokes[w]>0.01):
+                change_well1 = w
+                found1=True
+                break
+    if not (found1 or found2):
         for w in t.well_order:
             if(abs(new_chokes[w]-old_chokes[w]) >= 0.01):
-                change_well = w
-                found=True
+                change_well1 = w
+                found1=True
                 break
-    if not found:
+    if not (found1 or found2):
         return 0, tot_oil, tot_gas, old_chokes, None, None
+    if(found1):
+        change_well = change_well1
+    else:
+        change_well = change_well2
     #implement change and check for infeasibility
     temp_chokes = {key: value for key, value in old_chokes.items()}
     temp_chokes[change_well] = new_chokes[change_well]
@@ -242,11 +268,11 @@ class SOSpredictor():
                 index = i
                 break
                 
-        factor = 1-(choke - self.choke_vals[index-1])/10
+        factor = 1-(choke - self.choke_vals[index-1])/(self.choke_vals[index]-self.choke_vals[index-1])
 #        lower = self.rounddown(choke)
 #        upper = self.roundup(choke)
 #        factor = choke/10-lower
-#        print("l:", index-1, "u:", index, "fac:", factor, "val_l:", self.gas_vals[index-1], "val_u:", self.gas_vals[index])
+#        print("choke:", choke, "l:", index-1, "u:", index, "fac:", factor, "val_l:", self.gas_vals[index-1], "val_u:", self.gas_vals[index])
         if(phase=="oil"):
             return (factor)*self.oil_vals[index-1]+(1-factor)*self.oil_vals[index]
         else:

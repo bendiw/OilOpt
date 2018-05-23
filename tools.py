@@ -24,7 +24,7 @@ p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
 well_GORs = {'W1': 1578.6439, 'W2': 5886.233, 'W3': 2085.9548, 'W4': 1682.6052, 'W5': 1676.8193, 'W6': 2630.8806, 'W7': 5608.433}
 well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
-tot_exp_caps = {"under_cap":250000, "zero":250000, "over_cap":181000, "over_cap_old":210000}
+tot_exp_caps = {"under_cap":250000, "zero":250000, "over_cap":225000, "over_cap_old":235000} #225000
 
 
 # =============================================================================
@@ -100,7 +100,7 @@ def get_limits(target, wellnames, well_to_sep, case):
         for well in wellnames:
             for sep in well_to_sep_2[well]:
                 dfw = df[well+"_CHK_mea"]
-                lower[well][sep] = max(0.0, 0.8*dfw.min()-0.01) #do not allow negative choke values
+                lower[well][sep] = max(0.0, 0.9*dfw.min()-0.01) #do not allow negative choke values
                 upper[well][sep] = min(100.0, 1.3*dfw.max()+0.01)
         return lower, upper
 
