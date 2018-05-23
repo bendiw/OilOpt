@@ -24,14 +24,14 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False):
     
     filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+".csv"
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     
     #failsafe check in case we forget to specify :)
-    if(init_name=="over_cap"):
+    if(init_name=="over_cap" or init_name=="over_cap_old"):
         from_infeasible=True
         
         
@@ -58,8 +58,10 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         #get "true" sos2 or NN models
         true_well_curves = get_true_models(init_name, i)
         #iterate with one less change since we have already found first solution
-        results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name)
-        
+        if(not simul_change):
+            results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name)
+        else:
+            simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=verbose)
         #revert to initial model
         model.set_chokes(first_sol)
         model.reset_m()
@@ -71,7 +73,16 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     return results
 
 # =============================================================================
-# Perform one iteration of algorithm
+# Perform one iteration of algo with simultaneous changes.
+# =============================================================================
+def simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=0):
+    
+    
+    print("\n==================================================")
+
+
+# =============================================================================
+# Perform one iteration of algorithm. Step-wise changes
 # =============================================================================
 def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False, init_name=None):
     #store intermediary results as optimization finds them
