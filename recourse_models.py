@@ -91,7 +91,7 @@ class Recourse_Model:
 #        if case==2:
         if(not w_relative_change):
             if(init_name=="over_cap"):
-                self.w_relative_change = {well : [0.7] for well in self.wellnames}
+                self.w_relative_change = {well : [0.4] for well in self.wellnames}
             else:
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
         else:
@@ -165,9 +165,17 @@ class Recourse_Model:
         self.changes = self.m.addVars([(well, sep, dim) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1)], vtype=GRB.BINARY, name="changes")
         self.inputs = self.m.addVars(self.input_upper.keys(), ub = self.input_upper, lb=self.input_lower, name="input", vtype=GRB.SEMICONT) #SEMICONT
         
-        if(init_name=="over_cap"):
-            self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
+        self.w_allow_off = {w:1 for w in self.wellnames}
+        if(init_name=="over_cap" or init_name=="over_cap_old"):
+#            self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
             
+            for w in self.wellnames:
+                if self.w_initial_prod[w] < 1:
+#                    print("forced", w, "off")
+                    self.m.addConstr(self.inputs[w, "HP", 0]==0)
+                else:
+#                    self.m.addConstr(self.inputs[w, "HP", 0] >= 0.5)
+                    self.w_allow_off[w] = 0
         #input forcing to track changes
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, dim] <= 0) for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
 
@@ -228,7 +236,7 @@ class Recourse_Model:
             self.m.remove(self.pos_change_constr)
             
         self.neg_change_constr = self.m.addConstrs(self.w_initial_vars[well] - self.inputs[well, sep, dim] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim] + 
-                          (self.w_initial_vars[well]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim]))
+                          self.w_allow_off[well]*(self.w_initial_vars[well]*(1-quicksum(self.routes[well, separ] for separ in self.well_to_sep[well]))*(1-self.w_relative_change[well][dim]))
                           for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(1))
         
         self.pos_change_constr = self.m.addConstrs(self.inputs[well, sep, dim] - self.w_initial_vars[well] <= self.changes[well, sep, dim]*self.w_initial_vars[well]*self.w_relative_change[well][dim]+
@@ -243,8 +251,8 @@ class Recourse_Model:
         for p in self.phasenames:
             for c in self.learned_constr[p]:
                 self.m.remove(c)
-
         self.learned_vars = []
+        self.lock_wells = []
         self.learned_constr = {p:[] for p in self.phasenames}
     
     def solve(self, verbose=1):
@@ -261,19 +269,18 @@ class Recourse_Model:
         self.m.setParam(GRB.Param.DisplayInterval, 15.0)
         #maximization of mean oil. no need to take mean over scenarios since only gas is scenario dependent
         self.m.optimize()
-#        if(self.verbose>0):
-#            print("\n=====================")
-#            for p_well in ["W5"]:
-#                print("max input", self.input_upper[p_well, "HP", 0])
-#                if(len(self.gas_vals)>0):
-#                    try:
-#                        for brk in range(len(self.choke_vals[p_well])):
-#                            print(self.zetas[brk, p_well, "HP"])
-#                    except:
-#                        pass
-#                for s in range(self.scenarios):
-#        #            print("\n",self.gas_vals[s]["W5"])
-#                    print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
+#        print("\n=====================")
+#        for p_well in ["W3", "W4"]:
+#            print("max input", self.input_upper[p_well, "HP", 0])
+#            if(len(self.gas_vals)>0):
+#                try:
+#                    for brk in range(len(self.choke_vals[p_well])):
+#                        print(self.zetas[brk, p_well, "HP"])
+#                except:
+#                    pass
+#            for s in range(self.scenarios):
+#    #            print("\n",self.gas_vals[s]["W5"])
+#                print(s, "choke", self.inputs[p_well, "HP", 0].x, p_well+"_gas", self.outputs_gas[s, p_well, "HP"].x, "tot_gas", sum([self.outputs_gas[s, g_w, "HP"].x for g_w in self.wellnames]))
         
     def get_solution(self):        
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
@@ -553,17 +560,18 @@ class Factor(Recourse_Model):
                 self.zeta_route = self.m.addConstrs( self.routes[change_well, sep] == quicksum(self.zetas[brk, change_well, sep] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
                 self.zeta_sos2 = self.m.addSOS(2, [self.zetas[brk, change_well, "HP"] for brk in range(len(self.choke_vals[change_well]))])
 
+                #add new constrs
+                self.oil_constr =self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well])))) for sep in self.well_to_sep[change_well])
+                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
+
                 #store constr, vars to remove later
                 self.learned_vars.append(self.zetas)
+                self.learned_constr["oil"].append(self.oil_constr)
+                self.learned_constr["gas"].append(self.gas_constr)
                 self.learned_constr["gas"].append(self.zeta_constr)
                 self.learned_constr["gas"].append(self.zeta_sos2)
                 self.learned_constr["gas"].append(self.zeta_route)
                 
-                #add new constrs
-                self.oil_constr =self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well])))) for sep in self.well_to_sep[change_well])
-                self.learned_constr["oil"].append(self.oil_constr)
-                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
-                self.learned_constr["gas"].append(self.gas_constr)
             self.m.update()
 
         else:
@@ -652,7 +660,11 @@ class SOS2(Recourse_Model):
                 return
             else:
                 self.learned_wells.append(change_well)
-#                self.lock_wells.append(change_well)
+                
+#                if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
+#                    self.lock_wells.append(change_well)
+#                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+#                    self.learned_constr["oil"].append(self.lock_constr)
                 #remove old curves, update values dict
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, "HP"])
