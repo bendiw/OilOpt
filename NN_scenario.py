@@ -126,14 +126,14 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
         if known_point:
             gas,choke = t.get_sos2_scenarios(goal,num_scen,"w2_off")
             X_ = [choke[w][i] for i in range(len(choke[w]))]
-            points = len(gas[0]["W1"])
-            scen = [[gas[i]["W1"][j] for j in range(points)] for i in range(len(gas))]
+            points = len(gas[0][w])
+            scen = [[gas[i][w][j] for j in range(points)] for i in range(len(gas))]
         else:
             gas, choke = t.get_sos2_scenarios(goal,num_scen,"zero")
-            points = len(gas[0]["W1"])
+            points = len(gas[0][w])
             factor = int(100/points)
             X_ = np.array([[i*factor] for i in range(points+1)])
-            scen = [[gas[i]["W1"][j] for j in range(points)] for i in range(len(gas))]
+            scen = [[gas[i][w][j] for j in range(points)] for i in range(len(gas))]
             for i in range(num_scen):
                 scen[i].insert(0,0)
         

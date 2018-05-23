@@ -451,7 +451,6 @@ def save_variance_func(X, var, mean, case, well, phase):
         print(df.columns)
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";")
-        
     
         
 def sample_mean_std(model, X, n_iter, f):
