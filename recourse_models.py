@@ -542,6 +542,12 @@ class Factor(Recourse_Model):
             else:
                 self.learned_wells.append(change_well)
                 self.lock_wells.append(change_well)
+                
+                if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
+                    self.lock_wells.append(change_well)
+                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                    self.learned_constr["oil"].append(self.lock_constr)
+                
                 #remove old constr
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, self.well_to_sep[change_well][0]])
@@ -661,10 +667,10 @@ class SOS2(Recourse_Model):
             else:
                 self.learned_wells.append(change_well)
                 
-#                if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
-#                    self.lock_wells.append(change_well)
-#                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
-#                    self.learned_constr["oil"].append(self.lock_constr)
+                if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
+                    self.lock_wells.append(change_well)
+                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                    self.learned_constr["oil"].append(self.lock_constr)
                 #remove old curves, update values dict
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, "HP"])
