@@ -324,7 +324,7 @@ class NN:
         self.m.optimize()
         print(routes)
         print(inputs)
-        print("oilopt:", self.oil_optimal, "needed oil:",self.oil_optimal*self.alpha, "\nsumoil:", sum([outputs[well, "oil", "HP"].x for well in self.wellnames]),  "slack:", self.alpha_constr.slack)
+#        print("oilopt:", self.oil_optimal, "needed oil:",self.oil_optimal*self.alpha, "\nsumoil:", sum([outputs[well, "oil", "HP"].x for well in self.wellnames]),  "slack:", self.alpha_constr.slack)
         
         df = pd.DataFrame(columns=t.MOP_res_columns)
         chokes = [inputs[well, "HP", 0].x for well in self.wellnames]
@@ -350,7 +350,7 @@ class NN:
 #            df.append(newrow)
             with open(self.results_file, 'a') as f:
                 df.to_csv(f, sep=';', index=False, header=self.header)
-        return rowlist
+        return df
 #        for p in self.platforms:
 #            print("Platform", p)
 #            print("well\t", "sep\t\t", "gas\t\t\t", "oil\t\t\tgas lift\t\tchoke")
