@@ -174,8 +174,8 @@ class NN:
         w_min_lims = [w_min_choke, w_min_glift]
         input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
         input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
-        
-        
+        print(self.w_initial_vars)
+        print(input_lower)
         # =============================================================================
         # variable creation                    
         # =============================================================================
@@ -285,7 +285,8 @@ class NN:
             # alpha constraint for MOP
             # =============================================================================
             self.alpha_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) >= self.oil_optimal*self.alpha)
-        
+#        self.test_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) <= self.oil_optimal*self.alpha)
+
         # =============================================================================
         # change tracking and total changes
         # =============================================================================
