@@ -61,7 +61,7 @@ def mse_loss(y_true, y_pred):
 def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
-        goal="oil", save_variance = False, save_weights = False, layers=2):
+        goal="oil", save_variance = False, save_weights = False, layers=2, verbose=0):
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
@@ -80,6 +80,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if (len(X[0]) >= 2):
         dim=2 
     X_test = gen_x_test(X, dim, sampling_density)
+
     y = np.array([[i[0], 0] for i in y])
     
     
@@ -89,7 +90,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if(dim==1):
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.xlim(np.min(X)-0.8*np.max(X), np.max(X)+0.8*np.max(X))
+        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
         pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
     
         pyplot.autoscale(False)
@@ -104,7 +105,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #                          [model.layers[-1].output])
     for r in range(runs):
         #train model
-        model.fit(X, y, batch_size, epochs, verbose=0)
+        model.fit(X, y, batch_size, epochs, verbose=verbose)
 #        if r==0:
 #            model.fit(X, y, batch_size, epochs, verbose=0)
 #        else:
@@ -151,16 +152,23 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #        var1 = pred_sq_mean-np.square(pred_mean)
         
         #this is the current network's prediction with dropout switched off
-        prediction = [x[0] for x in model.predict(X_test)]
+#        prediction = [x[0] for x in model.predict(X_test)]
         pred_mean, std = tools.sample_mean_std(model, X_test, n_iter, f)
-#        pred_mean, al, ep = tools.sample_mean_2var(model, X_test, n_iter, f)
 
-        
+#        Activate theese for plotting aleotoric and epistemic variance
+#        if r == runs-1:
+#            print("HER")
+#            model = tools.inverse_scale(model, dim, neurons, dropout, rs, lr, sced_loss)
+#            X_test=X
+#        pred_mean, al, ep = tools.sample_mean_2var(model, X_test, n_iter, f)
+#        print(r)
+
+
         #plot results from current run
         if dim==1:
             if r==0:
                 line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=10)
-                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
                 for i in range(2):
                     (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
@@ -168,12 +176,12 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
-                line2[0].set_ydata(prediction)
+#                line2[0].set_ydata(prediction)
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
-#                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
-#                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+ep, pred_mean-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-al-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
                 for i in range(2):
                     (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+var1*(i+1), pred_mean-var1*(i+1), alpha=0.5, facecolor='#0F0F0F', linewidth=2))
@@ -248,7 +256,7 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=No
 def gen_x_test(X, dim, n_iter):
     if (dim==1):
         step = (np.max(X)-np.min(X))/n_iter
-        X_test = np.array([[i] for i in np.arange(np.min(X)-0.5*np.max(X), 1.5*np.max(X)+step, step)])
+        X_test = np.array([[i] for i in np.arange(np.min(X)-0.2*np.max(X), 1.5*np.max(X)+step, step)])
 #        X_test = np.array([[i] for i in np.arange(0,101)])
     else:
         step_1 = (np.max(X[:,0])-np.min(X[:,0]))/n_iter

@@ -284,9 +284,14 @@ class NN:
             # =============================================================================
             # alpha constraint for MOP
             # =============================================================================
+<<<<<<< HEAD
             self.alpha_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) >= self.oil_optimal*self.alpha)
 #        self.test_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) <= self.oil_optimal*self.alpha)
 
+=======
+            self.alpha_constr = self.m.addConstr(quicksum(outputs[well, "oil", "HP"] for well in self.wellnames) >= self.oil_optimal*self.alpha-0.000001)
+        
+>>>>>>> master
         # =============================================================================
         # change tracking and total changes
         # =============================================================================
