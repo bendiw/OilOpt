@@ -100,13 +100,12 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
     X = [[x] for x in range(101)]
     if mode=="fac":
         scen = []
-#        for i in range(-5,0):
-#            print(i)
-#            scen.append(float(i/2.3))
-#        for i in range(1,6):
-#            print(i)
-#            scen.append(float(i/2.3))
-        scen.append(1.3)
+        for i in range(-5,0):
+            print(i)
+            scen.append(float(i/2.3))
+        for i in range(1,6):
+            print(i)
+            scen.append(float(i/2.3))
 
 #        scenarios = t.get_scenario("zero",num_scen)
 #        scen = [scenarios[w][i] for i in range(len(scenarios))]
@@ -150,13 +149,18 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
     col = [c for c in colors.cnames]
     ax.plot(X, mean,color="black",linestyle="-", linewidth=1)
     lines = []
+
+    
     for i in range(len(scen)):
+        ploty=np.zeros(len(X))
+        for j in range(len(ploty)):
+            ploty[j] = max(0,mean[j]+scen[i]*std[j])
         if mode=="fac":
             if known_point:
                 lines.append(ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])    
     
             else:
-                lines.append(ax.plot(X, mean + scen[i]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
+                lines.append(ax.plot(X, ploty,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
         else:
             ax.plot(X_, scen[i],color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
     print(["Factor: "+str(i) for i in scen])
@@ -166,7 +170,7 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
                 scen[i] = str(scen[i])[:4]
             else:
                 scen[i] = str(scen[i])[:3]
-#        leg = ax.legend(lines,["Factor: "+i for i in scen])
+        leg = ax.legend(lines,["Factor: "+i for i in scen])
 #        leg_lines = leg.get_lines()
 #        pyplot.setp(leg_lines, linewidth=2)
 #    for line in ax.legend().get_lines():
@@ -178,12 +182,12 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #    pyplot.ylabel(goal)
 #    pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
 #                       alpha=0.15, facecolor='#089FFF', linewidth=1)
-    pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std,
-                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+    pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std, alpha=0.15,
+                        facecolor='#089FFF', linewidth=1)
 #    pyplot.fill_between([x[0] for x in X], mean-3*std, mean+3*std,
 #                       alpha=0.15, facecolor='#089FFF', linewidth=1)
-    pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
-                       alpha=0.15, facecolor='#089FFF', linewidth=1)
+    pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std, alpha=0.15,
+                        facecolor='#089FFF', linewidth=1)
     
 
 # =============================================================================
@@ -245,7 +249,7 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
 #            for i in range(len(X)):
 #                m[i] = mean[i]
             for i in range(index+1,len(X)):
-                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+                y[i] = max(0,(1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
 #                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             for i in range(index-1,0,-1):
                 y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
@@ -362,18 +366,18 @@ def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="", iteration=No
         df.to_csv(f,sep=";")
         
         
-def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], neurons=20, lr=0.001):
-    df = t.get_sos2_scenarios(phase, start_scen+num_scen)
-    X = np.array([[i*10] for i in range(11)])
+def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], neurons=20, lr=0.00, init_name="under_cap"):
+    df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
+#    X = np.array([[i*10] for i in range(11)])
     for scen in range(start_scen, start_scen+num_scen):
-        train(well, X, df[scen][well], goal=phase, neurons=neurons, lr=lr,
-              epochs=epochs, save=True, plot=True, scen=scen)
+        train(well, df[1][well], df[0][scen][well], goal=phase, neurons=neurons, lr=lr,
+              epochs=epochs, save=True, plot=False, scen=scen, init_name=init_name)
         
     
     
 def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                epochs=1000, save=False, plot=False, regu=0.0, scen = 0,
-               gas_factor = 1000.0, num_scen=1, scen_start=0):
+               gas_factor = 1000.0, num_scen=1, scen_start=0, init_name=""):
     
     batch_size=7
     if (goal=="gas"):
@@ -398,9 +402,9 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
         line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=10)    
         line2 = ax.plot(X, prediction, color="blue", linestyle="dashed", linewidth=1)
         if save:
-            filepath = "scenarios\\nn\\points\\"+well+"_"+str(scen)+".png"
+            filepath = "scenarios\\nn\\points\\"+init_name+"\\"+well+"_"+str(scen)+".png"
             pyplot.savefig(filepath, bbox_inches="tight")
-            t.save_variables(well+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\")
+            t.save_variables(well+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\"+init_name+"\\")
         if plot:
             pyplot.show()
 

@@ -9,6 +9,7 @@ from keras import optimizers
 from keras import backend as K
 from scipy.stats import randint, uniform
 from matplotlib import pyplot
+import caseloader as cl
 
 # =============================================================================
 # Case 1
@@ -409,16 +410,21 @@ def retrieve_model(well, goal="oil", lr=0.001, case=2, mode="mean"):
 
 def build_and_plot_well(well, goal="oil", case=2):
     model = retrieve_model(well,goal=goal,lr=0.001,case=case)
-    X = np.array([[i] for i in range(101)])
-    pred = [x[0] for x in model.predict(X)]
-    print(pred)
-    return pred
+    X = np.array([[i] for i in range(61)])
+#    pred = [x[0] for x in model.predict(X)]
+    pred_mean, std = sample_mean_std(model, X, 100, K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output]))
+    X_, y_, _ = cl.BO_load(well, "HP", case=case, scaler=None, goal=goal)
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
-    line2 = ax.plot(X, pred, color='green',linestyle='dashed', linewidth=1)
+    line1 = ax.plot(X_, [i[0] for i in y_], linestyle='None', marker = '.',markersize=10)
+    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1)
+#    line2 = ax.plot(X, pred, color='green',linestyle='dashed', linewidth=1)
+    for i in range(2):
+        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
     pyplot.xlabel('choke')
     pyplot.ylabel("oil")
     pyplot.show()
+
     
 
 #def save_variance_func_2(X, var, mean, case, well, phase):
