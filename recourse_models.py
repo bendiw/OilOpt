@@ -91,7 +91,7 @@ class Recourse_Model:
 #        if case==2:
         if(not w_relative_change):
             if(init_name=="over_cap"):
-                self.w_relative_change = {well : [0.4] for well in self.wellnames}
+                self.w_relative_change = {well : [0.75] for well in self.wellnames}
             else:
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
         else:
@@ -166,13 +166,15 @@ class Recourse_Model:
         self.inputs = self.m.addVars(self.input_upper.keys(), ub = self.input_upper, lb=self.input_lower, name="input", vtype=GRB.SEMICONT) #SEMICONT
         
         self.w_allow_off = {w:1 for w in self.wellnames}
+        self.w_allow_on_constr = []
         if(init_name=="over_cap" or init_name=="over_cap_old"):
 #            self.m.addConstr( self.inputs["W7", "HP", 0] == 0)
             
             for w in self.wellnames:
                 if self.w_initial_prod[w] < 1:
 #                    print("forced", w, "off")
-                    self.m.addConstr(self.inputs[w, "HP", 0]==0)
+                    cstr = self.m.addConstr(self.inputs[w, "HP", 0]==0)
+                    self.w_allow_on_constr.append(cstr)
                 else:
 #                    self.m.addConstr(self.inputs[w, "HP", 0] >= 0.5)
                     self.w_allow_off[w] = 0
@@ -183,7 +185,7 @@ class Recourse_Model:
         # =============================================================================
         # separator gas constraints
         # =============================================================================
-        self.gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap[well] for well in self.wellnames for scenario in range(self.scenarios))
+        self.indiv_gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap[well] for well in self.wellnames for scenario in range(self.scenarios))
         self.exp_constr = self.m.addConstrs(quicksum(self.outputs_gas[scenario, well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= self.tot_exp_cap for scenario in range(self.scenarios))
         
         # =============================================================================
@@ -203,6 +205,15 @@ class Recourse_Model:
         self.change_constr.setAttr("rhs", max_changes)
         self.m.update()
         
+    def undo_allow_on_off(self):
+        for c in self.w_allow_on_constr:
+            self.m.remove(c)
+        self.w_allow_off = {w:1 for w in self.wellnames}
+        if self.m.status == GRB.LOADED:
+            self.set_chokes(self.w_initial_vars)
+        else:
+            self.set_chokes(self.get_chokes())
+        
     def set_tot_gas(self, gas):
         self.tot_exp_cap = gas
         for s in range(self.scenarios):
@@ -211,6 +222,7 @@ class Recourse_Model:
     
     #set indiv gas cap. if no well is specified, all wells are affected
     def set_indiv_gas(self, gas, wells=None):
+#        print(self.gas_constr)
         if wells:
             if(isinstance(wells, (list))):
                 to_change = wells
@@ -221,7 +233,7 @@ class Recourse_Model:
 #        print("tocange:", to_change)
         for w in to_change:
             for s in range(self.scenarios):
-                self.gas_constr[w, s].setAttr("rhs", gas)
+                self.indiv_gas_constr[w, s].setAttr("rhs", gas)
         self.m.update()
         
     def set_chokes(self, w_initial_vars):

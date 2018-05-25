@@ -24,11 +24,14 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False):
     
-    filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+".csv"
+    filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+".csv"
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
+    if(undo_allow_on and "over_cap" in init_name):
+        model.undo_allow_on_off()
+        print("wells may be switched on/off.")
     
     #failsafe check in case we forget to specify :)
     if(init_name=="over_cap" or init_name=="over_cap_old"):
@@ -61,7 +64,7 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         if(not simul_change):
             results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name)
         else:
-            simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=verbose)
+            results.loc[i] = simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=verbose)
         #revert to initial model
         model.set_chokes(first_sol)
         model.reset_m()
@@ -76,9 +79,42 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
 # Perform one iteration of algo with simultaneous changes.
 # =============================================================================
 def simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=0):
+    changed_w = []
+    ch_gas = {}
+    ch_oil = {}
+    old_gas ={}
+    old_oil = {}
+    tot_oil = sum([true_well_curves[w].predict(init_chokes[w], "oil") for w in t.wellnames_2])
+    tot_gas = sum([true_well_curves[w].predict(init_chokes[w], "gas") for w in t.wellnames_2])
+    infeasible_count = 0
+    for w in t.wellnames_2:
+        if(abs(first_sol[w]-init_chokes[w]) >= 0.01):
+            changed_w.append(w)
     
+        
+    for w in changed_w:
+        old_gas[w] = true_well_curves[w].predict(init_chokes[w], "gas")
+        ch_gas[w] = true_well_curves[w].predict(first_sol[w], "gas")
+        old_oil[w] = true_well_curves[w].predict(init_chokes[w], "oil")
+        ch_oil[w] = true_well_curves[w].predict(first_sol[w], "oil")
+        if(ch_gas[w]-0.01 > model.well_cap[w]):
+            infeasible_count+=1
+    new_tot_gas = tot_gas-sum(old_gas.values())+sum(ch_gas.values())
+    new_tot_oil = tot_oil-sum(old_oil.values())+sum(ch_oil.values())
     
-    print("\n==================================================")
+    if(new_tot_gas-0.01 > model.tot_exp_cap):
+        infeasible_count+=1
+    if(verbose>1):
+        print("\n==================================================")
+        print("Solution was", ("infeasible!" if infeasible_count>0 else "feasible."))
+        print("\nchanged wells:")
+        for w in changed_w:
+            print(w+"\t[", (round(init_chokes[w],2)),"--->", round(first_sol[w],2), "]")
+        print("\ntot_oil:\t", round(new_tot_oil,2), "\t[", round(tot_oil,2), "]")
+        print("tot_gas:\t", round(new_tot_gas,2), "\t[", round(tot_gas,2), "]")
+        print("\n==================================================\n")
+    rowlist = [infeasible_count, new_tot_oil, new_tot_gas]+ list(first_sol.values())
+    return rowlist
 
 
 # =============================================================================
@@ -114,7 +150,8 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
                 print(w+"\t", round(impl_chokes[w],2), "\t\t\t", round(new_chokes[w],2))
             print("\ntot oil:\t", tot_oil, "\ntot gas:\t", tot_gas)
             print("==================================================\n")
-
+            
+            
 #        print("res\n", opt_results)
         old_chokes = {key: value for key, value in impl_chokes.items()}
         model.set_chokes(impl_chokes)
@@ -128,6 +165,10 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
                 else:
                     infeasible_count=0
             break
+        #allow individual infeasibility as a quick fix for single wells
+        if(change_gas > model.well_cap[change_well]):
+#            print("\n***\n"+change_well,"indiv cap changed to",change_gas,"\n***")
+            model.set_indiv_gas(change_gas, change_well)
 #        model.set_changes(changes)
         if(init_name == "over_cap" or init_name=="over_cap_old"):
             if(impl_chokes[change_well] != 0):
