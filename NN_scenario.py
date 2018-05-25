@@ -340,7 +340,7 @@ def train_all_scen(neurons=15,lr=0.005,epochs=1000,save=True,plot=False, case=2,
         for p in ["oil","gas"]:
             train_scen(w, goal=p, neurons=neurons, lr=lr, epochs=epochs, save=save, plot=plot, case=case, num_std=num_std)
 
-def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="", iteration=None):
+def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="",iteration=None):
     filename = folder + "sos2_" +phase+"_"+name+((" ("+str(iteration)+")") if iteration else "")+".csv"
 #    well+'_'+phase+"_std":var, 
 #    x = [z[0] for z in x]
@@ -366,12 +366,14 @@ def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="", iteration=No
         df.to_csv(f,sep=";")
         
         
-def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], neurons=20, lr=0.00, init_name="under_cap"):
+def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[],
+               neurons=20, lr=0.00, init_name="under_cap", plot=False):
     df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
 #    X = np.array([[i*10] for i in range(11)])
     for scen in range(start_scen, start_scen+num_scen):
+        print(init_name, well, scen)
         train(well, df[1][well], df[0][scen][well], goal=phase, neurons=neurons, lr=lr,
-              epochs=epochs, save=True, plot=False, scen=scen, init_name=init_name)
+              epochs=epochs, save=True, plot=plot, scen=scen, init_name=init_name)
         
     
     
