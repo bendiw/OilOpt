@@ -353,7 +353,7 @@ class NN(Recourse_Model):
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
     # =============================================================================
-    def getNeuralNets(self, mode, case, phase, net_type="scen"):
+    def getNeuralNets(self, mode, case, phase, net_type="scen", init_name=""):
         if phase=="gas":
             weights = {scenario : {well : {} for well in self.wellnames} for scenario in range(self.scenarios)}
             biases = {scenario : {well : {} for well in self.wellnames}for scenario in range(self.scenarios)}
@@ -367,7 +367,7 @@ class NN(Recourse_Model):
                     layers[scenario][well] = {} 
                     for separator in self.well_to_sep[well]:
                         if mode==self.LOAD:
-                            multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, separator, case, net_type, scenario)
+                            multidims[scenario][well][separator], weights[scenario][well][separator], biases[scenario][well][separator] = t.load_2(well, phase, init_name=init_name, separator=separator, case=case, mode=net_type, scen=scenario)
                             layers[scenario][well][separator] = len(multidims[scenario][well][separator])
                             if net_type=="mean" and multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] > 1:
                                 multidims[scenario][well][separator][ layers[scenario][well][separator]-1 ] -=1
@@ -385,7 +385,7 @@ class NN(Recourse_Model):
                 layers[well] = {} 
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
-                        multidims[well][separator], weights[well][separator], biases[well][separator] = t.load_2(well, phase, separator, case, net_type, scen=0)
+                        multidims[well][separator], weights[well][separator], biases[well][separator] = t.load_2(well, phase, init_name=init_name, separator=separator, case=case, mode=net_type, scen=0)
                         layers[well][separator] = len(multidims[well][separator])
                         if net_type=="mean" and multidims[well][separator][layers[well][separator]-1 ] > 1:
                             multidims[well][separator][ layers[well][separator]-1 ] -=1
@@ -403,10 +403,11 @@ class NN(Recourse_Model):
                 max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1):
 
         Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
+
         self.results_file = "results/robust/res_NN.csv"
         #load mean and variance networks
-        self.layers_gas, self.multidims_gas, self.weights_gas, self.biases_gas = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="gas")
-        self.layers_oil, self.multidims_oil, self.weights_oil, self.biases_oil = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="oil")
+        self.layers_gas, self.multidims_gas, self.weights_gas, self.biases_gas = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="gas", init_name=init_name)
+        self.layers_oil, self.multidims_oil, self.weights_oil, self.biases_oil = self.getNeuralNets(self.LOAD, case, net_type="scen", phase="oil", init_name=init_name)
 
         # =============================================================================
         # variable creation                    
@@ -441,13 +442,74 @@ class NN(Recourse_Model):
 
         #use these to model last layer as linear instead of ReLU
         #gas
-        self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] ==  quicksum(self.weights_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][neuron][0] * self.mus_gas[scenario, well, sep, self.layers_gas[scenario][well][sep]-2, neuron] for neuron in range(self.multidims_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2]) ) + self.biases_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][0]) for scenario in range(self.scenarios) for well in self.wellnames for sep in self.well_to_sep[well] )
+        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] ==  quicksum(self.weights_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][neuron][0] * self.mus_gas[scenario, well, sep, self.layers_gas[scenario][well][sep]-2, neuron] for neuron in range(self.multidims_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2]) ) + self.biases_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_gas[scenario, well, sep] == 0) for scenario in range(self.scenarios) for well in self.wellnames for sep in self.well_to_sep[well])
         #oil
-        self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights_oil[well][sep][self.layers_oil[well][sep]-2][neuron][0] * self.mus_oil[well, sep, self.layers_oil[well][sep]-2, neuron] for neuron in range(self.multidims_oil[well][sep][self.layers_oil[well][sep]-2]) ) + self.biases_oil[well][sep][self.layers_oil[well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
+        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights_oil[well][sep][self.layers_oil[well][sep]-2][neuron][0] * self.mus_oil[well, sep, self.layers_oil[well][sep]-2, neuron] for neuron in range(self.multidims_oil[well][sep][self.layers_oil[well][sep]-2]) ) + self.biases_oil[well][sep][self.layers_oil[well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
         self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.outputs_oil[well, sep] == 0) for well in self.wellnames for sep in self.well_to_sep[well] )
         
         return self
+    
+    def set_true_curve(self, change_well, true_curve):
+        if(true_curve.p_type=="sos2"):
+            if(change_well in self.learned_wells):
+                return
+            else:
+                self.learned_wells.append(change_well)
+                self.lock_wells.append(change_well)
+                
+                if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
+                    self.lock_wells.append(change_well)
+                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                    self.learned_constr["oil"].append(self.lock_constr)
+                
+                #remove old constr
+                #oil
+                self.m.remove(self.oil_out_constr[change_well, self.well_to_sep[change_well][0]])
+                self.oil_vals[change_well] = true_curve.oil_vals.values.tolist()
+                #gas
+                gases = true_curve.gas_vals.values.tolist()
+                for s in range(self.scenarios):
+                    self.m.remove(self.gas_out_constr[change_well, self.well_to_sep[change_well][0], s])
+                    self.gas_vals[s][change_well] = gases
+    
+                self.choke_vals[change_well] = true_curve.choke_vals.values.tolist()
+
+                #add zetas, link to inputs
+                self.zetas = self.m.addVars([(brk, change_well, sep) for sep in self.well_to_sep[change_well] for brk in range(len(self.choke_vals[change_well]))], vtype = GRB.CONTINUOUS, name="zetas")
+                self.zeta_constr = self.m.addConstrs( self.inputs[change_well, sep, 0] == quicksum(self.zetas[brk, change_well, sep]*self.choke_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
+                self.zeta_route = self.m.addConstrs( self.routes[change_well, sep] == quicksum(self.zetas[brk, change_well, sep] for brk in range(len(self.choke_vals[change_well]))) for sep in self.well_to_sep[change_well])
+                self.zeta_sos2 = self.m.addSOS(2, [self.zetas[brk, change_well, "HP"] for brk in range(len(self.choke_vals[change_well]))])
+
+                #add new constrs
+                self.oil_constr =self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_oil[change_well, sep] == quicksum( self.zetas[brk, change_well, sep]*self.oil_vals[change_well][brk] for brk in range(len(self.choke_vals[change_well])))) for sep in self.well_to_sep[change_well])
+                self.gas_constr = self.m.addConstrs( (self.routes[change_well, sep] == 1) >> (self.outputs_gas[scenario, change_well, sep] == quicksum(self.zetas[brk, change_well, sep]*self.gas_vals[scenario][change_well][brk] for brk in range(len(self.choke_vals[change_well]))))for sep in self.well_to_sep[change_well] for scenario in range(self.scenarios) )
+
+                #store constr, vars to remove later
+                self.learned_vars.append(self.zetas)
+                self.learned_constr["oil"].append(self.oil_constr)
+                self.learned_constr["gas"].append(self.gas_constr)
+                self.learned_constr["gas"].append(self.zeta_constr)
+                self.learned_constr["gas"].append(self.zeta_sos2)
+                self.learned_constr["gas"].append(self.zeta_route)
+                
+            self.m.update()
+
+        else:
+            raise ValueError("Only SOS2-based true curve discovery is implemented yet!")
+            
+            
+    def reset_m(self):
+        Recourse_Model.reset_m(self)
+
+        #remove and re-add orig constraints
+        self.m.remove(self.gas_out_constr)
+        self.m.remove(self.oil_out_constr)
+        self.gas_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_gas[scenario, well, sep] ==  quicksum(self.weights_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][neuron][0] * self.mus_gas[scenario, well, sep, self.layers_gas[scenario][well][sep]-2, neuron] for neuron in range(self.multidims_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2]) ) + self.biases_gas[scenario][well][sep][self.layers_gas[scenario][well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios))
+        self.oil_out_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.outputs_oil[well, sep] == quicksum(self.weights_oil[well][sep][self.layers_oil[well][sep]-2][neuron][0] * self.mus_oil[well, sep, self.layers_oil[well][sep]-2, neuron] for neuron in range(self.multidims_oil[well][sep][self.layers_oil[well][sep]-2]) ) + self.biases_oil[well][sep][self.layers_oil[well][sep]-2][0]) for well in self.wellnames for sep in self.well_to_sep[well])
+
+        self.learned_wells =[]
+        self.m.update()
     
     
 class Factor(Recourse_Model):

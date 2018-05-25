@@ -145,9 +145,9 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def load_2(well, phase, separator="HP", case=1, mode = "mean", scen=0):
+def load_2(well, phase, init_name="", separator="HP", case=1, mode = "mean", scen=0):
     if mode == "scen":
-        filename = "scenarios/nn/points/"+well+"_"+str(scen)+"-scen-"+phase+".txt"
+        filename = "scenarios/nn/points/"+((init_name+"/") if len(init_name)>0 else "")+well+"_"+str(scen)+"-scen-"+phase+".txt"
     else:
         if(case==2):
             separator=mode
@@ -316,10 +316,13 @@ def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", l
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
-        
+    
+#CHANGED to load only one file and re-use scenarios    
 def load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
-    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
+#    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
+    filename = "scenarios/"+init_name+"_"+phase+"_500_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     df = pd.read_csv(filename, sep=';')
+    df = df.loc[:num_scen-1]
     return df
 
 def get_scenario(init_name, num_scen, lower=-4, upper=4, phase="gas", sep="HP", iteration=None, distr="truncnorm"):
@@ -328,6 +331,7 @@ def get_scenario(init_name, num_scen, lower=-4, upper=4, phase="gas", sep="HP", 
     try:
         return load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     except Exception as e:
+        print("Attempted to load more scenarios than are generated. Generating new...")
         generate_scenario_trunc_normal(init_name, num_scen, sep=sep, phase=phase, lower=lower, upper=upper, iteration=iteration, distr=distr)
         return load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=iteration, distr=distr)
     
