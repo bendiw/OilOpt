@@ -387,7 +387,7 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     model = build_model(neurons, dim, lr, regu=regu)
 #                for i in range(100):
 #                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
-    print("Fitting to data:",y)
+#    print("Fitting to data:",y)
     model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
     prediction = [x[0] for x in model.predict(X)]
 #                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)

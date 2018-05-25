@@ -47,7 +47,7 @@ def build_model(neurons, dim, regu, dropout, lr, layers):
 # =============================================================================
 # Heteroscedastic loss function. See Yarin Gal
 # =============================================================================
-def sced_loss(y_true, y_pred):
+def sced_loss(y_true, y_pred):  
     return K.mean(0.5*multiply(K.exp(-y_pred[:,1]),K.square(y_pred[:,0]-y_true[:,0]))+0.5*y_pred[:,1], axis=0)
     
 def mse_loss(y_true, y_pred):
