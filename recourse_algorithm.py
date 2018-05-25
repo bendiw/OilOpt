@@ -26,7 +26,7 @@ from recourse_models import NN, SOS2, Factor
 # =============================================================================
 def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False):
     
-    filestring = "results/robust_recourse_iterative/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+".csv"
+    filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+".csv"
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     if(undo_allow_on and "over_cap" in init_name):
