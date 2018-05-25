@@ -370,6 +370,7 @@ def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[], ne
     df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
 #    X = np.array([[i*10] for i in range(11)])
     for scen in range(start_scen, start_scen+num_scen):
+        print(init_name, well, scen)
         train(well, df[1][well], df[0][scen][well], goal=phase, neurons=neurons, lr=lr,
               epochs=epochs, save=True, plot=False, scen=scen, init_name=init_name)
         
@@ -387,7 +388,7 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     model = build_model(neurons, dim, lr, regu=regu)
 #                for i in range(100):
 #                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
-    print("Fitting to data:",y)
+#    print("Fitting to data:",y)
     model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
     prediction = [x[0] for x in model.predict(X)]
 #                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
