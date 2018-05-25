@@ -529,7 +529,7 @@ class Factor(Recourse_Model):
                 layers[well][phase] = {} 
                 for separator in self.well_to_sep[well]:
                     if mode==self.LOAD:
-                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = t.load_2(well, phase, separator, case, net_type)
+                        multidims[well][phase][separator], weights[well][phase][separator], biases[well][phase][separator] = t.load_2(well, phase, separator=separator, case=case, mode=net_type)
                         layers[well][phase][separator] = len(multidims[well][phase][separator])
                         if net_type=="mean" and multidims[well][phase][separator][layers[well][phase][separator]-1] > 1:
                             multidims[well][phase][separator][layers[well][phase][separator]-1] -=1
