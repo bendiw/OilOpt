@@ -179,7 +179,7 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #                  ("-2,2","-1,7","-1,3","-0.9","-0.4","0.4","0.9","1.3","1.7","2.2"))
 #    pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
     pyplot.xlabel('Choke')
-    pyplot.ylabel("Gas [Sm3/h]")
+    pyplot.ylabel(goal.capitalize() + " [Sm3/h]")
 #    pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
 #                       alpha=0.15, facecolor='#089FFF', linewidth=1)
     pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std, alpha=0.15,
