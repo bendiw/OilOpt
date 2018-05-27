@@ -223,13 +223,13 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pred_mean_scaled, std_scaled = tools.sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
         std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
         pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
-#        print(std_unscaled)
-#        print(pred_mean_unscaled)
+        print(std_unscaled)
+        print(pred_mean_unscaled)
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
-#        plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
+        plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, extra_points = std_unscaled)
         
-        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
+#        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):

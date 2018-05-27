@@ -375,7 +375,13 @@ def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[],
         train(well, df[1][well], df[0][scen][well], goal=phase, neurons=neurons, lr=lr,
               epochs=epochs, save=True, plot=plot, scen=scen, init_name=init_name)
         
-    
+def go():
+    for c in ["over_cap"]:
+        for well in ["W5","W6","W7"]:
+            if well == "W5":
+                sos2_to_nn(well,epochs=40000,num_scen=100,start_scen=50,lr=0.004, init_name=c)
+            else:            
+                sos2_to_nn(well,epochs=40000,num_scen=100,lr=0.004, init_name=c)
     
 def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                epochs=1000, save=False, plot=False, regu=0.0, scen = 0,
