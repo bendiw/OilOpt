@@ -109,18 +109,18 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 
 #        scenarios = t.get_scenario("zero",num_scen)
 #        scen = [scenarios[w][i] for i in range(len(scenarios))]
-        if known_point:
-            weight=0.6
-            y=[]
-            for i in range(num_scen):
-                y.append([0]*(len(X)))
-            for s in range(len(scen)):
-                y[s][round(x_)]=y_
-                for i in range(round(x_)+1,len(X)):
-        #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-                    y[s][i] = max(0, (1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i-1])
-                for i in range(round(x_)-1,-1,-1):
-                    y[s][i] = max(0,(1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i+1])
+#        if known_point:
+#            weight=0.6
+#            y=[]
+#            for i in range(num_scen):
+#                y.append([0]*(len(X)))
+#            for s in range(len(scen)):
+#                y[s][round(x_)]=y_
+#                for i in range(round(x_)+1,len(X)):
+#        #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
+#                    y[s][i] = max(0, (1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i-1])
+#                for i in range(round(x_)-1,-1,-1):
+#                    y[s][i] = max(0,(1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i+1])
     else:
         if known_point:
             gas,choke = t.get_sos2_scenarios(goal,num_scen,"w2_off")
@@ -147,21 +147,21 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #        mean = np.array([mean[i*factor] for i in range(points+1)])
 #        std = np.array([std[i*factor] for i in range(points+1)])
     col = [c for c in colors.cnames]
-    ax.plot(X, mean,color="black",linestyle="-", linewidth=1)
-    lines = []
 
-    
-    for i in range(len(scen)):
-        ploty=np.zeros(len(X))
-        for j in range(len(ploty)):
-            ploty[j] = max(0,mean[j]+scen[i]*std[j])
-        if mode=="fac":
+    lines = []
+    if mode=="fac":
+        for i in range(len(scen)):
+            ploty=np.zeros(len(X))
+            for j in range(len(ploty)):
+                ploty[j] = max(0,mean[j]+scen[i]*std[j])
             if known_point:
                 lines.append(ax.plot(X, mean+scen[0]*std,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])    
     
             else:
                 lines.append(ax.plot(X, ploty,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
-        else:
+    
+    else:
+        for i in range(num_scen):
             ax.plot(X_, scen[i],color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
     print(["Factor: "+str(i) for i in scen])
     if mode=="fac":
@@ -178,8 +178,8 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #    ax.legend((line1,line2,line3,line4,line5,line6,line7,line8,line9,line10),
 #                  ("-2,2","-1,7","-1,3","-0.9","-0.4","0.4","0.9","1.3","1.7","2.2"))
 #    pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
-#    pyplot.xlabel('choke')
-#    pyplot.ylabel(goal)
+    pyplot.xlabel('Choke')
+    pyplot.ylabel("Gas [Sm3/h]")
 #    pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
 #                       alpha=0.15, facecolor='#089FFF', linewidth=1)
     pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std, alpha=0.15,
@@ -188,6 +188,10 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #                       alpha=0.15, facecolor='#089FFF', linewidth=1)
     pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std, alpha=0.15,
                         facecolor='#089FFF', linewidth=1)
+    ax.plot(X, mean,color="black",linestyle="-", linewidth=1)
+    if known_point:
+        ax.plot([X_[7]], [scen[0][7]], linestyle="none", marker=".", color="red", markersize=10)
+    
     
 
 # =============================================================================
@@ -308,9 +312,9 @@ def plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train
             line2 = ax.plot(X, prediction, color='red',linestyle='dashed', linewidth=1)
         else:
             line2=None
-        pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
-        pyplot.xlabel('choke')
-        pyplot.ylabel(goal)
+#        pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
+        pyplot.xlabel('Choke')
+        pyplot.ylabel(goal.capitalize() + " [Sm3/h]")
         pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
                            alpha=0.2, facecolor='#089FFF', linewidth=1)
         pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,
@@ -325,8 +329,8 @@ def plot_all(X, y, prediction, mean, std, goal, weight, points, x_, y_, w, train
             line2[0].set_ydata(prediction)
         ax.collections.clear()
         pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
-        pyplot.xlabel('choke')
-        pyplot.ylabel(goal)
+        pyplot.xlabel('Choke')
+        pyplot.ylabel(goal.capitalize() + "[Sm3/h]")
         pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
                            alpha=0.2, facecolor='#089FFF', linewidth=1)
         pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std,

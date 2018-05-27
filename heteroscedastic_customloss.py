@@ -224,7 +224,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
         pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
         print(std_unscaled)
-        print(pred_mean_unscaled)
+#        print(pred_mean_unscaled)
+        print(rs.inverse_transform([[i] for i in std_scaled]))
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
         plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, extra_points = std_unscaled)
@@ -242,7 +243,7 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=No
     pyplot.xlabel('choke')
     pyplot.ylabel("LOLOLOL")
     pyplot.show()
-#    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
+    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
 #    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
     for i in range(2):
         (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
