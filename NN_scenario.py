@@ -374,9 +374,13 @@ def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[],
                neurons=20, lr=0.00, init_name="under_cap", plot=False):
     df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
 #    X = np.array([[i*10] for i in range(11)])
+    X = df[1][well]
     for scen in range(start_scen, start_scen+num_scen):
-        print(init_name, well, scen)
-        train(well, df[1][well], df[0][scen][well], goal=phase, neurons=neurons, lr=lr,
+        if(phase=="gas"):
+            y = df[0][scen][well]
+        else:
+            y = df[0][well]
+        train(well, X, y, goal=phase, neurons=neurons, lr=lr,
               epochs=epochs, save=True, plot=plot, scen=scen, init_name=init_name)
         
 def go():

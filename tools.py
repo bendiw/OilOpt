@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.tri as mtri
 import pandas as pd
 import math
+from sys import stdout
 import scipy.stats as ss
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
@@ -51,6 +52,11 @@ param_dict = {'dropout':[x for x in np.arange(0.05,0.4,0.1)], 'regu':[1e-6, 1e-5
 param_dict_rand = {'dropout':uniform(0.01, 0.4),
                   'regu':uniform(1e-6, 1e-4),
                   'layers':randint(1,3),
+                  'neurons':randint(5,40)}
+param_dict_expanded ={'dropout':[0.05], 'regu':[1e-6], 'layers':[3,4], 'neurons':[10,20,40]}
+param_dict_rand_expanded = {'dropout':uniform(0.03, 0.09),
+                  'regu':uniform(1e-6, 4e-6),
+                  'layers':randint(2,4),
                   'neurons':randint(5,40)}
 
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
@@ -312,7 +318,7 @@ def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", l
     for w in wellnames_2:
         if(factors[w] != math.inf):
             df[w] = factors[w]
-    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
+    filename = "scenarios/"+("stability/" if iteration else "")+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";", index=False)
         
@@ -320,7 +326,7 @@ def generate_scenario_trunc_normal(init_name, num_scen, sep="HP", phase="gas", l
 #CHANGED to load only one file and re-use scenarios    
 def load_scenario(init_name, num_scen, lower, upper, phase, sep, iteration=None, distr="truncnorm"):
 #    filename = "scenarios/"+init_name+"_"+phase+"_"+str(num_scen)+"_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
-    filename = "scenarios/"+init_name+"_"+phase+"_500_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
+    filename = "scenarios/"+("stability/" if iteration else "")+init_name+"_"+phase+"_500_"+str(lower)+"_"+str(upper)+((" ("+str(iteration)+")") if iteration else "")+"_"+distr+".csv"
     df = pd.read_csv(filename, sep=';')
     df = df.loc[:num_scen-1]
     return df
@@ -546,6 +552,10 @@ def add_layer(model_1, neurons, loss, factor=1000000.0):
     model_2.add(Dense(1, weights = [np.array([[factor]]), np.array([0.0])], trainable=False))
     model_2.compile(optimizer=optimizers.adam(lr=0.001), loss = loss)
     return model_2
+
+def p(output):
+    stdout.write("\r"+str(output))
+    stdout.flush()
 
 def get_sos2_scenarios(phase, num_scen, init_name="", iteration=None):
     dbs = {}

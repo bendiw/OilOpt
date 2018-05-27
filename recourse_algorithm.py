@@ -11,7 +11,7 @@ import pandas as pd
 import tools as t
 import os.path
 from sys import stdout
-
+import time
 from recourse_models import NN, SOS2, Factor
    
 
@@ -24,9 +24,12 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, perfect_info=False):
     
-    filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+".csv"
+    filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+("_EVPI" if perfect_info else "")+".csv"
+    if perfect_info:
+        simul_change=True
+        num_scen=1
     #init model
     model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     if(undo_allow_on and "over_cap" in init_name):
@@ -37,6 +40,9 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     if(init_name=="over_cap" or init_name=="over_cap_old"):
         from_infeasible=True
         
+        
+    #if we have perfect information there is no need to perform changes sequentially
+    #also only require a single scenario in this case
         
     #this is our starting point in terms of chokes
     init_chokes = t.get_init_chokes(init_name)
@@ -49,24 +55,34 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
     #store results in a dataframe
     results = pd.DataFrame(columns=t.recourse_algo_columns)
     
-    #get first solution since it will be same for all iterations
-    model.solve(verbose=max(verbose-2, 0))
-    first_sol = model.get_chokes()
+    #get first solution since it will be same for all iterations unless we are in PI/WS model
+    if not perfect_info:
+        model.solve(verbose=max(verbose-2, 0))
+        first_sol = model.get_chokes()
     
     
     for i in range(num_iter):
         stdout.write("\r iteration %d" % i)
         stdout.flush()
-
-        #get "true" sos2 or NN models
         true_well_curves = get_true_models(init_name, i)
+        if perfect_info: #now the first solution depends on the scenario we are in.
+            model.m.update() #need to do this in order to swap well curves
+            for w in t.wellnames_2:
+#                print("true", w)
+                model.set_true_curve(w, true_well_curves[w], perfect_info=perfect_info)
+
+            model.solve(verbose=max(verbose-2, 0))
+            first_sol = model.get_chokes()
+    
+        #get "true" sos2 or NN models
         #iterate with one less change since we have already found first solution
         if(not simul_change):
-            results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name)
+            results.loc[i] = iteration(model, init_chokes, first_sol, max_changes-1, true_well_curves, verbose=verbose, from_infeasible=from_infeasible, init_name=init_name, perfect_info=perfect_info)
         else:
             results.loc[i] = simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=verbose)
         #revert to initial model
-        model.set_chokes(first_sol)
+        if not perfect_info:
+            model.set_chokes(first_sol)
         model.reset_m()
         model.m.update()
 #        print(model.oil_out_constr)
@@ -120,7 +136,7 @@ def simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=0):
 # =============================================================================
 # Perform one iteration of algorithm. Step-wise changes
 # =============================================================================
-def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False, init_name=None):
+def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False, init_name=None, perfect_info=False):
     #store intermediary results as optimization finds them
 #    opt_results = model.get_solution()
     #store implemented chokes, first we use only the starting point
@@ -165,16 +181,17 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
                 else:
                     infeasible_count=0
             break
-        #allow individual infeasibility as a quick fix for single wells
-        if(change_gas > model.well_cap[change_well]):
-#            print("\n***\n"+change_well,"indiv cap changed to",change_gas,"\n***")
-            model.set_indiv_gas(change_gas, change_well)
-#        model.set_changes(changes)
-        if(init_name == "over_cap" or init_name=="over_cap_old"):
-            if(impl_chokes[change_well] != 0):
+        if not perfect_info:
+            #allow individual infeasibility as a quick fix for single wells
+            if(init_name=="over_cap" and change_gas > model.well_cap[change_well]):
+    #            print("\n***\n"+change_well,"indiv cap changed to",change_gas,"\n***")
+                model.set_indiv_gas(change_gas, change_well)
+    #        model.set_changes(changes)
+            if(init_name == "over_cap" or init_name=="over_cap_old"):
+                if(impl_chokes[change_well] != 0):
+                    model.set_true_curve(change_well, true_well_curves[change_well])
+            else:
                 model.set_true_curve(change_well, true_well_curves[change_well])
-        else:
-            model.set_true_curve(change_well, true_well_curves[change_well])
         model.solve(verbose=max(verbose-2, 0))
 #        new_sol = model.get_solution()
 #        opt_results.append(new_sol.to_dict(), ignore_index=True)
@@ -272,6 +289,72 @@ def get_model(m_type):
         return Factor()
     else:
         raise ValueError("No model type specified!")
+        
+        
+# =============================================================================
+#         Calculates the switch-off penalty from stored results of "over_cap" runs
+# =============================================================================
+def switch_off_penalty(scen, init_name="over_cap", model_type="sos2", simul_changes=False, verbose=0, save=False):
+    df = pd.DataFrame(columns=["switch-off penalty"])
+    c_cols = [w+"_choke_final" for w in t.wellnames_2]
+    folder = "results/robust_recourse_iterative/"+init_name+"/"+(model_type if not simul_changes else "simul")+"/"
+    filename = "200iter_"+str(scen)+"scen_"+init_name+"_"+model_type+("simul" if simul_changes else "")
+    off_order = list(reversed(t.well_order))
+    results = pd.read_csv(folder+filename+".csv", sep=';', index_col=0)
+    for i in range(results.shape[0]):
+        i_res = results.loc[i]
+        if(i_res["infeasible count"]>0):
+            true_well_curves = get_true_models(init_name, i)
+            chks = i_res[c_cols]
+            gas = {w:true_well_curves[w].predict(chks[w+"_choke_final"], "gas") for w in t.wellnames_2}
+            oil = {w:true_well_curves[w].predict(chks[w+"_choke_final"], "oil") for w in t.wellnames_2}
+            off_wells = []
+            for k, v in gas.items():
+                if(v-0.01 > 54166):
+                    off_wells.append(k)
+            tot_oil = sum([oil[w] if w not in off_wells else 0 for w in t.wellnames_2])
+            tot_gas = sum([gas[w] if w not in off_wells else 0 for w in t.wellnames_2])
+            while(tot_gas-0.01 > t.tot_exp_caps["over_cap"]):
+                if(off_order[len(off_wells)] not in off_wells):
+                    off_wells.append(off_order[len(off_wells)])
+                    tot_gas = sum([gas[w] if w not in off_wells else 0 for w in t.wellnames_2])
+                    tot_oil = sum([oil[w] if w not in off_wells else 0 for w in t.wellnames_2])
+
+            df.loc[i] = tot_oil
+            if(verbose>0):
+                print("\niter:", i, "off:", off_wells,"oils:", [oil[w] for w in off_wells], "gases:", [gas[w] for w in off_wells],"oil:", tot_oil, "gas:", tot_gas)
+        else:
+            df.loc[i] = i_res["oil output"]
+    if(save):
+        df.to_csv(folder+filename+"off_penalty"+".csv", sep=";")
+    return df
+        
+
+# =============================================================================
+# Function to time runs
+# =============================================================================
+def time_test(init_name, max_changes=3, model_type="sos2", num_tests=10, save=False, verbose=0, scen_cap=1000):
+    scens = [ 5,	10,	15,	20,	25,	30,	40,	50,75,100,125,150,200,300,400,500]
+    z = np.zeros((len(scens), 13))
+    columns = ["scenarios", "mean time", "std time"] + [i for i in range(10)]
+    for s in scens:
+        if(s > scen_cap):
+            break
+        t = []
+        for n in range(num_tests):
+            model = get_model(model_type).init(init_name=init_name, num_scen=s, max_changes=max_changes, stability_iter=n)
+            start = time.time()
+            model.solve(0)
+            elapsed = time.time()-start
+            t.append(elapsed)
+        rowlist = [s, np.mean(t), np.std(t)]+t
+        if(verbose>0):
+            print("\nscenarios:", s, "mean time:", round(rowlist[1],5), "std time:", round(rowlist[2], 5))
+        z[scens.index(s)] = rowlist
+    df = pd.DataFrame(z, columns=columns)
+    if save:
+        df.to_csv("results/technical/"+model_type+"_"+init_name+"_"+str(num_tests)+"_tests.csv",sep=";")
+    return df
         
 # =============================================================================
 # get "true" well curves
