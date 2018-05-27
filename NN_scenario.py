@@ -123,12 +123,12 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
 #                    y[s][i] = max(0,(1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i+1])
     else:
         if known_point:
-            gas,choke = t.get_sos2_scenarios(goal,num_scen,"w2_off")
+            gas,choke = t.get_sos2_scenarios(goal,num_scen,"under_cap")
             X_ = [choke[w][i] for i in range(len(choke[w]))]
             points = len(gas[0][w])
             scen = [[gas[i][w][j] for j in range(points)] for i in range(len(gas))]
         else:
-            gas, choke = t.get_sos2_scenarios(goal,num_scen,"zero")
+            gas, choke = t.get_sos2_scenarios(goal,num_scen,"under_cap")
             points = len(gas[0][w])
             factor = int(100/points)
             X_ = np.array([[i*factor] for i in range(points+1)])
@@ -161,7 +161,7 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
                 lines.append(ax.plot(X, ploty,color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)[0])
     
     else:
-        for i in range(num_scen):
+        for i in range(num_scen-25,num_scen):
             ax.plot(X_, scen[i],color=col[np.random.randint(0,148)],linestyle="dashed", linewidth=0.9)
     print(["Factor: "+str(i) for i in scen])
     if mode=="fac":
