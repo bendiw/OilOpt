@@ -298,7 +298,7 @@ class Recourse_Model:
         df = pd.DataFrame(columns=t.robust_res_columns_SOS2) 
         chokes = [self.inputs[well, "HP", 0].x if self.outputs_gas[0, well, "HP"].x>0 else 0 for well in self.wellnames]
         rowlist=[]
-        if(self.case==2 and self.save):
+        if(self.case==2):
             gas_mean = np.zeros(len(self.wellnames))
 #            gas_var=[]
             w = 0
@@ -317,6 +317,7 @@ class Recourse_Model:
 #            print(df.columns)
             rowlist = [self.scenarios, self.tot_exp_cap]+ [tot_oil, tot_gas]+list(self.well_cap.values())+chokes+gas_mean+oil_mean+change
 #            print(len(rowlist))
+            df.loc[df.shape[0]] = rowlist
             if(self.store_init):
                 df.rename(columns={"scenarios": "name"}, inplace=True)
                 rowlist[0] = self.init_name
@@ -325,8 +326,7 @@ class Recourse_Model:
                 head = not os.path.isfile(self.results_file_init)
                 with open(self.results_file_init, 'a') as f:
                     df.to_csv(f, sep=';', index=False, header=head)
-            else:
-                df.loc[df.shape[0]] = rowlist
+            elif self.save:
                 head = not os.path.isfile(self.results_file)
                 with open(self.results_file, 'a') as f:
                     df.to_csv(f, sep=';', index=False, header=head)
@@ -602,10 +602,10 @@ class Factor(Recourse_Model):
         
 #        TODO: DELETE
 #        TEST DUMMIES
-        self.out_gas_mean = self.m.addVars([(well) for well in self.wellnames])
-        self.out_gas_var = self.m.addVars([(well) for well in self.wellnames])
-        self.gmean_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.out_gas_mean[well] ==  quicksum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron] for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
-        self.gvar_constr = self.m.addConstrs(  (self.routes[well, sep] == 1) >> (self.out_gas_var[well] == quicksum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+#        self.out_gas_mean = self.m.addVars([(well) for well in self.wellnames])
+#        self.out_gas_var = self.m.addVars([(well) for well in self.wellnames])
+#        self.gmean_constr = self.m.addConstrs( (self.routes[well, sep] == 1) >> (self.out_gas_mean[well] ==  quicksum(self.weights[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][neuron][0] * self.mus[well, "gas", "HP", self.layers[well]["gas"]["HP"]-2, neuron] for neuron in range(self.multidims[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2]) ) + self.biases[well]["gas"]["HP"][self.layers[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
+#        self.gvar_constr = self.m.addConstrs(  (self.routes[well, sep] == 1) >> (self.out_gas_var[well] == quicksum(self.weights_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][neuron][0] * (self.mus_var[well, "gas", "HP", self.layers_var[well]["gas"]["HP"]-2, neuron]) for neuron in range(self.multidims_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2])) + self.biases_var[well]["gas"]["HP"][self.layers_var[well]["gas"]["HP"]-2][0]) for well in self.wellnames)
         
         return self
     
@@ -676,22 +676,27 @@ class SOS2(Recourse_Model):
     # =============================================================================
     def init(self, case=2,
                 num_scen = 200, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
-                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1, points=10):
+                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1, points=10, perfect_info=False):
         
         Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
 #        super(Recourse_Model, self).init(case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
 
         self.results_file = "results/robust/res_SOS2.csv"
         #load SOS2 breakpoints
+#        if not perfect_info:
         self.orig_oil_vals, self.choke_vals = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
         self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
         self.oil_vals, _ = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
         self.gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
+#        else:
+#            self.orig_oil_vals, self.choke_vals = t.get_sos2_true_curves("oil", num_scen, init_name, stability_iter)
+#            self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
+#            self.oil_vals, _ = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
+#            self.gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
 #         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
 #        print(self.orig_oil_vals)
         if(self.scenarios=="eev"):
             self.scenarios=1
-        
         # =============================================================================
         # variable creation                    
         # =============================================================================
@@ -732,7 +737,7 @@ class SOS2(Recourse_Model):
         return self
     
     
-    def set_true_curve(self, change_well, true_curve):
+    def set_true_curve(self, change_well, true_curve, perfect_info=False):
         if(true_curve.p_type=="sos2"):
 #            print(self.learned_wells)
             if(change_well in self.learned_wells):
@@ -742,9 +747,10 @@ class SOS2(Recourse_Model):
                 self.learned_wells.append(change_well)
                 
                 if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
-                    self.lock_wells.append(change_well)
-                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
-                    self.learned_constr["oil"].append(self.lock_constr)
+                    if(not perfect_info):
+                        self.lock_wells.append(change_well)
+                        self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                        self.learned_constr["oil"].append(self.lock_constr)
                 #remove old curves, update values dict
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, "HP"])
