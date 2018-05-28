@@ -146,10 +146,17 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
     tot_gas = sum([true_well_curves[w].predict(init_chokes[w], "gas") for w in t.wellnames_2])
 #    print("initchoke", init_chokes, "oil", tot_oil, "\ngas", tot_gas)
     new_chokes = first_sol
+    
     #since we start by checking for #changes+1, we need to iterate an 'extra' time including 0
     for c in range(changes, -1, -1):
+        suggested_tot_oil = sum([true_well_curves[w].predict(new_chokes[w], "oil") for w in t.wellnames_2])
+        suggested_tot_gas = sum([true_well_curves[w].predict(new_chokes[w], "gas") for w in t.wellnames_2])
         inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap, from_infeasible)
         infeasible_count+=inf_single
+        
+        if inf_single<1:
+            from_infeasible=False
+        
 #        print("CHANGE RHS:", model.change_constr.getAttr("rhs"), "CHK:", model.w_initial_vars)
 #        for w in t.wellnames_2:
 #            print("\n",w, model.routes[w, "HP"].x)
@@ -164,7 +171,7 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
             print("\nimpl chokes:\t\t\tsuggested chokes:")
             for w in t.wellnames_2:
                 print(w+"\t", round(impl_chokes[w],2), "\t\t\t", round(new_chokes[w],2))
-            print("\ntot oil:\t", tot_oil, "\ntot gas:\t", tot_gas)
+            print("\ntot oil:\t", tot_oil,"\tsuggested tot oil:\t", suggested_tot_oil, "\ntot gas:\t", tot_gas, "\tsuggested tot gas:\t", suggested_tot_gas)
             print("==================================================\n")
             
             
@@ -333,12 +340,16 @@ def switch_off_penalty(scen, init_name="over_cap", model_type="sos2", simul_chan
 # =============================================================================
 # Function to time runs
 # =============================================================================
-def time_test(init_name, max_changes=3, model_type="sos2", num_tests=10, save=False, verbose=0, scen_cap=1000):
-    scens = [ 5,	10,	15,	20,	25,	30,	40,	50,75,100,125,150,200,300,400,500]
+def time_test(init_name, max_changes=3, model_type="sos2", num_tests=10, save=False, verbose=0, start_scen=5, max_scen=500):
+    scens_list = [ 5,	10,	15,	20,	25,	30,	40,	50,75,100,125,150,200,300,400,500]
+    scens = []
+    for s in scens_list:
+        if s >= start_scen and s<=max_scen:
+            scens.append(s)
     z = np.zeros((len(scens), 13))
     columns = ["scenarios", "mean time", "std time"] + [i for i in range(10)]
     for s in scens:
-        if(s > scen_cap):
+        if(s > max_scen):
             break
         t = []
         for n in range(num_tests):
