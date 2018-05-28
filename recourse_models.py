@@ -549,8 +549,8 @@ class Factor(Recourse_Model):
         if(num_scen=="eev"):
             num_scen=1
             distr="eev"
-        elif(num_scen==1):
-            distr="eev"
+#        elif(num_scen==1):
+#            distr="eev"
         Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_factor.csv"
         self.s_draw = t.get_scenario(init_name, num_scen, lower=lower, upper=upper,
