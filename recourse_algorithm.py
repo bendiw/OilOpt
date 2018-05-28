@@ -84,6 +84,7 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         if not perfect_info:
             model.set_chokes(first_sol)
         model.reset_m()
+        model.redo_allow_on_off()
         model.m.update()
 #        print(model.oil_out_constr)
     if(save):
@@ -197,7 +198,9 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
 #        model.set_tot_gas(225000)
         #TEST
         model.set_changes(c)
-        
+        if(c==1):
+            model.undo_allow_on_off()
+
         #if we came from infeasibility, only care about whether or not we ended up in infeasibility
         if(c<1):
             if(from_infeasible):
