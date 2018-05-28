@@ -63,7 +63,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         print("Robust scaling of data")
         rs = RobustScaler(with_centering =False)
     elif scaler == "std":
-        rs = StandardScaler()
+        rs = StandardScaler(with_mean=False)
         print("Standard scaling of data")
     else:
         scaler=None
