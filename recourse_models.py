@@ -91,7 +91,7 @@ class Recourse_Model:
 #        if case==2:
         if(not w_relative_change):
             if(init_name=="over_cap"):
-                self.w_relative_change = {well : [0.45] for well in self.wellnames}
+                self.w_relative_change = {well : [0.55] for well in self.wellnames}
             else:
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
         else:
@@ -213,6 +213,18 @@ class Recourse_Model:
             self.set_chokes(self.w_initial_vars)
         else:
             self.set_chokes(self.get_chokes())
+            
+    def redo_allow_on_off(self):
+            for w in self.wellnames:
+                if self.w_initial_prod[w] < 1:
+                    cstr = self.m.addConstr(self.inputs[w, "HP", 0]==0)
+                    self.w_allow_on_constr.append(cstr)
+                else:
+                    self.w_allow_off[w] = 0
+            if self.m.status == GRB.LOADED:
+                self.set_chokes(self.w_initial_vars)
+            else:
+                self.set_chokes(self.get_chokes())
         
     def set_tot_gas(self, gas):
         self.tot_exp_cap = gas
