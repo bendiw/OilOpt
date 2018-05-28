@@ -16,6 +16,7 @@ import numpy as np
 from matplotlib import pyplot
 import tools, plotter
 import pandas as pd
+import time
 
 
 # =============================================================================
@@ -62,6 +63,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
         goal="oil", save_variance = False, save_weights = False, layers=2, verbose=0):
+    start=time.time()
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
@@ -194,6 +196,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
     
     print("Training complete")
+    stop=time.time()
+    print("Time spent training:",stop-start)
     if (save_weights or save_variance):
         if not scaler:
             model_2 = model

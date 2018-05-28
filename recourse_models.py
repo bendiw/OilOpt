@@ -549,8 +549,8 @@ class Factor(Recourse_Model):
         if(num_scen=="eev"):
             num_scen=1
             distr="eev"
-        elif(num_scen==1):
-            distr="eev"
+#        elif(num_scen==1):
+#            distr="eev"
         Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
         self.results_file = "results/robust/res_factor.csv"
         self.s_draw = t.get_scenario(init_name, num_scen, lower=lower, upper=upper,
@@ -609,7 +609,7 @@ class Factor(Recourse_Model):
         
         return self
     
-    def set_true_curve(self, change_well, true_curve):
+    def set_true_curve(self, change_well, true_curve, perfect_info=False):
         if(true_curve.p_type=="sos2"):
             if(change_well in self.learned_wells):
                 return
@@ -618,9 +618,10 @@ class Factor(Recourse_Model):
                 self.lock_wells.append(change_well)
                 
                 if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
-                    self.lock_wells.append(change_well)
-                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
-                    self.learned_constr["oil"].append(self.lock_constr)
+                    if not perfect_info:
+                        self.lock_wells.append(change_well)
+                        self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                        self.learned_constr["oil"].append(self.lock_constr)
                 
                 #remove old constr
                 #oil
