@@ -149,10 +149,15 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
     
     #since we start by checking for #changes+1, we need to iterate an 'extra' time including 0
     for c in range(changes, -1, -1):
-        suggested_tot_oil = sum([true_well_curves[w].predict(new_chokes[w], "oil") for w in t.wellnames_2])
-        suggested_tot_gas = sum([true_well_curves[w].predict(new_chokes[w], "gas") for w in t.wellnames_2])
+        suggested_tot_oil_all_changes = sum([true_well_curves[w].predict(new_chokes[w], "oil") for w in t.wellnames_2])
+        suggested_tot_gas_all_changes = sum([true_well_curves[w].predict(new_chokes[w], "gas") for w in t.wellnames_2])
         inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap, from_infeasible)
-        infeasible_count+=inf_single
+        
+#        suggested_tot_oil_one_change = sum([true_well_curves[w].predict(impl_chokes[w], "oil") for w in t.wellnames_2])
+#        suggested_tot_gas_one_change = sum([true_well_curves[w].predict(impl_chokes[w], "gas") for w in t.wellnames_2])
+
+
+        infeasible_count+=inf_single 
         
         if inf_single<1:
             from_infeasible=False
@@ -171,13 +176,26 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
             print("\nimpl chokes:\t\t\tsuggested chokes:")
             for w in t.wellnames_2:
                 print(w+"\t", round(impl_chokes[w],2), "\t\t\t", round(new_chokes[w],2))
-            print("\ntot oil:\t", tot_oil,"\tsuggested tot oil:\t", suggested_tot_oil, "\ntot gas:\t", tot_gas, "\tsuggested tot gas:\t", suggested_tot_gas)
+                
+            print("\ntot oil:\t", tot_oil,"\tsugg. tot oil after all changes:\t", suggested_tot_oil_all_changes, "\ntot gas:\t", tot_gas, "\tsugg. tot gas after all changes:\t", suggested_tot_gas_all_changes)
             print("==================================================\n")
             
             
 #        print("res\n", opt_results)
         old_chokes = {key: value for key, value in impl_chokes.items()}
         model.set_chokes(impl_chokes)
+        
+        ###TEST
+#        model.set_changes(0)
+#        model.set_tot_gas(320000)
+#        model.solve(0)
+#        solz = model.get_solution()
+#        print("check: chokes:\n", model.get_chokes())
+#        suggested_tot_oil_one_change = solz["tot_oil"].values[0]
+#        suggested_tot_gas_one_change = solz["tot_gas"].values[0]
+#        print("*****\n estimated total oil after 1 change:", suggested_tot_oil_one_change, "\n estimated total gas after 1 change:", suggested_tot_gas_one_change,"\n*****")
+#        model.set_tot_gas(225000)
+        #TEST
         model.set_changes(c)
         
         #if we came from infeasibility, only care about whether or not we ended up in infeasibility
@@ -249,7 +267,6 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
     change_gas = true_well_curves[change_well].predict(temp_chokes[change_well], "gas")
     old_oil = true_well_curves[change_well].predict(old_chokes[change_well], "oil")
     change_oil = true_well_curves[change_well].predict(temp_chokes[change_well], "oil")
-    
     if(change_gas-0.01 > indiv_cap[change_well] or tot_gas+(change_gas-old_gas)-0.01 > tot_cap):
         if(from_infeasible):
             #implement the change
