@@ -16,6 +16,7 @@ import numpy as np
 from matplotlib import pyplot
 import tools, plotter
 import pandas as pd
+import time
 
 
 # =============================================================================
@@ -62,6 +63,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         neurons=20, dim=1, regu=0.00001, dropout=0.05, epochs=1000,
         batch_size=50, lr=0.001, n_iter=50, sampling_density=50, scaler='rs',
         goal="oil", save_variance = False, save_weights = False, layers=2, verbose=0):
+    start=time.time()
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
         if(x_grid is not None and case==2):
@@ -194,6 +196,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 plotter.update_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y], pred_mean, triang, ax)
     
     print("Training complete")
+    stop=time.time()
+    print("Time spent training:",stop-start)
     if (save_weights or save_variance):
         if not scaler:
             model_2 = model
@@ -223,13 +227,14 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pred_mean_scaled, std_scaled = tools.sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
         std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
         pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
-#        print(std_unscaled)
+        print(std_unscaled)
 #        print(pred_mean_unscaled)
+        print(rs.inverse_transform([[i] for i in std_scaled]))
         
         prediction = [x[0] for x in model_2.predict(X_sample)]
-#        plot_once(X_sample, prediction, pred_mean_unscaled, std, y_points, X_points, extra_points = std_unscaled)
+        plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, extra_points = std_unscaled)
         
-        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
+#        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):
@@ -242,7 +247,7 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=No
     pyplot.xlabel('choke')
     pyplot.ylabel("LOLOLOL")
     pyplot.show()
-#    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
+    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
 #    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
     for i in range(2):
         (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
