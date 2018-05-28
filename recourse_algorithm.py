@@ -298,7 +298,7 @@ def switch_off_penalty(scen, init_name="over_cap", model_type="sos2", simul_chan
     df = pd.DataFrame(columns=["switch-off penalty"])
     c_cols = [w+"_choke_final" for w in t.wellnames_2]
     folder = "results/robust_recourse_iterative/"+init_name+"/"+(model_type if not simul_changes else "simul")+"/"
-    filename = "200iter_"+str(scen)+"scen_"+init_name+"_"+model_type+("simul" if simul_changes else "")
+    filename = "200iter_"+str(scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_changes else "")
     off_order = list(reversed(t.well_order))
     results = pd.read_csv(folder+filename+".csv", sep=';', index_col=0)
     for i in range(results.shape[0]):

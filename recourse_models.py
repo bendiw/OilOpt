@@ -609,7 +609,7 @@ class Factor(Recourse_Model):
         
         return self
     
-    def set_true_curve(self, change_well, true_curve):
+    def set_true_curve(self, change_well, true_curve, perfect_info=False):
         if(true_curve.p_type=="sos2"):
             if(change_well in self.learned_wells):
                 return
@@ -618,9 +618,10 @@ class Factor(Recourse_Model):
                 self.lock_wells.append(change_well)
                 
                 if(self.init_name=="over_cap" or self.init_name=="over_cap_old"):
-                    self.lock_wells.append(change_well)
-                    self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
-                    self.learned_constr["oil"].append(self.lock_constr)
+                    if not perfect_info:
+                        self.lock_wells.append(change_well)
+                        self.lock_constr = self.m.addConstr(self.changes[change_well, "HP", 0] == 0)
+                        self.learned_constr["oil"].append(self.lock_constr)
                 
                 #remove old constr
                 #oil
