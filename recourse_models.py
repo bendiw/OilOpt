@@ -91,7 +91,7 @@ class Recourse_Model:
 #        if case==2:
         if(not w_relative_change):
             if(init_name=="over_cap"):
-                self.w_relative_change = {well : [0.45] for well in self.wellnames}
+                self.w_relative_change = {well : [0.55] for well in self.wellnames}
             else:
                 self.w_relative_change = {well : [0.4] for well in self.wellnames}
         else:
