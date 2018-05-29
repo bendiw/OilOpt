@@ -208,6 +208,8 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
                     infeasible_count=1
                 else:
                     infeasible_count=0
+            elif init_name == "over_cap":
+                infeasible_count=0
             break
         if not perfect_info:
             #allow individual infeasibility as a quick fix for single wells
