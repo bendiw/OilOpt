@@ -97,13 +97,13 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if(dim==1):
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-#        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
-#        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
+        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
+        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
     
-#        pyplot.autoscale(False)
+        pyplot.autoscale(False)
         pyplot.xlabel('Choke')  
         pyplot.ylabel(goal.capitalize() + " [Sm3/h]")
-        pyplot.title(well+"_"+goal.upper() if well is not None else "")
+#        pyplot.title(well+"_"+goal.upper() if well is not None else "")
         pyplot.show()
         
     f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
@@ -162,7 +162,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         #this is the current network's prediction with dropout switched off
         prediction = [x[0] for x in model.predict(X_test)]
         pred_mean, std = tools.sample_mean_std(model, X_test, n_iter, f)
-        print(X_test)
+#        print(X_test)
 
 #        Activate theese for plotting aleotoric and epistemic variance
 #        if r == runs-1:
@@ -176,8 +176,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         #plot results from current run
         if dim==1:
             if r==0:
-#                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=5)
-#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=5)
+                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
                 for i in range(2):
                     (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
@@ -185,7 +185,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
-#                line2[0].set_ydata(prediction)
+                line2[0].set_ydata(prediction)
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
@@ -214,8 +214,6 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #                print(model.layers[i].get_weights())
             model_2 = tools.inverse_scale(model, dim, neurons, dropout, rs, lr, sced_loss)
     
-    fig = pyplot.figure()
-    ax = fig.add_subplot(111)
 #        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
 #        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
 
