@@ -53,11 +53,11 @@ param_dict_rand = {'dropout':uniform(0.01, 0.4),
                   'regu':uniform(1e-6, 1e-4),
                   'layers':randint(1,3),
                   'neurons':randint(5,40)}
-param_dict_expanded ={'dropout':[0.05], 'regu':[1e-6], 'layers':[3,4], 'neurons':[10,20,40]}
+param_dict_expanded ={'dropout':[0.05], 'regu':[1e-6], 'layers':[1,2], 'neurons':[50, 60, 70, 80]}
 param_dict_rand_expanded = {'dropout':uniform(0.03, 0.09),
                   'regu':uniform(1e-6, 4e-6),
-                  'layers':randint(2,4),
-                  'neurons':randint(5,40)}
+                  'layers':randint(1,2),
+                  'neurons':randint(40,80)}
 
 #param_dict = {'dropout':[0.1, 0.05], 'regu':[1e-6]}
 
