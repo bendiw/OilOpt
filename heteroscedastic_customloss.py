@@ -32,7 +32,7 @@ def build_model(neurons, dim, regu, dropout, lr, layers):
                           kernel_regularizer=regularizers.l2(regu), 
                           bias_initializer=initializers.Constant(value=0.1),
                           bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("relu"))
+        model_1.add(Activation("sigmoid"))
     #    model_1.add(LeakyReLU(alpha=0.3))
         model_1.add(Dropout(dropout))
 
@@ -74,14 +74,20 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     else:
         #generate simple test data
         #sine curve with some added faulty data
-        X = np.arange(-3., 4., 7/40)
+        X = np.arange(-4., 4., 7/40)
         y = [[math.sin(x), 0] for x in X]
         X = np.append(X, [1.,1.,1.,1.,1.])
         y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
+        X=list(X)
+        for i in range(len(X)):
+            X[i] = [X[i]]
+        X=np.array(X)
+        y=np.array(y)
         
     if (len(X[0]) >= 2):
         dim=2 
-    X_test = gen_x_test(X, dim, sampling_density)
+    X_test = gen_x_test(X, dim, sampling_density,scaler)
+#    print(X_test)
 
     y = np.array([[i[0], 0] for i in y])
     
@@ -92,9 +98,9 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if(dim==1):
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
-        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
-        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
-    
+        pyplot.xlim(np.min(X)-0.4*np.max(X), np.max(X)+0.4*np.max(X))
+        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), 1.4*np.max([i[0] for i in y]))
+#        pyplot.ylim(-1.5,2.5)
         pyplot.autoscale(False)
         pyplot.xlabel('Choke')  
         pyplot.ylabel(goal.capitalize()+tools.label)
@@ -105,9 +111,10 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     #forward pass function, needed for dropout eval
 #    f = K.function([model.layers[0].input, K.learning_phase()],
 #                          [model.layers[-1].output])
+#    print(X, y)
     for r in range(runs):
         #train model
-        model.fit(X, y, batch_size, epochs, verbose=verbose)
+        model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=verbose)
 #        if r==0:
 #            model.fit(X, y, batch_size, epochs, verbose=0)
 #        else:
@@ -154,8 +161,10 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #        var1 = pred_sq_mean-np.square(pred_mean)
         
         #this is the current network's prediction with dropout switched off
-#        prediction = [x[0] for x in model.predict(X_test)]
+        prediction = [x[0] for x in model.predict(X_test)]
         pred_mean, std = tools.sample_mean_std(model, X_test, n_iter, f)
+#        print(pred_mean+std)
+#        print(X_test)
 
 #        Activate theese for plotting aleotoric and epistemic variance
 #        if r == runs-1:
@@ -169,10 +178,10 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         #plot results from current run
         if dim==1:
             if r==0:
-                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=10)
+                line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=5)
 #                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
                 for i in range(2):
-                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+                    ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2)
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-al-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
                 line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
@@ -207,6 +216,23 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #                print(model.layers[i].get_weights())
             model_2 = tools.inverse_scale(model, dim, neurons, dropout, rs, lr, sced_loss)
     
+#        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
+#        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
+
+#        pyplot.autoscale(False)
+#    pyplot.xlabel('Choke')  
+#    pyplot.ylabel("Variance")
+#    y = []
+##    print(len(X_test))
+#    new_x  = []
+#    for i in range(0,71,5):
+#        new_x.append(X_test[i])
+#        y.append([std[i]**2])
+##    for i in range(len(X_test)):
+###        print(X_test[i][0])
+##        y.append([std[X_test[i][0]]])
+#    ax.plot(new_x, [i[0] for i in y], linestyle='None', marker = '.',markersize=8)
+    
     if (save_weights):
 #        print("Weights after inverse:")
 #        for i in range(0,7,3):
@@ -216,6 +242,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if(save_variance):
         if not (scaler == None):
             X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)        
+            X_points,y_points = tools.simple_node_merge(np.array(X_points),np.array(y_points),x_grid,y_grid)
         X_sample = np.array([[i] for i in range(101)])
         X_save = np.array([i for i in range(101)])
         
@@ -225,43 +252,54 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         
 #        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
         pred_mean_scaled, std_scaled = tools.sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
-        std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
-        pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
-        print(std_unscaled)
+        std_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
+        pred_mean_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
+#        print(std_unscaled)
 #        print(pred_mean_unscaled)
-        print(rs.inverse_transform([[i] for i in std_scaled]))
-        
+#        print(rs.inverse_transform([[i] for i in std_scaled]))
+            
         prediction = [x[0] for x in model_2.predict(X_sample)]
-        plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, extra_points = std_unscaled)
+        plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, well=well,goal=goal, extra_points = std_unscaled)
         
 #        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
         
-def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None):
+def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None, well="", goal="oil"):
     fig = pyplot.figure()
     ax = fig.add_subplot(111)
+    pyplot.autoscale(False)
+    pyplot.title(well)
+
+#    pyplot.xlim(np.min(X_points)-0.3*np.max(X_points), np.max(X_points)+0.6*np.max(X_points))
+    pyplot.xlim(-10,110)
+    pyplot.ylim(np.min([i[0] for i in y_points])-0.4*np.max([i[0] for i in y_points]), np.max(y_points)+0.4*np.max([i[0] for i in y_points]))
 #    pyplot.xlim(np.min(X)-0.2*np.max(X), np.max(X)+0.2*np.max(X))
 #    pyplot.ylim(np.min([i[0] for i in y_points])-0.4*np.max([i[0] for i in y_points]), np.max(y_points)+0.4*np.max([i[0] for i in y_points]))
 
 #    pyplot.autoscale(False)
-    pyplot.xlabel('choke')
-    pyplot.ylabel("LOLOLOL")
+    pyplot.xlabel('Choke')
+    pyplot.ylabel(goal.capitalize() + tools.label)
     pyplot.show()
-    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=10)
+    line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=5)
 #    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
     for i in range(2):
         (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1)
+    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1.5)
+#    line3 = ax.plot(X, pred_mean, color='#000000', linewidth=1)
+
 #    if (extra_points is not None):
 #        for i in range(2):
 #            (ax.fill_between([x[0] for x in X], pred_mean+extra_points*(i+1), pred_mean-extra_points*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #        line4=ax.plot(X, pred_mean + extra_points,color='green',linestyle="None",marker=".",markersize=5)
 
 
-def gen_x_test(X, dim, n_iter):
+def gen_x_test(X, dim, n_iter, scaler):
     if (dim==1):
         step = (np.max(X)-np.min(X))/n_iter
-        X_test = np.array([[i] for i in np.arange(np.min(X)-0.2*np.max(X), 1.5*np.max(X)+step, step)])
+        if(scaler=="rs"):
+            X_test = np.array([[i] for i in np.arange(np.min(X)-0.2*np.max(X), 1.5*np.max(X)+step, step)])
+        else:
+            X_test = np.array([[i] for i in np.arange(np.min(X)-10*step, np.max(X)+10*step, step)])
 #        X_test = np.array([[i] for i in np.arange(0,101)])
     else:
         step_1 = (np.max(X[:,0])-np.min(X[:,0]))/n_iter

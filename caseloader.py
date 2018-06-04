@@ -63,7 +63,7 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         print("Robust scaling of data")
         rs = RobustScaler(with_centering =False)
     elif scaler == "std":
-        rs = StandardScaler()
+        rs = StandardScaler(with_mean=False)
         print("Standard scaling of data")
     else:
         scaler=None
@@ -82,10 +82,13 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
         y = np.array([x[1][0] for x in data]).reshape(-1,1)
 #        scaler = StandardScaler().fit(X, y)
         if(scaler):
+            if goal.lower()=="gas":
+                y=y/1000
             y = rs.fit_transform(y.reshape(-1,1))
             X = rs.transform(X.reshape(-1,1))
 #            X = rs.fit_transform(X.reshape(-1,1))
 #            y = rs.transform(y.reshape(-1, 1))
+
     return X, y, rs
 
 ##############
