@@ -527,18 +527,25 @@ def mean_var_to_csv(well, phase="gas", mode="mean", n_iter=200, case=2):
 #    plot_once(X_test, 2, pred_mean, std, 1, 1)
     save_variance_func([x for x in range(101)], None, pred_mean, case, well, phase)
     
-def inverse_scale(model_1, dim, neurons, dropout, rs, lr, loss):
+def inverse_scale(model_1, dim, neurons, dropout, rs, lr, loss, sos2=False):
     model_2= Sequential()
-    model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons),
-                      rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
-    model_2.add(Activation("relu"))
-    model_2.add(Dropout(dropout))
-    model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
-                      rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
-    model_2.add(Activation("relu"))
-    model_2.add(Dropout(dropout))
-    model_2.add(Dense(2,  weights = [model_1.layers[-2].get_weights()[0],rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(2,)]))
-    model_2.add(Activation("linear"))
+    if not sos2:
+        model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons),
+                          rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(neurons, weights = [model_1.layers[3].get_weights()[0].reshape(neurons,neurons),
+                          rs.inverse_transform(model_1.layers[3].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+        model_2.add(Activation("relu"))
+        model_2.add(Dropout(dropout))
+        model_2.add(Dense(2,  weights = [model_1.layers[-2].get_weights()[0],rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(2,)]))
+        model_2.add(Activation("linear"))
+    else:
+        model_2.add(Dense(neurons, input_shape=(dim,), weights = [model_1.layers[0].get_weights()[0].reshape(dim,neurons),
+                          rs.inverse_transform(model_1.layers[0].get_weights()[1].reshape(-1,1)).reshape(neurons,)]))
+        model_2.add(Activation("relu"))
+        model_2.add(Dense(1,  weights = [model_1.layers[-2].get_weights()[0],rs.inverse_transform(model_1.layers[-2].get_weights()[1].reshape(-1,1)).reshape(1,)]))
+        model_2.add(Activation("linear"))
     model_2.compile(optimizer=optimizers.adam(lr=lr), loss = loss)
     return model_2
 

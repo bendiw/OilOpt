@@ -24,7 +24,7 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, perfect_info=False):
+def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", start_iter=0, verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, perfect_info=False):
     
     filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+("_EVPI" if perfect_info else "")+".csv"
     if perfect_info:
@@ -61,9 +61,11 @@ def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_typ
         first_sol = model.get_chokes()
     
     
-    for i in range(num_iter):
+    for i in range(start_iter,num_iter):
         stdout.write("\r iteration %d" % i)
         stdout.flush()
+#        print(model.exp_constr[0].getAttr("rhs"))
+#        print(model.get_solution())
         true_well_curves = get_true_models(init_name, i)
         if perfect_info: #now the first solution depends on the scenario we are in.
             model.m.update() #need to do this in order to swap well curves
