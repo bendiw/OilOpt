@@ -103,8 +103,12 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #        pyplot.ylim(-1.5,2.5)
         pyplot.autoscale(False)
         pyplot.xlabel('Choke')  
+<<<<<<< HEAD
         pyplot.ylabel(goal.capitalize() + " [Sm3/h]")
 #        pyplot.title(well+"_"+goal.upper() if well is not None else "")
+=======
+        pyplot.ylabel(goal.capitalize()+tools.label)
+>>>>>>> master
         pyplot.show()
         
     f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])

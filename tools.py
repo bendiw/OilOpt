@@ -28,7 +28,7 @@ well_GORs = {'W1': 1578.6439, 'W2': 5886.233, 'W3': 2085.9548, 'W4': 1682.6052, 
 well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
 tot_exp_caps = {"under_cap":250000, "zero":250000, "over_cap":225000, "over_cap_old":225000} #225000
 
-
+label = " [Sm3/h]"
 # =============================================================================
 # Case 2
 # =============================================================================
@@ -151,12 +151,13 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
-def load_2(well, phase, init_name="", separator="HP", case=1, mode = "mean", scen=0):
+def load_2(well, phase, separator="HP", case=1, mode = "mean",init_name="", scen=0):
     if mode == "scen":
         filename = "scenarios/nn/points/"+((init_name+"/") if len(init_name)>0 else "")+well+"_"+str(scen)+"-scen-"+phase+".txt"
     else:
         if(case==2):
             separator=mode
+#        print(well, separator, phase)
         filename = "weights/" + well + "-" + separator + "-" + phase + ".txt"
     with open(filename) as f:
         content = f.readlines()
