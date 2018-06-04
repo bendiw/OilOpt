@@ -77,7 +77,7 @@ class NN:
     # Specify alpha to control which part of the pareto front to generate.
     # Not sure how to best handle prod_optimal... Load from file?    
     # =============================================================================
-    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15, save=False, verbose=0):
+    def run_all(self, case=2, load_M = False, prod_optimal=100, alpha=1.0, w_relative_change=None, init_name=None, max_changes=15, save=False, verbose=0, gas_factor=10000):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -88,9 +88,9 @@ class NN:
             self.p_dict = t.p_dict
             self.p_sep_names = t.p_sep_names
             
-
-        self.results_file = "results/mop/res_"+(init_name if  init_name is not None else "")+str(max_changes)+"_changes.csv"
-
+        self.base_file = "results/mop/res_"+(init_name if  init_name is not None else "")+str(max_changes)+"_changes" 
+        self.results_file = self.base_file+".csv"
+        self.out_file = self.base_file + (("_"+str(gas_factor) +"_gas") if alpha is not "inf" else "")+".csv"
         self.alpha=alpha
         try:
             res_df = pd.read_csv(self.results_file, delimiter=';')
@@ -100,8 +100,9 @@ class NN:
             self.oil_optimal = prod_optimal
             self.header=True
         self.phasenames = t.phasenames
-        print("MOP optimization. alpha =", self.alpha)
-        print("oil_optimal:", self.oil_optimal)
+        if(verbose >0):
+            print("MOP optimization. alpha =", self.alpha)
+            print("oil_optimal:", self.oil_optimal)
         
         #Case relevant numerics
         if case==2:
@@ -132,7 +133,10 @@ class NN:
                 
 #                print("optimization initial chokes:", w_initial_vars)
                 self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
-            self.tot_exp_cap = 250000
+            if init_name == "over_cap":
+                self.tot_exp_cap = 225000
+            else:
+                self.tot_exp_cap = 275000
             self.well_cap = {w:54166 for w in self.wellnames}
         else:
             raise ValueError("Case 1 not implemented yet.")
@@ -174,8 +178,8 @@ class NN:
         w_min_lims = [w_min_choke, w_min_glift]
         input_upper = {(well, sep, dim) : w_max_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
         input_lower = {(well, sep, dim) : w_min_lims[dim][well][sep]  for well in self.wellnames for sep in self.well_to_sep[well] for dim in range(self.multidims[well]["oil"][sep][0])}
-        print(self.w_initial_vars)
-        print(input_lower)
+#        print(self.w_initial_vars)
+#        print(input_lower)
         # =============================================================================
         # variable creation                    
         # =============================================================================
@@ -319,11 +323,11 @@ class NN:
             self.m.setObjective(quicksum(outputs[well, "oil", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MAXIMIZE)
         else:
             #minimization of var gas
-            self.m.setObjective(quicksum(outputs_var[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
+            self.m.setObjective(quicksum(outputs_var[well, "gas", sep]+gas_factor*outputs[well, "gas", sep] for well in self.wellnames for sep in self.well_to_sep[well]), GRB.MINIMIZE)
         
         self.m.optimize()
-        print(routes)
-        print(inputs)
+#        print(routes)
+#        print(inputs)
 #        print("oilopt:", self.oil_optimal, "needed oil:",self.oil_optimal*self.alpha, "\nsumoil:", sum([outputs[well, "oil", "HP"].x for well in self.wellnames]),  "slack:", self.alpha_constr.slack)
         
         df = pd.DataFrame(columns=t.MOP_res_columns)
@@ -348,7 +352,7 @@ class NN:
 #            print(rowlist)
 #            newrow = pd.DataFrame(rowlist, columns=t.MOP_res_columns)
 #            df.append(newrow)
-            with open(self.results_file, 'a') as f:
+            with open(self.out_file, 'a') as f:
                 df.to_csv(f, sep=';', index=False, header=self.header)
         return df
 #        for p in self.platforms:
