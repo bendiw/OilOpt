@@ -442,6 +442,8 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
             t.save_variables(well+"_"+str(scen), goal=goal, case=2,neural=model.get_weights(), mode="scen", folder="scenarios\\nn\\points\\"+init_name+"\\")
         if plot:
             pyplot.show()
+        else:
+            pyplot.close("all")
 
 
             

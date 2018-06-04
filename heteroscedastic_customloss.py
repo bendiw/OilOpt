@@ -74,10 +74,13 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     else:
         #generate simple test data
         #sine curve with some added faulty data
-        X = np.arange(-4., 4., 7/40)
-        y = [[math.sin(x), 0] for x in X]
-        X = np.append(X, [1.,1.,1.,1.,1.])
-        y.extend([[1.,0.],[2.,0.],[0.5,0.],[0.,0.], [1.7,0.]])
+        X = np.arange(-7.5, 10.8, 7/40)
+        print(len(X))
+        y = [[0.5*math.sin(x), 0] for x in X[:35]]
+        y = y + [[0.5+math.sin(x), 0] for x in X[35:70]]
+        y = y+ [[0.5*math.sin(x), 0] for x in X[70:105]]
+        X = np.append(X, [1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,0.9,1.1,1.4,1.7,2.0,2.3])
+        y.extend([[1.5,0.],[1.4,0.],[1.3,0.],[1.2,0],[2.,0.],[1.8,0.],[1.7,0.],[1.6,0.],[1.15,0],[1.15,0],[1.15,0],[1.15,0],[1.15,0],[1.15,0]])
         X=list(X)
         for i in range(len(X)):
             X[i] = [X[i]]

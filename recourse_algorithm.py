@@ -370,8 +370,8 @@ def time_test(init_name, max_changes=3, model_type="sos2", num_tests=10, save=Fa
     for s in scens_list:
         if s >= start_scen and s<=max_scen:
             scens.append(s)
-    z = np.zeros((len(scens), 13))
-    columns = ["scenarios", "mean time", "std time"] + [i for i in range(10)]
+    z = np.zeros((len(scens), 3+num_tests))
+    columns = ["scenarios", "mean time", "std time"] + [i for i in range(num_tests)]
     for s in scens:
         if(s > max_scen):
             break
