@@ -96,8 +96,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
     
         pyplot.autoscale(False)
-        pyplot.xlabel('choke')  
-        pyplot.ylabel(goal)
+        pyplot.xlabel('Choke')  
+        pyplot.ylabel(goal.capitalize()+tools.label)
         pyplot.show()
         
     f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
