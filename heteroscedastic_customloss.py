@@ -257,7 +257,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
 #        print(std_unscaled)
 #        print(pred_mean_unscaled)
 #        print(rs.inverse_transform([[i] for i in std_scaled]))
-        
+            
         prediction = [x[0] for x in model_2.predict(X_sample)]
         plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, well=well,goal=goal, extra_points = std_unscaled)
         

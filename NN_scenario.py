@@ -15,6 +15,7 @@ import tools as t
 from matplotlib import pyplot
 import scipy.stats as ss
 import matplotlib.colors as colors
+from sklearn.preprocessing import RobustScaler
 # =============================================================================
 # This class grossly overfits a PWL NN to data points sampled from a
 # distribution with mean and variation from a network trained on well data
@@ -36,9 +37,7 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
         model_1= Sequential()
         model_1.add(Dense(neurons, input_shape=(dim,),
                           kernel_initializer=initializers.VarianceScaling(),
-                          bias_initializer=initializers.Constant(value=0.1),
-                          kernel_regularizer=regularizers.l2(regu),
-                          bias_regularizer=regularizers.l2(regu)))
+                          bias_initializer=initializers.Constant(value=0.1)))
         model_1.add(Activation("relu"))
 
 #        model_1.add(Dense(neurons,
@@ -371,17 +370,24 @@ def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="",iteration=Non
         
         
 def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[],
-               neurons=20, lr=0.00, init_name="under_cap", plot=False):
+               neurons=20, lr=0.005, init_name="under_cap", plot=False, runs=1):
     df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
 #    X = np.array([[i*10] for i in range(11)])
-    X = df[1][well]
+    X_orig = df[1][well]
     for scen in range(start_scen, start_scen+num_scen):
+        print(well, scen)
+        rs = RobustScaler(with_centering=False)
         if(phase=="gas"):
             y = df[0][scen][well]
         else:
             y = df[0][well]
+
+        X = rs.fit_transform(X_orig.reshape(-1,1))
+        y = rs.transform(y.reshape(-1,1))
+        
         train(well, X, y, goal=phase, neurons=neurons, lr=lr,
-              epochs=epochs, save=True, plot=plot, scen=scen, init_name=init_name)
+              epochs=epochs, save=True, plot=plot, scen=scen, init_name=init_name,
+              rs=rs, runs=runs)
         
 def go():
     for c in ["over_cap"]:
@@ -393,26 +399,39 @@ def go():
     
 def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
                epochs=1000, save=False, plot=False, regu=0.0, scen = 0,
-               gas_factor = 1000.0, num_scen=1, scen_start=0, init_name=""):
-    
-    batch_size=7
+               gas_factor = 100.0, num_scen=1, scen_start=0, init_name="",
+               batch_size=7, rs=None, runs=50):
+
     if (goal=="gas"):
         y = y/gas_factor
 
-    early_stopping = EarlyStopping(monitor='loss', patience=20000, verbose=1, mode='auto')
+    early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=1, mode='auto')
     model = build_model(neurons, dim, lr, regu=regu)
+    model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
 #                for i in range(100):
 #                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
 #    print("Fitting to data:",y)
-    model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
-    prediction = [x[0] for x in model.predict(X)]
+#    fig = pyplot.figure()
+#    ax = fig.add_subplot(111)
+#    print(X,y)
+#    for i in range(runs):
+#        model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
+#        prediction = [x[0] for x in model.predict(X)]
+#        if i == 0:
+#            line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=10)    
+#            line2 = ax.plot(X, prediction, color="blue", linestyle="dashed", linewidth=1)
+#        else:
+#            line2[0].set_ydata(prediction)
+#        pyplot.pause(0.001)
 #                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
     
     if plot or save:
+        model = t.inverse_scale(model, dim, neurons, 0, rs, lr, "mse", sos2=True)
+        X = rs.inverse_transform(X)
+        y = rs.inverse_transform(y)*gas_factor
         if goal=="gas" and train:
             model = t.add_layer(model,neurons,"mse", factor=gas_factor)
             prediction = [x[0] for x in model.predict(X)]
-            y = y*gas_factor
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
         line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=10)    
