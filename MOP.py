@@ -136,7 +136,7 @@ class NN:
             if init_name == "over_cap":
                 self.tot_exp_cap = 225000
             else:
-                self.tot_exp_cap = 275000
+                self.tot_exp_cap = 320000
             self.well_cap = {w:54166 for w in self.wellnames}
         else:
             raise ValueError("Case 1 not implemented yet.")
