@@ -32,7 +32,7 @@ def build_model(neurons, dim, regu, dropout, lr, layers):
                           kernel_regularizer=regularizers.l2(regu), 
                           bias_initializer=initializers.Constant(value=0.1),
                           bias_regularizer=regularizers.l2(regu)))
-        model_1.add(Activation("sigmoid"))
+        model_1.add(Activation("relu"))
     #    model_1.add(LeakyReLU(alpha=0.3))
         model_1.add(Dropout(dropout))
 
@@ -66,6 +66,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     start=time.time()
     if(well):
         X, y, rs = cl.BO_load(well, separator, case=case, scaler=scaler, goal=goal)
+        X = X/100.0
         if(x_grid is not None and case==2):
             print("Datapoints before merge:",len(X))
         if(x_grid is not None and case==2):
@@ -182,7 +183,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         if dim==1:
             if r==0:
                 line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=5)
-#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
                 for i in range(2):
                     ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2)
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
@@ -190,7 +191,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
                 line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
             else:
-#                line2[0].set_ydata(prediction)
+                line2[0].set_ydata(prediction)
                 line3[0].set_ydata(pred_mean)
                 pyplot.draw()
                 ax.collections.clear()
@@ -246,7 +247,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         if not (scaler == None):
             X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)        
             X_points,y_points = tools.simple_node_merge(np.array(X_points),np.array(y_points),x_grid,y_grid)
-        X_sample = np.array([[i] for i in range(101)])
+        X_sample = np.array([[i] for i in range(101)])/100.0
         X_save = np.array([i for i in range(101)])
         
         f_scaled = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
@@ -255,17 +256,50 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         
 #        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
         pred_mean_scaled, std_scaled = tools.sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
-        std_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
-        pred_mean_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
+        if goal == "gas":
+            pred_mean_scaled = pred_mean_scaled*1000
+            std_scaled = std_scaled*1000
+        std_unscaled = np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
+        pred_mean_unscaled = np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
 #        print(std_unscaled)
 #        print(pred_mean_unscaled)
 #        print(rs.inverse_transform([[i] for i in std_scaled]))
             
         prediction = [x[0] for x in model_2.predict(X_sample)]
-        plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, well=well,goal=goal, extra_points = std_unscaled)
+        
+        avg_dev_tot, avg_dev_top, dev_max, dev_max_choke = get_deviation(prediction,pred_mean_unscaled,X_points)
+        print("Avg deviation total:",avg_dev_tot)
+        print("Avg deviation above max point:",avg_dev_top)
+        print("Max deviation:",dev_max)
+        print("Max dev choke:",dev_max_choke)
+        
+        plot_once(X_sample*100, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, well=well,goal=goal, extra_points = std_unscaled)
         
 #        tools.save_variance_func(X_save, std_unscaled, pred_mean_unscaled, case, well, goal)
         
+def get_deviation(prediction,pred_mean_unscaled,X_points):
+    c=0
+    avg_dev_tot = 0
+    max_dev = 0
+    max_dev_choke = 0
+    for i in range(101):
+        dev = abs(prediction[i]-pred_mean_unscaled[i])#/pred_mean_unscaled[i]
+#            print("Dev point",i,dev)
+        if dev > max_dev:
+            max_dev=dev
+            max_dev_choke = i
+        avg_dev_tot += dev
+        c += 1
+    avg_dev_tot = avg_dev_tot/c       
+    c=0
+    avg_dev_top = 0
+    for i in range(int(round(max([x[0] for x in X_points]))),101):
+        dev = abs(prediction[i]-pred_mean_unscaled[i])#/pred_mean_unscaled[i]
+#            print("Dev point",i,dev)
+        avg_dev_top += dev
+        c += 1
+    avg_dev_top = avg_dev_top/c
+    return avg_dev_tot, avg_dev_top, max_dev, max_dev_choke
         
 def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=None, well="", goal="oil"):
     fig = pyplot.figure()
@@ -284,7 +318,7 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=No
     pyplot.ylabel(goal.capitalize() + tools.label)
     pyplot.show()
     line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=5)
-#    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1)
+#    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1.5)
     for i in range(2):
         (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
     line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1.5)
