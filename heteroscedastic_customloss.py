@@ -87,6 +87,7 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
             X[i] = [X[i]]
         X=np.array(X)
         y=np.array(y)
+
         
     if (len(X[0]) >= 2):
         dim=2 
@@ -183,25 +184,25 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         if dim==1:
             if r==0:
                 line1 = ax.plot(X, [i[0] for i in y], linestyle='None', marker = '.',markersize=5)
-                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
-                for i in range(2):
-                    ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2)
+#                line2 = ax.plot(X_test,prediction,color='green',linestyle='dashed', linewidth=1)
+#                for i in range(2):
+#                    ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2)
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al, pred_mean-al, alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-al-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
-                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
+#                line3 = ax.plot(X_test, pred_mean, color='#089FFF', linewidth=1)
 #                line3 = ax.plot(X_test, pred_mean, color='#000000', linewidth=1)
-            else:
-                line2[0].set_ydata(prediction)
-                line3[0].set_ydata(pred_mean)
-                pyplot.draw()
-                ax.collections.clear()
+#            else:
+#                line2[0].set_ydata(prediction)
+#                line3[0].set_ydata(pred_mean)
+#                pyplot.draw()
+#                ax.collections.clear()
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+ep, pred_mean-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                (ax.fill_between([x[0] for x in X_test], pred_mean+al+ep, pred_mean-al-ep, alpha=0.2, facecolor='#089FFF', linewidth=2))
-                for i in range(2):
-                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#                for i in range(2):
+#                    (ax.fill_between([x[0] for x in X_test], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+var1*(i+1), pred_mean-var1*(i+1), alpha=0.5, facecolor='#0F0F0F', linewidth=2))
 #                    (ax.fill_between([x[0] for x in X_test], pred_mean+(var1+var_mean)*(i+1), pred_mean-(var1+var_mean)*(i+1), alpha=0.5, facecolor='#089FFF', linewidth=2))
-            pyplot.pause(0.001)
+#            pyplot.pause(0.001)
         else:
             if r==0:
                 triang, ax = plotter.first_plot_3d([x[0] for x in X], [x[1] for x in X], [x[0] for x in y],[x[0] for x in X_test], [x[1] for x in X_test], pred_mean, well)
@@ -246,7 +247,8 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if(save_variance):
         if not (scaler == None):
             X_points,y_points,_ = cl.BO_load(well, separator, case=case, scaler=None, goal=goal)        
-            X_points,y_points = tools.simple_node_merge(np.array(X_points),np.array(y_points),x_grid,y_grid)
+            if x_grid is not None:
+                X_points,y_points = tools.simple_node_merge(np.array(X_points),np.array(y_points),x_grid,y_grid)
         X_sample = np.array([[i] for i in range(101)])/100.0
         X_save = np.array([i for i in range(101)])
         
@@ -319,9 +321,9 @@ def plot_once(X, prediction, pred_mean, std, y_points, X_points, extra_points=No
     pyplot.show()
     line1 = ax.plot(X_points, [i[0] for i in y_points], linestyle='None', marker = '.',markersize=5)
 #    line2 = ax.plot(X,prediction,color='green',linestyle='dashed', linewidth=1.5)
-    for i in range(2):
-        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
-    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1.5)
+#    for i in range(2):
+#        (ax.fill_between([x[0] for x in X], pred_mean+std*(i+1), pred_mean-std*(i+1), alpha=0.2, facecolor='#089FFF', linewidth=2))
+#    line3 = ax.plot(X, pred_mean, color='#089FFF', linewidth=1.5)
 #    line3 = ax.plot(X, pred_mean, color='#000000', linewidth=1)
 
 #    if (extra_points is not None):

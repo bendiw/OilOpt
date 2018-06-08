@@ -24,13 +24,9 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-<<<<<<< HEAD
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", 
-             verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, 
-             perfect_info=False):
-=======
+
 def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", start_iter=0, verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, perfect_info=False):
->>>>>>> master
+
     
     filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+("_EVPI" if perfect_info else "")+".csv"
     if perfect_info:
