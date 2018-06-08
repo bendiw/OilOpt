@@ -24,13 +24,13 @@ p_dict = {"A" : ["A2", "A3", "A5", "A6", "A7", "A8"], "B":["B1", "B2",
              "B3", "B4", "B5", "B6", "B7"], "C":["C1", "C2", "C3", "C4"]}
 p_sep_names = {"A":["HP"], "B":["LP", "HP"], "C":["LP"]}
 
-well_GORs = {'W1': 1578.6439, 'W2': 5886.233, 'W3': 2085.9548, 'W4': 1682.6052, 'W5': 1676.8193, 'W6': 2630.8806, 'W7': 5608.433}
-well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
-tot_exp_caps = {"under_cap":250000, "zero":250000, "over_cap":225000, "over_cap_old":225000} #225000
 
 label = " [Sm3/h]"
 # =============================================================================
 # Case 2
+well_GORs = {'W1': 1578.6439, 'W2': 5886.233, 'W3': 2085.9548, 'W4': 1682.6052, 'W5': 1676.8193, 'W6': 2630.8806, 'W7': 5608.433}
+well_order = ["W1", "W5", "W4", "W3", "W6", "W7", "W2"]
+tot_exp_caps = {"under_cap":250000, "zero":250000, "over_cap":225000, "over_cap_old":225000} #225000
 # =============================================================================
 wellnames_2= ["W"+str(x) for x in range(1,8)]
 well_to_sep_2 = {w:["HP"] for w in wellnames_2}
@@ -81,7 +81,9 @@ def convert_from_dict_to_tflists(dict_data):
         i += 1
     return data
 
-
+# =============================================================================
+# gets upper and lower limits of measurement data
+# =============================================================================
 def get_limits(target, wellnames, well_to_sep, case):
     if(case==1):
         df = pd.read_csv("welltests_new.csv", delimiter=",", header=0)
@@ -111,6 +113,9 @@ def get_limits(target, wellnames, well_to_sep, case):
                 upper[well][sep] = min(100.0, 1.3*dfw.max()+0.01)
         return lower, upper
 
+# =============================================================================
+# normalize data prior to training
+# =============================================================================
 def normalize(data):
     X = np.array([d for d in data[0][0]])
     y = np.array([d for d in data[0][1]])
@@ -123,6 +128,9 @@ def normalize(data):
     y = [(y-y_mean)/y_std for y in y]
     return X,y
 
+# =============================================================================
+# load data from file
+# =============================================================================
 def load(well, phase, separator, old=True, case=1):
     if(case==2):
         separator=""
@@ -151,6 +159,9 @@ def load(well, phase, separator, old=True, case=1):
                 w.append([float(x) for x in content[k]])
     return dim, w, b
 
+# =============================================================================
+# alternate loading function
+# =============================================================================
 def load_2(well, phase, separator="HP", case=1, mode = "mean",init_name="", scen=0):
     if mode == "scen":
         filename = "scenarios/nn/points/"+((init_name+"/") if len(init_name)>0 else "")+well+"_"+str(scen)+"-scen-"+phase+".txt"
@@ -185,7 +196,9 @@ def load_2(well, phase, separator="HP", case=1, mode = "mean",init_name="", scen
     
     return dims, w, b
 
-
+# =============================================================================
+# saves weights, parameters of NN
+# =============================================================================
 def save_variables(datafile, hp=1, goal="oil", is_3d=False, neural=None,
                    case=1, mode="mean", folder = "weights\\", num=""):
     dims = []
@@ -405,19 +418,6 @@ def retrieve_model(well, goal="oil", lr=0.001, case=2, mode="mean"):
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
 
-#def retrieve_model(dims, w, b, lr=0.001):
-#    model_1= Sequential()
-#    for i in range(1,len(dims)):
-#        new_w = [np.array(w[i-1]), np.array(b[i-1])]
-#        model_1.add(Dense(dims[i], input_shape=(dims[i-1],),
-#                          weights = new_w))
-#        if (i == len(dims)-1):
-#            model_1.add(Activation("linear"))
-#        else:
-#            model_1.add(Activation("relu"))
-#            model_1.add(Dropout(0.05))
-#    model_1.compile(optimizer=optimizers.Adam(lr=lr), loss=sced_loss)
-#    return model_1
 
 def build_and_plot_well(well, goal="oil", case=2):
     model = retrieve_model(well,goal=goal,lr=0.001,case=case)
@@ -438,20 +438,6 @@ def build_and_plot_well(well, goal="oil", case=2):
 
     
 
-#def save_variance_func_2(X, var, mean, case, well, phase):
-#    filename = "variance_case" + str(case) +"_"+phase+".csv"
-#    old = pd.read_csv(filename,sep=";",index_col=0)
-#    d = {well+"_"+phase+"_mean": old[well+"_"+phase+"_mean"], well+"_"+phase+"_var": var ,well+"_"+phase+"_X":X}
-#    try:
-#        df = pd.read_csv(filename+"_", sep=';', index_col=0)
-#        for k, v in d.items():
-#            df[k] = v
-#    except Exception as e:
-#        print(e)
-#        df = pd.DataFrame(data=d)
-#        print(df.columns)
-#    with open(filename+"_", 'w') as f:
-#        df.to_csv(f,sep=";")
 
 def save_variance_func(X, var, mean, case, well, phase):
     filename = "variance_case" + str(case) +"_"+phase+".csv"
@@ -572,11 +558,6 @@ def get_sos2_scenarios(phase, num_scen, init_name="", iteration=None):
     if(num_scen=="eev"):
         df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+("_eev" if phase=="gas" else "")+".csv", delimiter=";", header=0)
         num_scen=1
-#        dbs[0] = {}
-#        for well in wellnames_2:
-#            dbs[0][well] = df[well+"_"+phase+"_"+str(0)]
-#            chks[0][well] = df[well+"_choke"]
-#        return dbs, chks
     else:
         df = pd.read_csv(folder+"sos2_"+phase+"_"+init_name+((" ("+str(iteration)+")") if iteration and phase=="gas" else "")+".csv", delimiter=";", header=0)
     avail_scenarios=(len(df.keys())-2)/7

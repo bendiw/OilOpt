@@ -24,20 +24,16 @@ from recourse_models import NN, SOS2, Factor
 # 3 - see gurobi solver prints
 #Use verbose=3 to see gurobi output
 # =============================================================================
-<<<<<<< HEAD
 def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", 
              verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, 
-             perfect_info=False):
-=======
-def recourse(num_iter=200, num_scen=10, max_changes=3, init_name=None, model_type="sos2", start_iter=0, verbose=0, save=False, from_infeasible=False, simul_change=False, undo_allow_on=False, perfect_info=False):
->>>>>>> master
+             perfect_info=False, start_iter=0, indiv_caps=True):
     
     filestring = "results/robust_recourse_iterative/"+init_name+"/"+model_type+"/"+str(num_iter)+"iter_"+str(num_scen)+"scen_"+init_name+"_"+model_type+("_simul" if simul_change else"")+("_EVPI" if perfect_info else "")+".csv"
     if perfect_info:
         simul_change=True
         num_scen=1
     #init model
-    model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
+    model = get_model(model_type).init(max_changes=max_changes, num_scen=num_scen, init_name=init_name, indiv_caps=indiv_caps) #, w_relative_change={w:[0.5] for w in t.wellnames_2}
     if(undo_allow_on and "over_cap" in init_name):
         model.undo_allow_on_off()
         print("wells may be switched on/off.")
@@ -146,8 +142,6 @@ def simul_iteration(model, init_chokes, first_sol, true_well_curves, verbose=0):
 # Perform one iteration of algorithm. Step-wise changes
 # =============================================================================
 def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=0, from_infeasible=False, init_name=None, perfect_info=False):
-    #store intermediary results as optimization finds them
-#    opt_results = model.get_solution()
     #store implemented chokes, first we use only the starting point
     impl_chokes = init_chokes
     infeasible_count = 0
@@ -162,8 +156,6 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         suggested_tot_gas_all_changes = sum([true_well_curves[w].predict(new_chokes[w], "gas") for w in t.wellnames_2])
         inf_single, tot_oil, tot_gas, impl_chokes, change_well, change_gas = check_and_impl_change(true_well_curves, tot_oil, tot_gas, impl_chokes, new_chokes, model.well_cap, model.tot_exp_cap, from_infeasible)
         
-#        suggested_tot_oil_one_change = sum([true_well_curves[w].predict(impl_chokes[w], "oil") for w in t.wellnames_2])
-#        suggested_tot_gas_one_change = sum([true_well_curves[w].predict(impl_chokes[w], "gas") for w in t.wellnames_2])
 
 
         infeasible_count+=inf_single 
@@ -171,9 +163,6 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         if inf_single<1:
             from_infeasible=False
         
-#        print("CHANGE RHS:", model.change_constr.getAttr("rhs"), "CHK:", model.w_initial_vars)
-#        for w in t.wellnames_2:
-#            print("\n",w, model.routes[w, "HP"].x)
         if change_well is None:
             if verbose>1:
                 print("No more suggested changes.")
@@ -194,17 +183,6 @@ def iteration(model, init_chokes, first_sol, changes, true_well_curves, verbose=
         old_chokes = {key: value for key, value in impl_chokes.items()}
         model.set_chokes(impl_chokes)
         
-        ###TEST
-#        model.set_changes(0)
-#        model.set_tot_gas(320000)
-#        model.solve(0)
-#        solz = model.get_solution()
-#        print("check: chokes:\n", model.get_chokes())
-#        suggested_tot_oil_one_change = solz["tot_oil"].values[0]
-#        suggested_tot_gas_one_change = solz["tot_gas"].values[0]
-#        print("*****\n estimated total oil after 1 change:", suggested_tot_oil_one_change, "\n estimated total gas after 1 change:", suggested_tot_gas_one_change,"\n*****")
-#        model.set_tot_gas(225000)
-        #TEST
         model.set_changes(c)
         if(c==1):
             model.undo_allow_on_off()
@@ -281,6 +259,8 @@ def check_and_impl_change(true_well_curves, tot_oil, tot_gas, old_chokes, new_ch
     old_oil = true_well_curves[change_well].predict(old_chokes[change_well], "oil")
     change_oil = true_well_curves[change_well].predict(temp_chokes[change_well], "oil")
     if(change_gas-0.01 > indiv_cap[change_well] or tot_gas+(change_gas-old_gas)-0.01 > tot_cap):
+#        if(change_gas-0.01 > indiv_cap[change_well]):
+#            print("\nINDIV INFEASIBLE:", change_well, "\t",change_gas, "\n")
         if(from_infeasible):
             #implement the change
             return 1, tot_oil+(change_oil-old_oil), tot_gas+(change_gas-old_gas), temp_chokes, change_well, change_gas
@@ -434,10 +414,6 @@ class SOSpredictor():
                 break
                 
         factor = 1-(choke - self.choke_vals[index-1])/(self.choke_vals[index]-self.choke_vals[index-1])
-#        lower = self.rounddown(choke)
-#        upper = self.roundup(choke)
-#        factor = choke/10-lower
-#        print("choke:", choke, "l:", index-1, "u:", index, "fac:", factor, "val_l:", self.gas_vals[index-1], "val_u:", self.gas_vals[index])
         if(phase=="oil"):
             return (factor)*self.oil_vals[index-1]+(1-factor)*self.oil_vals[index]
         else:

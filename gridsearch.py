@@ -117,7 +117,9 @@ def create_model(tau=0.005, length_scale=0.001, dropout=0.05, score="ll",
     return model_1
 
 
-
+# =============================================================================
+# performs grid or randomized search over a well and specified parmeters
+# =============================================================================
 def search(well, separator="HP", case=1, parameters=t.param_dict, variance="heterosced", x_grid=None, y_grid=None, 
            verbose=2, nan_ratio=0.0, goal='gas', mode="grid", n_iter=30, epochs=5000, expanded=False):
     if(well):
@@ -173,6 +175,9 @@ def search(well, separator="HP", case=1, parameters=t.param_dict, variance="hete
         for mean, stdev, param in zip(means, stds, params):
             print("%f (%f) with: %r" % (mean, stdev, param))
 
+# =============================================================================
+# grid search for all wells in the problem
+# =============================================================================
 def search_all(case=2, goal="gas", mode="grid", n_iter=90, x_grid=None, y_grid=None):
     if(case==2):
         for w in t.wellnames_2[5:]:

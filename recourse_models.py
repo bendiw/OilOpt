@@ -25,6 +25,11 @@ import math
 import pandas as pd
 import tools as t
 import os.path
+
+
+# =============================================================================
+# Superclass for all optimization models. 
+# =============================================================================
 class Recourse_Model:
     well_to_sep = {}
     wellnames = []
@@ -43,7 +48,7 @@ class Recourse_Model:
     # =============================================================================
     def init(self, case=2,
                 num_scen = 1000, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
-                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False):
+                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, indiv_caps=True):
         if(case==2):
             self.wellnames = t.wellnames_2
             self.well_to_sep = t.well_to_sep_2
@@ -132,7 +137,10 @@ class Recourse_Model:
             self.w_initial_prod = {well : 1 if self.w_initial_vars[well]>0 else 0 for well in self.wellnames}
 #            self.tot_exp_cap = 250000
         self.tot_exp_cap = t.tot_exp_caps[init_name]
-        self.well_cap = {w:54166 for w in self.wellnames}
+        if(indiv_caps):
+            self.well_cap = {w:54166 for w in self.wellnames}
+        else:
+            self.well_cap = {w:math.inf for w in self.wellnames}
 #        else:
 #            raise ValueError("Case 1 not implemented yet.")
             
@@ -185,7 +193,8 @@ class Recourse_Model:
         # =============================================================================
         # separator gas constraints
         # =============================================================================
-        self.indiv_gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap[well] for well in self.wellnames for scenario in range(self.scenarios))
+        if(indiv_caps):
+            self.indiv_gas_constr = self.m.addConstrs(self.outputs_gas[scenario, well, "HP"] <= self.well_cap[well] for well in self.wellnames for scenario in range(self.scenarios))
         self.exp_constr = self.m.addConstrs(quicksum(self.outputs_gas[scenario, well, sep] for well in self.wellnames for sep in self.well_to_sep[well]) <= self.tot_exp_cap for scenario in range(self.scenarios))
         
         # =============================================================================
@@ -360,7 +369,9 @@ class Recourse_Model:
         return chokes
     
 
-    
+# =============================================================================
+#     Markov Weighted NN MILP formulation
+# =============================================================================
 class NN(Recourse_Model):
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
@@ -523,7 +534,9 @@ class NN(Recourse_Model):
         self.learned_wells =[]
         self.m.update()
     
-    
+# =============================================================================
+#     Factor scenario formulation
+# =============================================================================
 class Factor(Recourse_Model):
     # =============================================================================
     # get neural nets either by loading existing ones or training new ones
@@ -683,31 +696,27 @@ class Factor(Recourse_Model):
         self.learned_wells =[]
         self.m.update()
     
+    
+# =============================================================================
+#     Markov Weighted SOS2 formulation
+# =============================================================================
 class SOS2(Recourse_Model):
     # =============================================================================
     # Function to build model with all wells in the problem.
     # =============================================================================
     def init(self, case=2,
                 num_scen = 200, lower=-4, upper=4, phase="gas", sep="HP", save=True,store_init=False, init_name=None, 
-                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1, points=10, perfect_info=False):
+                max_changes=15, w_relative_change=None, stability_iter=None, distr="truncnorm", lock_wells=None, scen_const=None, recourse_iter=False, verbose=1, points=10, perfect_info=False, indiv_caps=True):
         
-        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
+        Recourse_Model.init(self, case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter, indiv_caps)        
 #        super(Recourse_Model, self).init(case, num_scen, lower, upper, phase, sep, save, store_init, init_name, max_changes, w_relative_change, stability_iter, distr, lock_wells, scen_const, recourse_iter)        
 
         self.results_file = "results/robust/res_SOS2.csv"
         #load SOS2 breakpoints
-#        if not perfect_info:
         self.orig_oil_vals, self.choke_vals = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
         self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
         self.oil_vals, _ = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
         self.gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
-#        else:
-#            self.orig_oil_vals, self.choke_vals = t.get_sos2_true_curves("oil", num_scen, init_name, stability_iter)
-#            self.orig_gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
-#            self.oil_vals, _ = t.get_sos2_scenarios("oil", num_scen, init_name, stability_iter)
-#            self.gas_vals, _ = t.get_sos2_scenarios("gas", num_scen, init_name, stability_iter)
-#         = [i*100/(len(self.oil_vals["W1"])-1) for i in range(len(self.oil_vals["W1"]))]
-#        print(self.orig_oil_vals)
         if(self.scenarios=="eev"):
             self.scenarios=1
         # =============================================================================
@@ -733,11 +742,6 @@ class SOS2(Recourse_Model):
 
 
 
-#        self.m.addConstr( self.inputs["W2", "HP", 0] == 0)
-
-
-#        self.m.addConstrs( (self.routes[well, sep] == 0) >> (self.inputs[well, sep, 0] == 0) for well in self.wellnames for sep in self.well_to_sep[well])
-
         # =============================================================================
         # SOS2 constraints 
         # =============================================================================
@@ -745,8 +749,6 @@ class SOS2(Recourse_Model):
         for well in self.wellnames:
             for sep in self.well_to_sep[well]:
                 self.m.addSOS(2, [self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))])
-        #tighten sos constraints
-#        self.m.addConstrs( self.routes[well, sep] == quicksum( self.zetas[brk, well, sep] for brk in range(len(self.choke_vals[well]))) for well in self.wellnames for sep in self.well_to_sep[well] for scenario in range(self.scenarios) )
         return self
     
     
@@ -767,12 +769,9 @@ class SOS2(Recourse_Model):
                 #remove old curves, update values dict
                 #oil
                 self.m.remove(self.oil_out_constr[change_well, "HP"])
-#                self.oil_vals[change_well] = true_curve.oil_vals.values.tolist()
-#                print("old", self.oil_vals[change_well])
 
                 self.oil_vals[change_well] = true_curve.oil_vals
                 #gas
-#                gases = true_curve.gas_vals.values.tolist()
                 gases = true_curve.gas_vals
                 for s in range(self.scenarios):
                     self.m.remove(self.gas_out_constr[change_well, "HP", s])

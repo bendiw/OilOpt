@@ -99,23 +99,12 @@ def BO_load(well, separator="HP",case=1,  goal="oil", scaler="rs", nan_ratio = 0
 ##############
 def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize = False, factor=0, nan_ratio=0.5, hp=True):
     df = df.loc[df['well']==well]
-#    if(hp==0):
-#        if(df['prs_dns'].isnull().sum()/df.shape[0] <= 0.5):
-#            df1 = df.loc[df['prs_dns']>=18.5]
-#            df2 = df.loc[df['prs_dns']<18.5 ]
-#            if(df1.shape[0] >= df2.shape[0]):
-#                df = df1
-#            else:
-#                df = df2
-#    print(df['prs_dns'])
     if(df['prs_dns'].isnull().sum()/df.shape[0] >= 0.7):
         df = df
     elif(hp==1):
         df = df.loc[df['prs_dns']>=18.5]
-#        print("zzz")
     else:
         df = df.loc[df['prs_dns']<18.5 ]
-#        print("HJHJ")
 
     ret = {}
     add_Z = False
@@ -135,49 +124,31 @@ def gen_targets(df, well, goal='oil', intervals=None, allow_nan=False, normalize
         y = []
         min_g = df['gaslift_rate'].min()
         max_g = df['gaslift_rate'].max()
-##        if(add_Z):
-##            min_c = df['choke'].min()
-##            max_c = df['choke'].max()
-##            c_diff = max_c-min_c
-##            c_step = c_diff/intervals
-##            c_vals = np.arange(min_c, max_c, c_step)
-#        print(max_g, min_g)
         g_diff = max_g-min_g
         step = g_diff/intervals
         vals = np.arange(min_g, max_g+step, step)
-#        print(intervals)
         for i in range(len(vals)):
             val = df.loc[df['gaslift_rate']>=vals[i]]
             val = val.loc[val['gaslift_rate']<=vals[i]+step]
             maxtime = val['time_ms_begin'].max()
             mintime = val['time_ms_begin'].min()
             div = maxtime-mintime
-#            print(val["gaslift_rate"])
             if(val.shape[0] > 1):
                 factors = val['time_ms_begin'].apply(lambda x: math.exp(-factor*((maxtime-x)/div)))
                 oil = val[goal].multiply(factors).sum() / factors.sum()
                 glift = val['gaslift_rate'].multiply(factors).sum() / factors.sum()
-####                if(add_Z):
-##                    choke = val['choke'].multiply(factors).sum() / factors.sum()
             elif(val.shape[0]==1):
                 glift = val['gaslift_rate'].values[0]
                 oil = val[goal].values[0]
-#                print("#####glift: ",glift)
-##                if(add_Z):
-##                    choke = val['choke'].values[0]
             if(not val.empty):
                 X.append(glift)
                 y.append(oil)
-##                if(add_Z):
-##                    Z.append(choke)
     else:
         if add_Z:
             Z = df['choke']
         X = df['gaslift_rate']
         y = df[goal]
         
-##    print(X)
-##    print(y)
     if(normalize):
         X, X_mean, X_std = normalize_data(X)
         y, y_mean, y_std = normalize_data(y)
@@ -213,10 +184,7 @@ def conv_to_batch_multi(X, Y, Z):
 
 def conv_to_batch(data):
     batch= []
-####    print(data[0])
     for i in range(len(data[0])):
         tup = [[data[0][i]], [data[1][i]]]
-##        tup.append([data[0][0][i]])
-##        tup.append([data[0][1][i]])
         batch.append(tup)
     return batch

@@ -21,7 +21,6 @@ import time
 
 # =============================================================================
 # builds a neural net
-# will probably want to expand to let call determine architecture
 # =============================================================================
 def build_model(neurons, dim, regu, dropout, lr, layers):
     model_1= Sequential()
@@ -87,20 +86,17 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
     if (len(X[0]) >= 2):
         dim=2 
     X_test = gen_x_test(X, dim, sampling_density,scaler)
-#    print(X_test)
 
     y = np.array([[i[0], 0] for i in y])
     
     
     model = build_model(neurons, dim, regu, dropout, lr, layers)
 
-    #setup plots
     if(dim==1):
         fig = pyplot.figure()
         ax = fig.add_subplot(111)
         pyplot.xlim(np.min(X)-0.4*np.max(X), np.max(X)+0.4*np.max(X))
         pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), 1.4*np.max([i[0] for i in y]))
-#        pyplot.ylim(-1.5,2.5)
         pyplot.autoscale(False)
         pyplot.xlabel('Choke')  
         pyplot.ylabel(goal.capitalize()+tools.label)
@@ -108,57 +104,9 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         
     f = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
     
-    #forward pass function, needed for dropout eval
-#    f = K.function([model.layers[0].input, K.learning_phase()],
-#                          [model.layers[-1].output])
-#    print(X, y)
     for r in range(runs):
         #train model
         model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=verbose)
-#        if r==0:
-#            model.fit(X, y, batch_size, epochs, verbose=0)
-#        else:
-#            rate = lr/(1+np.log10(r))
-#            K.set_value(model.optimizer.lr, rate)
-#            model.fit(X,y,batch_size,epochs,verbose=0)
-#        print(K.get_value(model.optimizer.lr))
-#        if (r%50==0):
-#            print ("Run",r)
-#            b_func = K.function([model.layers[0].input, K.learning_phase()],
-#                                  [model.layers[-2].bias])
-#            w_func = K.function([model.layers[0].input, K.learning_phase()],
-#                                  [model.layers[-2].kernel])
-#            out_func = K.function([model.layers[0].input, K.learning_phase()],
-#                                  [model.layers[-1].output])
-#            Q=b_func(([[X[3]]],1))
-#            W=w_func(([[X[3]]],1))
-#            R=out_func(([[X[3]]],1))
-#            print("Bias",Q)
-#            print("Weights",W)
-#            print("Outout",R)
-
-
-
-#        #gather results from forward pass
-#        results = np.column_stack(f((X_test,1.))[0])
-#        if (np.isnan(results[0][0])):
-#            print("NAN")
-#            return
-#
-#        res_mean = [results[0]]
-#        res_var = [np.exp(results[1])]
-#        for i in range(1,n_iter):
-#            a = np.column_stack(f((X_test,1.))[0])
-#            res_mean.append(a[0])
-#            res_var.append(np.exp(a[1]))
-        
-        #calculate uncertainty
-#        pred_mean = np.mean(res_mean, axis=0)
-#        pred_sq_mean = np.mean(np.square(res_mean), axis=0)
-#        var_mean = np.mean(res_var, axis=0)
-#        std = np.sqrt(pred_sq_mean-np.square(pred_mean)+var_mean)
-#        
-#        var1 = pred_sq_mean-np.square(pred_mean)
         
         #this is the current network's prediction with dropout switched off
         prediction = [x[0] for x in model.predict(X_test)]
@@ -211,32 +159,9 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         if not scaler:
             model_2 = model
         else:
-#            print("Weights before inverse:")
-#            for i in range(0,7,3):
-#                print(model.layers[i].get_weights())
             model_2 = tools.inverse_scale(model, dim, neurons, dropout, rs, lr, sced_loss)
     
-#        pyplot.xlim(np.min(X)-0.3*np.max(X), np.max(X)+0.6*np.max(X))
-#        pyplot.ylim(np.min([i[0] for i in y])-0.4*np.max([i[0] for i in y]), np.max(y)+0.4*np.max([i[0] for i in y]))
-
-#        pyplot.autoscale(False)
-#    pyplot.xlabel('Choke')  
-#    pyplot.ylabel("Variance")
-#    y = []
-##    print(len(X_test))
-#    new_x  = []
-#    for i in range(0,71,5):
-#        new_x.append(X_test[i])
-#        y.append([std[i]**2])
-##    for i in range(len(X_test)):
-###        print(X_test[i][0])
-##        y.append([std[X_test[i][0]]])
-#    ax.plot(new_x, [i[0] for i in y], linestyle='None', marker = '.',markersize=8)
-    
     if (save_weights):
-#        print("Weights after inverse:")
-#        for i in range(0,7,3):
-#            print(model_2.layers[i].get_weights())
         save_variables(well,goal,model_2,case)
     
     if(save_variance):
@@ -247,17 +172,11 @@ def run(well=None, separator="HP", x_grid=None, y_grid=None, case=1, runs=10,
         X_save = np.array([i for i in range(101)])
         
         f_scaled = K.function([model.layers[0].input, K.learning_phase()], [model.layers[-1].output])
-#        f = K.function([model_2.layers[0].input, K.learning_phase()], [model_2.layers[-1].output])
         X_sample_scaled = rs.transform(X_sample)
         
-#        pred_mean, std = sample_mean_std(model_2, X_sample, n_iter, f)
         pred_mean_scaled, std_scaled = tools.sample_mean_std(model, X_sample_scaled, n_iter, f_scaled)
         std_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(std_scaled.reshape(-1,1))])
         pred_mean_unscaled = 1000*np.array([x[0] for x in rs.inverse_transform(pred_mean_scaled.reshape(-1,1))])
-#        print(std_unscaled)
-#        print(pred_mean_unscaled)
-#        print(rs.inverse_transform([[i] for i in std_scaled]))
-            
         prediction = [x[0] for x in model_2.predict(X_sample)]
         plot_once(X_sample, prediction, pred_mean_unscaled, std_unscaled, y_points, X_points, well=well,goal=goal, extra_points = std_unscaled)
         

@@ -21,7 +21,9 @@ from sklearn.preprocessing import RobustScaler
 # distribution with mean and variation from a network trained on well data
 # =============================================================================
     
-
+# =============================================================================
+# build a NN
+# =============================================================================
 def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
     if maxout:
         a = Input((dim,))
@@ -33,31 +35,12 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
         model_1 = Model(a, f)
 
     else:        
-        #compile model
         model_1= Sequential()
         model_1.add(Dense(neurons, input_shape=(dim,),
                           kernel_initializer=initializers.VarianceScaling(),
                           bias_initializer=initializers.Constant(value=0.1)))
         model_1.add(Activation("relu"))
 
-#        model_1.add(Dense(neurons,
-#                          kernel_initializer=initializers.VarianceScaling(),
-#                          bias_initializer=initializers.Constant(value=0.1),
-#                          kernel_regularizer=regularizers.l2(regu),
-#                          bias_regularizer=regularizers.l2(regu)))
-#        model_1.add(Activation("relu"))
-    #    model_1.add(Dense(neurons,
-    #                      kernel_initializer=initializers.VarianceScaling(),
-    #                      bias_initializer=initializers.Constant(value=0.1),
-    #                      kernel_regularizer=regularizers.l2(regu),
-    #                      bias_regularizer=regularizers.l2(regu)))
-    #    model_1.add(Activation("relu"))
-    #    model_1.add(Dense(neurons*2,
-    #                      kernel_initializer=initializers.VarianceScaling(),
-    #                      bias_initializer=initializers.Constant(value=0.1),
-    #                      kernel_regularizer=regularizers.l2(regu),
-    #                      bias_regularizer=regularizers.l2(regu)))
-    #    model_1.add(Activation("relu"))
     
         model_1.add(Dense(1,
                           kernel_initializer=initializers.VarianceScaling(),
@@ -67,6 +50,9 @@ def build_model(neurons, dim, lr, regu=0.0, maxout=False, goal="oil"):
     model_1.compile(optimizer=optimizers.Adam(lr=lr), loss="mse")
     return model_1
 
+# =============================================================================
+# alternate run function
+# =============================================================================
 def hey():
     filename = "scenarios/nn/points/sos2_gas_w2_off.csv"
     df = pd.read_csv(filename, sep=';', index_col=0)
@@ -80,8 +66,6 @@ def hey():
     y_true = []
     for i in range(200):
         y_true.append([c for c in df_true["W1_gas_"+str(i)]])
-#    for i in range(200):
-#        line1 = ax.plot(X, y_true[i],color="blue",linestyle="dashed", linewidth=0.5)
     for i in range(5,1000):
         line1 = ax.plot(X, y[i],color="blue",linestyle="dashed", linewidth=0.3)
     for i in range(5):
@@ -89,6 +73,9 @@ def hey():
         line2 = ax.plot(X, y[i],color="red",linestyle="None", marker=".", markersize=7)
     return X,y
 
+# =============================================================================
+# plot scenario curves
+# =============================================================================
 def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=None,y_=None):
     filename = "variance_case2_"+goal+".csv"
     real = pd.read_csv(filename, sep=';', index_col=0)
@@ -106,20 +93,6 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
             print(i)
             scen.append(float(i/2.3))
 
-#        scenarios = t.get_scenario("zero",num_scen)
-#        scen = [scenarios[w][i] for i in range(len(scenarios))]
-#        if known_point:
-#            weight=0.6
-#            y=[]
-#            for i in range(num_scen):
-#                y.append([0]*(len(X)))
-#            for s in range(len(scen)):
-#                y[s][round(x_)]=y_
-#                for i in range(round(x_)+1,len(X)):
-#        #                y[i] = (1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1))
-#                    y[s][i] = max(0, (1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i-1])
-#                for i in range(round(x_)-1,-1,-1):
-#                    y[s][i] = max(0,(1-weight)*(mean[i] + scen[s]*std[i]) + weight*y[s][i+1])
     else:
         if known_point:
             gas,choke = t.get_sos2_scenarios(goal,num_scen,"under_cap")
@@ -136,15 +109,6 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
                 scen[i].insert(0,0)
         
         
-#        if (x_[w]<100):
-#            X_ = np.insert(X, index+1, [x_[w]+0.5*factor], axis=0)
-#            y[index] = y_[w]
-#            insert_index = index + 1
-#        else:
-#            X = np.insert(X, index, [x_[w]-0.5*factor], axis=0)
-#            y[index+1] = y_[w]
-#        mean = np.array([mean[i*factor] for i in range(points+1)])
-#        std = np.array([std[i*factor] for i in range(points+1)])
     col = [c for c in colors.cnames]
 
     lines = []
@@ -170,21 +134,10 @@ def plot_scens(goal="gas", w="W1", mode="fac", num_scen=15,known_point=False,x_=
             else:
                 scen[i] = str(scen[i])[:3]
         leg = ax.legend(lines,["Factor: "+i for i in scen])
-#        leg_lines = leg.get_lines()
-#        pyplot.setp(leg_lines, linewidth=2)
-#    for line in ax.legend().get_lines():
-#        line.set_linewidth(3)
-#    ax.legend((line1,line2,line3,line4,line5,line6,line7,line8,line9,line10),
-#                  ("-2,2","-1,7","-1,3","-0.9","-0.4","0.4","0.9","1.3","1.7","2.2"))
-#    pyplot.title(w+", weight="+ str(round(weight, 1))+", points="+str(points))
     pyplot.xlabel('Choke')
     pyplot.ylabel(goal.capitalize() + " [Sm3/h]")
-#    pyplot.fill_between([x[0] for x in X], mean-std, mean+std,
-#                       alpha=0.15, facecolor='#089FFF', linewidth=1)
     pyplot.fill_between([x[0] for x in X], mean-1*std, mean+1*std, alpha=0.15,
                         facecolor='#089FFF', linewidth=1)
-#    pyplot.fill_between([x[0] for x in X], mean-3*std, mean+3*std,
-#                       alpha=0.15, facecolor='#089FFF', linewidth=1)
     pyplot.fill_between([x[0] for x in X], mean-2*std, mean+2*std, alpha=0.15,
                         facecolor='#089FFF', linewidth=1)
     ax.plot(X, mean,color="black",linestyle="-", linewidth=1)
@@ -252,11 +205,11 @@ def train_scen(well, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
 #            for i in range(len(X)):
 #                m[i] = mean[i]
             for i in range(index+1,len(X)):
-                y[i] = max(0,(1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+#                y[i] = max(0,(1-weight)*y[i-1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i-1]-mean[i-1])/std[i-1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             for i in range(index-1,0,-1):
-                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
-#                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
+#                y[i] = max((1-weight)*y[i+1] + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)),0)
+                y[i] = max(0, (1-weight)*(mean[i]+std[i]*((y[i+1]-mean[i+1])/std[i+1])) + weight*ss.truncnorm.rvs(-num_std, num_std, scale=std[i], loc=mean[i], size=(1)))
             if(train):
                 early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=0, mode='auto')
                 model = build_model(neurons, dim, lr, regu=regu)
@@ -368,7 +321,9 @@ def save_sos2(X,y,phase, well, scen, folder, scen_start=0, name="",iteration=Non
     with open(filename, 'w') as f:
         df.to_csv(f,sep=";")
         
-        
+# =============================================================================
+#         train NNs on sample points for scenario, in order to create NN markov weighted scenraios
+# =============================================================================
 def sos2_to_nn(well,epochs, phase="gas", num_scen=10, start_scen=0, scens=[],
                neurons=20, lr=0.005, init_name="under_cap", plot=False, runs=1):
     df = t.get_sos2_scenarios(phase, start_scen+num_scen, init_name=init_name)
@@ -408,26 +363,10 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
     early_stopping = EarlyStopping(monitor='loss', patience=10000, verbose=1, mode='auto')
     model = build_model(neurons, dim, lr, regu=regu)
     model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
-#                for i in range(100):
-#                model.fit(X,y,batch_size=batch_size,epochs=int(epochs),verbose=0)
-#    print("Fitting to data:",y)
-#    fig = pyplot.figure()
-#    ax = fig.add_subplot(111)
-#    print(X,y)
-#    for i in range(runs):
-#        model.fit(X, y, batch_size=batch_size, epochs=epochs, verbose=0, callbacks=[early_stopping])
-#        prediction = [x[0] for x in model.predict(X)]
-#        if i == 0:
-#            line1 = ax.plot(X, y,color="green",linestyle="None", marker=".", markersize=10)    
-#            line2 = ax.plot(X, prediction, color="blue", linestyle="dashed", linewidth=1)
-#        else:
-#            line2[0].set_ydata(prediction)
-#        pyplot.pause(0.001)
-#                ax = plot_all(X, y, prediction, mean, std, m, goal, weight, points, x_, y_, w, train, ax)
     
     if plot or save:
         model = t.inverse_scale(model, dim, neurons, 0, rs, lr, "mse", sos2=True)
-        X = rs.inverse_transform(X)
+        X = rs.inverse_transform(X) 
         y = rs.inverse_transform(y)*gas_factor
         if goal=="gas" and train:
             model = t.add_layer(model,neurons,"mse", factor=gas_factor)
@@ -446,19 +385,3 @@ def train(well, X, y, goal='gas', neurons=15, dim=1, case=2, lr=0.005,
 
             
     
-#    model = retrieve_model(dims, w, b)
-#    X_sample = np.array([[i] for i in range(101)])
-#    y_sample = np.array([x[0] for x in model.predict(X_sample)])
-#    scen_model = build_model(neurons, dim, lr)
-#    scen_model.fit(X_sample, y_sample, batch_size, epochs, verbose=0)
-#    if save:
-#        t.save_variables(well, goal=goal, neural=scen_model.get_weights(), mode="var", case=case, folder="scenario\nn\\")
-#    if plot:
-#        prediction = [x[0] for x in scen_model.predict(X_sample)]
-#        fig = pyplot.figure()
-#        ax = fig.add_subplot(111)
-#        line1 = ax.plot(X_sample, y_sample, linestyle='None', marker = '.',markersize=10)
-#        line2 = ax.plot(X_sample, prediction, color='green',linestyle='dashed', linewidth=1)
-#        pyplot.xlabel('choke')
-#        pyplot.ylabel(goal)
-#        pyplot.show()
